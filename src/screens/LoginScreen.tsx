@@ -34,12 +34,42 @@ export default function LoginScreen() {
     ]).start();
   }, []);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
+    if (!email || !password) {
+      alert('Please enter both email and password.');
+      return;
+    }
+
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      // Use localhost for Web, and the local computer IP for physical phones/emulators
+      const apiUrl = Platform.OS === 'web' 
+        ? 'http://localhost/atech_prime/backend/public/api/login'
+        : 'http://192.168.0.49/atech_prime/backend/public/api/login';
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed.');
+      }
+
+      alert('Welcome back, ' + data.name + '!');
+      // In the future, we will save data.token to AsyncStorage and navigate here
+      
+    } catch (error: any) {
+      alert(error.message);
+    } finally {
       setIsLoading(false);
-      alert('Login Attempted with: ' + email);
-    }, 1500);
+    }
   };
 
   return (
