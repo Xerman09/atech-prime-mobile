@@ -49,7 +49,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
       // Use localhost for Web, and the local computer IP for physical phones/emulators
       const apiUrl = Platform.OS === 'web' 
         ? 'http://localhost/atech_prime/backend/public/api/login'
-        : 'http://192.168.0.49/atech_prime/backend/public/api/login';
+        : 'http://192.168.100.31/atech_prime/backend/public/api/login';
 
       const response = await fetch(apiUrl, {
         method: 'POST',

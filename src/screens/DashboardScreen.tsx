@@ -64,7 +64,11 @@ export default function DashboardScreen({ onLogout, onNavigate }: DashboardScree
             <Text style={styles.cardDesc}>Record your daily attendance</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.card} activeOpacity={0.8}>
+          <TouchableOpacity 
+            style={styles.card} 
+            activeOpacity={0.8}
+            onPress={() => onNavigate('leave_request')}
+          >
             <View style={[styles.iconWrapper, { backgroundColor: 'rgba(168, 85, 247, 0.1)' }]}>
               <Feather name="file-text" size={24} color="#a855f7" />
             </View>
