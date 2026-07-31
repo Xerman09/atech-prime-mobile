@@ -8,9 +8,10 @@ import { Feather } from '@expo/vector-icons';
 
 interface DashboardScreenProps {
   onLogout: () => void;
+  onNavigate: (screen: string) => void;
 }
 
-export default function DashboardScreen({ onLogout }: DashboardScreenProps) {
+export default function DashboardScreen({ onLogout, onNavigate }: DashboardScreenProps) {
   const [userName, setUserName] = useState<string>('Employee');
   const [currentDate, setCurrentDate] = useState<string>('');
 
@@ -51,7 +52,11 @@ export default function DashboardScreen({ onLogout }: DashboardScreenProps) {
         <Text style={styles.sectionTitle}>QUICK ACTIONS</Text>
         
         <View style={styles.grid}>
-          <TouchableOpacity style={styles.card} activeOpacity={0.8}>
+          <TouchableOpacity 
+            style={styles.card} 
+            activeOpacity={0.8}
+            onPress={() => onNavigate('attendance')}
+          >
             <View style={[styles.iconWrapper, { backgroundColor: 'rgba(56, 189, 248, 0.1)' }]}>
               <Feather name="clock" size={24} color="#38bdf8" />
             </View>
