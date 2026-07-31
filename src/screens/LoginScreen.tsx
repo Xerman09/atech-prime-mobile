@@ -7,7 +7,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { Feather } from '@expo/vector-icons';
 
-export default function LoginScreen() {
+interface LoginScreenProps {
+  onLoginSuccess: (name: string) => void;
+}
+
+export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -62,8 +66,7 @@ export default function LoginScreen() {
         throw new Error(data.error || 'Login failed.');
       }
 
-      alert('Welcome back, ' + data.name + '!');
-      // In the future, we will save data.token to AsyncStorage and navigate here
+      onLoginSuccess(data.name || 'Employee');
       
     } catch (error: any) {
       alert(error.message);
