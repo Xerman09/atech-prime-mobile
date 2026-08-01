@@ -115,5 +115,5 @@ export default function App() {
     />;
   }
 
-  return <DashboardScreen onLogout={handleLogout} onNavigate={handleNavigate} />;
+  return <DashboardScreen userName={userName} onLogout={handleLogout} onNavigate={handleNavigate} />;
 }
