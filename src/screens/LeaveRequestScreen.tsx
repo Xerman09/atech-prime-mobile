@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, ActivityIndicator 
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, ActivityIndicator, Modal
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -15,6 +15,7 @@ interface LeaveRequestScreenProps {
 export default function LeaveRequestScreen({ onBack, onNavigateToForm, token }: LeaveRequestScreenProps) {
   const [history, setHistory] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedRequest, setSelectedRequest] = useState<any>(null);
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -66,6 +67,17 @@ export default function LeaveRequestScreen({ onBack, onNavigateToForm, token }: 
       case 'Pending': return 'rgba(245, 158, 11, 0.1)';
       case 'Rejected': return 'rgba(239, 68, 68, 0.1)';
       default: return 'rgba(148, 163, 184, 0.1)';
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr || dateStr === '0000-00-00') return '-';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    } catch {
+      return dateStr;
     }
   };
 
@@ -122,23 +134,89 @@ export default function LeaveRequestScreen({ onBack, onNavigateToForm, token }: 
               <View style={styles.dateContainer}>
                 <View style={styles.dateBlock}>
                   <Text style={styles.dateLabel}>Start Date</Text>
-                  <Text style={styles.dateValue}>{item.start_date || item.startDate}</Text>
+                  <Text style={styles.dateValue}>{formatDate(item.start_date || item.startDate)}</Text>
                 </View>
-                <Feather name="arrow-right" size={16} color="#64748b" />
+                <View style={styles.arrowWrapper}>
+                  <Feather name="arrow-right" size={16} color="#64748b" />
+                </View>
                 <View style={styles.dateBlock}>
                   <Text style={styles.dateLabel}>End Date</Text>
-                  <Text style={styles.dateValue}>{item.end_date || item.endDate}</Text>
+                  <Text style={styles.dateValue}>{formatDate(item.end_date || item.endDate)}</Text>
                 </View>
               </View>
 
               <View style={styles.cardFooter}>
-                <Text style={styles.submittedText}>Submitted: {item.created_at ? new Date(item.created_at).toLocaleDateString() : item.submittedAt}</Text>
+                <Text style={styles.submittedText}>Submitted: {item.created_at ? formatDate(item.created_at.split('T')[0] || item.created_at.split(' ')[0]) : formatDate(item.submittedAt)}</Text>
+                <TouchableOpacity 
+                  style={styles.viewButton}
+                  onPress={() => setSelectedRequest(item)}
+                >
+                  <Text style={styles.viewButtonText}>View Details</Text>
+                  <Feather name="chevron-right" size={16} color="#38bdf8" />
+                </TouchableOpacity>
               </View>
             </View>
           ))
         )}
 
       </ScrollView>
+
+      {/* Details Modal */}
+      <Modal
+        visible={!!selectedRequest}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setSelectedRequest(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            {/* Top Gradient Strip */}
+            <LinearGradient 
+              colors={['#2563eb', '#6366f1', '#22d3ee']}
+              start={{x: 0, y: 0}} end={{x: 1, y: 0}}
+              style={styles.modalGradientStrip}
+            />
+            
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Request Details</Text>
+              <TouchableOpacity onPress={() => setSelectedRequest(null)} style={styles.closeButton}>
+                <Feather name="x" size={24} color="#94a3b8" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+              {selectedRequest && (
+                <>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>LEAVE TYPE</Text>
+                    <Text style={styles.detailValue}>{selectedRequest.leave_type || selectedRequest.type}</Text>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>STATUS</Text>
+                    <View style={[styles.statusBadge, { backgroundColor: getStatusBg(selectedRequest.status), borderColor: getStatusColor(selectedRequest.status), alignSelf: 'flex-start' }]}>
+                      <Text style={[styles.statusText, { color: getStatusColor(selectedRequest.status) }]}>{selectedRequest.status}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>START DATE</Text>
+                    <Text style={styles.detailValue}>{formatDate(selectedRequest.start_date || selectedRequest.startDate)}</Text>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>END DATE</Text>
+                    <Text style={styles.detailValue}>{formatDate(selectedRequest.end_date || selectedRequest.endDate)}</Text>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>REASON</Text>
+                    <Text style={[styles.detailValue, { lineHeight: 22 }]}>
+                      {selectedRequest.reason || 'No reason provided.'}
+                    </Text>
+                  </View>
+                </>
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 }
@@ -289,6 +367,11 @@ const styles = StyleSheet.create({
   dateBlock: {
     flex: 1,
   },
+  arrowWrapper: {
+    paddingHorizontal: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   dateLabel: {
     color: '#64748b',
     fontSize: 11,
@@ -301,13 +384,86 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
   },
+  submittedText: {
+    color: '#64748b',
+    fontSize: 11,
+  },
   cardFooter: {
     borderTopWidth: 1,
     borderTopColor: 'rgba(51, 65, 85, 0.5)',
     paddingTop: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  submittedText: {
+  viewButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  viewButtonText: {
+    color: '#38bdf8',
+    fontSize: 12,
+    fontWeight: '600',
+    marginRight: 4,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(2, 6, 23, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContainer: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: '#0f172a',
+    borderWidth: 1,
+    borderColor: 'rgba(51, 65, 85, 0.5)',
+    borderRadius: 0, // Sharp corners rule
+    position: 'relative',
+    overflow: 'hidden',
+    maxHeight: '85%', // Stretchy modal rule
+  },
+  modalGradientStrip: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 6,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 24,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(51, 65, 85, 0.5)',
+    marginTop: 6,
+  },
+  modalTitle: {
+    color: '#f8fafc',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  closeButton: {
+    padding: 4,
+  },
+  modalContent: {
+    padding: 24,
+  },
+  detailRow: {
+    marginBottom: 20,
+  },
+  detailLabel: {
     color: '#64748b',
     fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1,
+    marginBottom: 6,
+  },
+  detailValue: {
+    color: '#e2e8f0',
+    fontSize: 14,
   },
 });
