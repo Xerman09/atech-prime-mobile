@@ -84,12 +84,16 @@ export default function DashboardScreen({ onLogout, onNavigate }: DashboardScree
             <Text style={styles.cardDesc}>Request official travel</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.card} activeOpacity={0.8}>
+          <TouchableOpacity 
+            style={styles.card} 
+            activeOpacity={0.8}
+            onPress={() => onNavigate('undertime_request')}
+          >
             <View style={[styles.iconWrapper, { backgroundColor: 'rgba(245, 158, 11, 0.1)' }]}>
-              <Feather name="award" size={24} color="#f59e0b" />
+              <Feather name="clock" size={24} color="#f59e0b" />
             </View>
-            <Text style={styles.cardTitle}>COE Request</Text>
-            <Text style={styles.cardDesc}>Certificate of Employment</Text>
+            <Text style={styles.cardTitle}>Undertime Request</Text>
+            <Text style={styles.cardDesc}>Request to leave work early</Text>
           </TouchableOpacity>
         </View>
 
