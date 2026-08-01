@@ -5,6 +5,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { Feather } from '@expo/vector-icons';
+import { useTheme, ThemeColors } from '../theme/ThemeContext';
 
 interface TimeInOutScreenProps {
   onBack: () => void;
@@ -13,6 +14,8 @@ interface TimeInOutScreenProps {
 }
 
 export default function TimeInOutScreen({ onBack, employeeId, token }: TimeInOutScreenProps) {
+  const { theme, isDarkMode } = useTheme();
+  const styles = getStyles(theme, isDarkMode);
   const [currentTime, setCurrentTime] = useState<string>('');
   const [currentDate, setCurrentDate] = useState<string>('');
   const [hasTimedIn, setHasTimedIn] = useState(false);
@@ -136,10 +139,10 @@ export default function TimeInOutScreen({ onBack, employeeId, token }: TimeInOut
 
   return (
     <LinearGradient
-      colors={['#020617', '#0f172a', '#020617']}
+      colors={theme.backgroundGradient}
       style={styles.container}
     >
-      <StatusBar style="light" />
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
       
       {/* Decorative Background Elements */}
       <View style={styles.glow1} />
@@ -147,7 +150,7 @@ export default function TimeInOutScreen({ onBack, employeeId, token }: TimeInOut
 
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Feather name="arrow-left" size={24} color="#f8fafc" />
+          <Feather name="arrow-left" size={24} color={theme.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Attendance</Text>
         <View style={{ width: 24 }} />
@@ -160,7 +163,7 @@ export default function TimeInOutScreen({ onBack, employeeId, token }: TimeInOut
           <Text style={styles.dateText}>{currentDate}</Text>
           <Text style={styles.timeText}>{currentTime}</Text>
           <View style={[styles.statusBadge, status === 'In' ? styles.statusIn : (status === 'Out' ? styles.statusOut : styles.statusCompleted)]}>
-            <View style={[styles.statusDot, { backgroundColor: status === 'In' ? '#22c55e' : (status === 'Out' ? '#ef4444' : '#3b82f6') }]} />
+            <View style={[styles.statusDot, { backgroundColor: status === 'In' ? theme.success : (status === 'Out' ? theme.error : theme.primary) }]} />
             <Text style={styles.statusText}>
               {status === 'Completed' ? 'Shift Completed' : `Currently ${status}`}
             </Text>
@@ -176,11 +179,11 @@ export default function TimeInOutScreen({ onBack, employeeId, token }: TimeInOut
             disabled={hasTimedIn}
           >
             <LinearGradient
-              colors={hasTimedIn ? ['#334155', '#1e293b'] : ['#059669', '#10b981']}
+              colors={hasTimedIn ? [theme.border, theme.cardBgSolid] : [theme.success, '#10b981']}
               style={styles.gradientButton}
             >
-              <Feather name="log-in" size={24} color={hasTimedIn ? '#94a3b8' : '#ffffff'} />
-              <Text style={[styles.buttonText, hasTimedIn && { color: '#94a3b8' }]}>TIME IN</Text>
+              <Feather name="log-in" size={24} color={hasTimedIn ? theme.textSecondary : '#ffffff'} />
+              <Text style={[styles.buttonText, hasTimedIn && { color: theme.textSecondary }]}>TIME IN</Text>
             </LinearGradient>
           </TouchableOpacity>
 
@@ -191,11 +194,11 @@ export default function TimeInOutScreen({ onBack, employeeId, token }: TimeInOut
             disabled={!hasTimedIn || hasTimedOut}
           >
             <LinearGradient
-              colors={(!hasTimedIn || hasTimedOut) ? ['#334155', '#1e293b'] : ['#e11d48', '#f43f5e']}
+              colors={(!hasTimedIn || hasTimedOut) ? [theme.border, theme.cardBgSolid] : [theme.error, '#f43f5e']}
               style={styles.gradientButton}
             >
-              <Feather name="log-out" size={24} color={(!hasTimedIn || hasTimedOut) ? '#94a3b8' : '#ffffff'} />
-              <Text style={[styles.buttonText, (!hasTimedIn || hasTimedOut) && { color: '#94a3b8' }]}>TIME OUT</Text>
+              <Feather name="log-out" size={24} color={(!hasTimedIn || hasTimedOut) ? theme.textSecondary : '#ffffff'} />
+              <Text style={[styles.buttonText, (!hasTimedIn || hasTimedOut) && { color: theme.textSecondary }]}>TIME OUT</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -204,7 +207,7 @@ export default function TimeInOutScreen({ onBack, employeeId, token }: TimeInOut
         <Text style={styles.sectionTitle}>TODAY'S LOG</Text>
         <View style={styles.logCard}>
           {isLoadingLogs ? (
-            <ActivityIndicator size="small" color="#6366f1" />
+            <ActivityIndicator size="small" color={theme.primary} />
           ) : !timeInLog && !timeOutLog ? (
             <Text style={styles.emptyLogText}>No records for today yet.</Text>
           ) : (
@@ -212,7 +215,7 @@ export default function TimeInOutScreen({ onBack, employeeId, token }: TimeInOut
               {timeInLog && (
                 <View style={[styles.logItem, timeOutLog && { marginBottom: 16 }]}>
                   <View style={styles.logIcon}>
-                    <Feather name="log-in" size={16} color="#22c55e" />
+                    <Feather name="log-in" size={16} color={theme.success} />
                   </View>
                   <View style={styles.logTextContainer}>
                     <Text style={styles.logTitle}>Time In</Text>
@@ -223,7 +226,7 @@ export default function TimeInOutScreen({ onBack, employeeId, token }: TimeInOut
               {timeOutLog && (
                 <View style={styles.logItem}>
                   <View style={styles.logIcon}>
-                    <Feather name="log-out" size={16} color="#ef4444" />
+                    <Feather name="log-out" size={16} color={theme.error} />
                   </View>
                   <View style={styles.logTextContainer}>
                     <Text style={styles.logTitle}>Time Out</Text>
@@ -240,7 +243,7 @@ export default function TimeInOutScreen({ onBack, employeeId, token }: TimeInOut
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create({
   container: {
     flex: 1,
     position: 'relative',
@@ -251,7 +254,7 @@ const styles = StyleSheet.create({
     left: -100,
     width: 300,
     height: 300,
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    backgroundColor: theme.glow1,
     borderRadius: 150,
     transform: [{ scale: 2 }],
   },
@@ -261,7 +264,7 @@ const styles = StyleSheet.create({
     right: -100,
     width: 300,
     height: 300,
-    backgroundColor: 'rgba(244, 63, 94, 0.1)',
+    backgroundColor: theme.glow2,
     borderRadius: 150,
     transform: [{ scale: 2 }],
   },
@@ -273,15 +276,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(51, 65, 85, 0.5)',
-    backgroundColor: 'rgba(2, 6, 23, 0.5)',
+    borderBottomColor: theme.border,
+    backgroundColor: theme.inputBg,
   },
   backButton: {
     padding: 8,
     marginLeft: -8,
   },
   headerTitle: {
-    color: '#f8fafc',
+    color: theme.textPrimary,
     fontSize: 18,
     fontWeight: '600',
     letterSpacing: 1,
@@ -296,9 +299,9 @@ const styles = StyleSheet.create({
   clockContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+    backgroundColor: theme.cardBg,
     borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.5)',
+    borderColor: theme.border,
     paddingVertical: 40,
     paddingHorizontal: 20,
     borderRadius: 0, // Sharp corners
@@ -310,14 +313,14 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   dateText: {
-    color: '#94a3b8',
+    color: theme.textSecondary,
     fontSize: 16,
     marginBottom: 8,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   timeText: {
-    color: '#f8fafc',
+    color: theme.textPrimary,
     fontSize: 48,
     fontWeight: '300',
     fontVariant: ['tabular-nums'],
@@ -332,16 +335,16 @@ const styles = StyleSheet.create({
     borderRadius: 0, // Sharp corners
   },
   statusIn: {
-    backgroundColor: 'rgba(34, 197, 94, 0.1)',
-    borderColor: 'rgba(34, 197, 94, 0.3)',
+    backgroundColor: isDarkMode ? 'rgba(34, 197, 94, 0.1)' : 'rgba(34, 197, 94, 0.2)',
+    borderColor: isDarkMode ? 'rgba(34, 197, 94, 0.3)' : 'rgba(34, 197, 94, 0.4)',
   },
   statusOut: {
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-    borderColor: 'rgba(239, 68, 68, 0.3)',
+    backgroundColor: isDarkMode ? 'rgba(239, 68, 68, 0.1)' : 'rgba(239, 68, 68, 0.2)',
+    borderColor: isDarkMode ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.4)',
   },
   statusCompleted: {
-    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-    borderColor: 'rgba(59, 130, 246, 0.3)',
+    backgroundColor: isDarkMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.2)',
+    borderColor: isDarkMode ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.4)',
   },
   statusDot: {
     width: 8,
@@ -350,7 +353,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   statusText: {
-    color: '#e2e8f0',
+    color: theme.textPrimary,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -385,16 +388,16 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   sectionTitle: {
-    color: '#64748b',
+    color: theme.textMuted,
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 1.5,
     marginBottom: 16,
   },
   logCard: {
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    backgroundColor: theme.cardBg,
     borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.5)',
+    borderColor: theme.border,
     borderRadius: 0, // Sharp corners
     padding: 20,
   },
@@ -405,11 +408,11 @@ const styles = StyleSheet.create({
   logIcon: {
     width: 32,
     height: 32,
-    backgroundColor: 'rgba(30, 41, 59, 0.5)',
+    backgroundColor: theme.inputBg,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.8)',
+    borderColor: theme.border,
     borderRadius: 0,
     marginRight: 16,
   },
@@ -417,17 +420,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   logTitle: {
-    color: '#e2e8f0',
+    color: theme.textPrimary,
     fontSize: 15,
     fontWeight: '500',
     marginBottom: 4,
   },
   logTime: {
-    color: '#94a3b8',
+    color: theme.textSecondary,
     fontSize: 13,
   },
   emptyLogText: {
-    color: '#64748b',
+    color: theme.textMuted,
     fontSize: 14,
     fontStyle: 'italic',
     textAlign: 'center',

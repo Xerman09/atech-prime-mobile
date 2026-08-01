@@ -6,12 +6,15 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { Feather } from '@expo/vector-icons';
+import { useTheme, ThemeColors } from '../theme/ThemeContext';
 
 interface LoginScreenProps {
   onLoginSuccess: (name: string, employeeId?: number, token?: string, rememberMe?: boolean) => void;
 }
 
 export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
+  const { theme, isDarkMode } = useTheme();
+  const styles = getStyles(theme);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -78,10 +81,10 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
   return (
     <LinearGradient
-      colors={['#020617', '#0f172a', '#020617']}
+      colors={theme.backgroundGradient}
       style={styles.container}
     >
-      <StatusBar style="light" />
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
       
       {/* Decorative Background Elements */}
       <View style={styles.glow1} />
@@ -109,7 +112,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>EMAIL ADDRESS</Text>
             <View style={[styles.inputWrapper, isEmailFocused && styles.inputWrapperFocused]}>
-              <Feather name="mail" size={18} color={isEmailFocused ? '#38bdf8' : '#64748b'} style={styles.inputIcon} />
+              <Feather name="mail" size={18} color={isEmailFocused ? theme.primary : theme.textMuted} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="name@company.com"
@@ -128,7 +131,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>PASSWORD</Text>
             <View style={[styles.inputWrapper, isPasswordFocused && styles.inputWrapperFocused]}>
-              <Feather name="lock" size={18} color={isPasswordFocused ? '#38bdf8' : '#64748b'} style={styles.inputIcon} />
+              <Feather name="lock" size={18} color={isPasswordFocused ? theme.primary : theme.textMuted} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Enter your password"
@@ -140,7 +143,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                 onBlur={() => setIsPasswordFocused(false)}
               />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-                <Feather name={showPassword ? "eye" : "eye-off"} size={18} color="#64748b" />
+                <Feather name={showPassword ? "eye" : "eye-off"} size={18} color={theme.textMuted} />
               </TouchableOpacity>
             </View>
           </View>
@@ -152,7 +155,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
               activeOpacity={0.8}
             >
               <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
-                {rememberMe && <Feather name="check" size={14} color="#0f172a" />}
+                {rememberMe && <Feather name="check" size={14} color={theme.cardBgSolid} />}
               </View>
               <Text style={styles.checkboxText}>Remember Me</Text>
             </TouchableOpacity>
@@ -169,7 +172,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             activeOpacity={0.8}
           >
             <LinearGradient
-              colors={['#0284c7', '#2563eb']}
+              colors={theme.primaryGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.gradientButton}
@@ -190,7 +193,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
     position: 'relative',
@@ -201,7 +204,7 @@ const styles = StyleSheet.create({
     left: -100,
     width: 300,
     height: 300,
-    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    backgroundColor: theme.glow1,
     borderRadius: 150,
     transform: [{ scale: 2 }],
   },
@@ -211,7 +214,7 @@ const styles = StyleSheet.create({
     right: -100,
     width: 300,
     height: 300,
-    backgroundColor: 'rgba(37, 99, 235, 0.15)',
+    backgroundColor: theme.glow2,
     borderRadius: 150,
     transform: [{ scale: 2 }],
   },
@@ -221,9 +224,9 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   formContainer: {
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    backgroundColor: theme.cardBg,
     borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.5)',
+    borderColor: theme.border,
     padding: 32,
     borderRadius: 0, // Sharp corners rule
     shadowColor: '#000',
@@ -239,27 +242,27 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   companyName: {
-    color: '#38bdf8',
+    color: theme.primary,
     fontSize: 13,
     fontWeight: '800',
     letterSpacing: 2,
     marginBottom: 12,
   },
   title: {
-    color: '#f8fafc',
+    color: theme.textPrimary,
     fontSize: 32,
     fontWeight: '300',
     marginBottom: 8,
   },
   subtitle: {
-    color: '#64748b',
+    color: theme.textMuted,
     fontSize: 15,
   },
   inputGroup: {
     marginBottom: 24,
   },
   label: {
-    color: '#94a3b8',
+    color: theme.textSecondary,
     fontSize: 12,
     fontWeight: '700',
     marginBottom: 10,
@@ -268,14 +271,14 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(2, 6, 23, 0.5)',
+    backgroundColor: theme.inputBg,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: theme.border,
     borderRadius: 0, // Sharp corners rule
   },
   inputWrapperFocused: {
-    borderColor: '#38bdf8',
-    backgroundColor: 'rgba(2, 6, 23, 0.8)',
+    borderColor: theme.primary,
+    backgroundColor: theme.inputBgFocused,
   },
   inputIcon: {
     paddingLeft: 16,
@@ -285,7 +288,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: '#f8fafc',
+    color: theme.textPrimary,
     paddingHorizontal: 12,
     paddingVertical: 16,
     fontSize: 16,
@@ -304,31 +307,31 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderWidth: 1,
-    borderColor: '#64748b',
+    borderColor: theme.textMuted,
     borderRadius: 0, // Sharp corners rule
     marginRight: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkboxChecked: {
-    backgroundColor: '#38bdf8',
-    borderColor: '#38bdf8',
+    backgroundColor: theme.primary,
+    borderColor: theme.primary,
   },
   checkboxText: {
-    color: '#94a3b8',
+    color: theme.textSecondary,
     fontSize: 14,
   },
   forgotPassword: {
   },
   forgotPasswordText: {
-    color: '#38bdf8',
+    color: theme.primary,
     fontSize: 14,
     fontWeight: '600',
     letterSpacing: 0.5,
   },
   loginButton: {
     width: '100%',
-    shadowColor: '#2563eb',
+    shadowColor: theme.primary,
     shadowOffset: {
       width: 0,
       height: 8,

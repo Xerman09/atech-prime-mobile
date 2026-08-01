@@ -5,6 +5,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { Feather } from '@expo/vector-icons';
+import { useTheme, ThemeColors } from '../theme/ThemeContext';
 
 interface DashboardScreenProps {
   userName: string;
@@ -13,6 +14,8 @@ interface DashboardScreenProps {
 }
 
 export default function DashboardScreen({ userName, onLogout, onNavigate }: DashboardScreenProps) {
+  const { theme, isDarkMode, toggleTheme } = useTheme();
+  const styles = getStyles(theme, isDarkMode);
   const [currentDate, setCurrentDate] = useState<string>('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -25,10 +28,10 @@ export default function DashboardScreen({ userName, onLogout, onNavigate }: Dash
 
   return (
     <LinearGradient
-      colors={['#020617', '#0f172a', '#020617']}
+      colors={theme.backgroundGradient}
       style={styles.container}
     >
-      <StatusBar style="light" />
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
       
       {/* Decorative Background Elements */}
       <View style={styles.glow1} />
@@ -36,7 +39,7 @@ export default function DashboardScreen({ userName, onLogout, onNavigate }: Dash
 
       <View style={styles.header}>
         <TouchableOpacity style={styles.menuButton} onPress={() => setIsMenuOpen(true)}>
-          <Feather name="menu" size={24} color="#f8fafc" />
+          <Feather name="menu" size={24} color={theme.textPrimary} />
         </TouchableOpacity>
         <View style={styles.headerTextContainer}>
           <Text style={styles.greeting}>Welcome back,</Text>
@@ -62,7 +65,7 @@ export default function DashboardScreen({ userName, onLogout, onNavigate }: Dash
           >
             {/* Top Gradient Strip */}
             <LinearGradient 
-              colors={['#2563eb', '#6366f1', '#22d3ee']}
+              colors={theme.primaryGradient as any}
               start={{x: 0, y: 0}} end={{x: 1, y: 0}}
               style={styles.modalGradientStrip}
             />
@@ -78,7 +81,7 @@ export default function DashboardScreen({ userName, onLogout, onNavigate }: Dash
                 </View>
               </View>
               <TouchableOpacity onPress={() => setIsMenuOpen(false)} style={styles.closeButton}>
-                <Feather name="x" size={24} color="#94a3b8" />
+                <Feather name="x" size={24} color={theme.textSecondary} />
               </TouchableOpacity>
             </View>
 
@@ -86,22 +89,22 @@ export default function DashboardScreen({ userName, onLogout, onNavigate }: Dash
               <Text style={styles.sidebarSectionTitle}>MAIN MENU</Text>
 
               <TouchableOpacity style={styles.sidebarItem} onPress={() => { setIsMenuOpen(false); onNavigate('dashboard'); }}>
-                <Feather name="home" size={20} color="#38bdf8" style={styles.sidebarItemIcon} />
+                <Feather name="home" size={20} color={theme.primary} style={styles.sidebarItemIcon} />
                 <Text style={styles.sidebarItemText}>Dashboard</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.sidebarItem} onPress={() => { setIsMenuOpen(false); onNavigate('attendance'); }}>
-                <Feather name="clock" size={20} color="#94a3b8" style={styles.sidebarItemIcon} />
+                <Feather name="clock" size={20} color={theme.textSecondary} style={styles.sidebarItemIcon} />
                 <Text style={styles.sidebarItemText}>Time In/Out</Text>
               </TouchableOpacity>
               
               <TouchableOpacity style={styles.sidebarItem} onPress={() => { setIsMenuOpen(false); onNavigate('leave_request'); }}>
-                <Feather name="file-text" size={20} color="#94a3b8" style={styles.sidebarItemIcon} />
+                <Feather name="file-text" size={20} color={theme.textSecondary} style={styles.sidebarItemIcon} />
                 <Text style={styles.sidebarItemText}>Leave Requests</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.sidebarItem} onPress={() => { setIsMenuOpen(false); onNavigate('undertime_request'); }}>
-                <Feather name="corner-down-right" size={20} color="#94a3b8" style={styles.sidebarItemIcon} />
+                <Feather name="corner-down-right" size={20} color={theme.textSecondary} style={styles.sidebarItemIcon} />
                 <Text style={styles.sidebarItemText}>Undertime Requests</Text>
               </TouchableOpacity>
 
@@ -109,12 +112,18 @@ export default function DashboardScreen({ userName, onLogout, onNavigate }: Dash
               <Text style={styles.sidebarSectionTitle}>ACCOUNT</Text>
 
               <TouchableOpacity style={styles.sidebarItem}>
-                <Feather name="user" size={20} color="#94a3b8" style={styles.sidebarItemIcon} />
+                <Feather name="user" size={20} color={theme.textSecondary} style={styles.sidebarItemIcon} />
                 <Text style={styles.sidebarItemText}>My Profile</Text>
               </TouchableOpacity>
               
+              
+              <TouchableOpacity style={styles.sidebarItem} onPress={toggleTheme}>
+                <Feather name={isDarkMode ? "sun" : "moon"} size={20} color={theme.textSecondary} style={styles.sidebarItemIcon} />
+                <Text style={styles.sidebarItemText}>{isDarkMode ? "Light Mode" : "Dark Mode"}</Text>
+              </TouchableOpacity>
+              
               <TouchableOpacity style={styles.sidebarItem}>
-                <Feather name="settings" size={20} color="#94a3b8" style={styles.sidebarItemIcon} />
+                <Feather name="settings" size={20} color={theme.textSecondary} style={styles.sidebarItemIcon} />
                 <Text style={styles.sidebarItemText}>Settings</Text>
               </TouchableOpacity>
 
@@ -128,7 +137,7 @@ export default function DashboardScreen({ userName, onLogout, onNavigate }: Dash
                   onLogout();
                 }}
               >
-                <Feather name="log-out" size={20} color="#ef4444" />
+                <Feather name="log-out" size={20} color={theme.error} />
                 <Text style={styles.logoutBtnText}>Log Out</Text>
               </TouchableOpacity>
             </View>
@@ -138,7 +147,7 @@ export default function DashboardScreen({ userName, onLogout, onNavigate }: Dash
 
       <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
         <View style={styles.dateContainer}>
-          <Feather name="calendar" size={16} color="#38bdf8" style={styles.dateIcon} />
+          <Feather name="calendar" size={16} color={theme.primary} style={styles.dateIcon} />
           <Text style={styles.dateText}>Today is {currentDate}</Text>
         </View>
 
@@ -150,8 +159,8 @@ export default function DashboardScreen({ userName, onLogout, onNavigate }: Dash
             activeOpacity={0.8}
             onPress={() => onNavigate('attendance')}
           >
-            <View style={[styles.iconWrapper, { backgroundColor: 'rgba(56, 189, 248, 0.1)' }]}>
-              <Feather name="clock" size={24} color="#38bdf8" />
+            <View style={[styles.iconWrapper, { backgroundColor: theme.glow1 }]}>
+              <Feather name="clock" size={24} color={theme.primary} />
             </View>
             <Text style={styles.cardTitle}>Time In/Out</Text>
             <Text style={styles.cardDesc}>Record your daily attendance</Text>
@@ -162,16 +171,16 @@ export default function DashboardScreen({ userName, onLogout, onNavigate }: Dash
             activeOpacity={0.8}
             onPress={() => onNavigate('leave_request')}
           >
-            <View style={[styles.iconWrapper, { backgroundColor: 'rgba(168, 85, 247, 0.1)' }]}>
-              <Feather name="file-text" size={24} color="#a855f7" />
+            <View style={[styles.iconWrapper, { backgroundColor: isDarkMode ? 'rgba(168, 85, 247, 0.1)' : 'rgba(147, 51, 234, 0.1)' }]}>
+              <Feather name="file-text" size={24} color={theme.purple} />
             </View>
             <Text style={styles.cardTitle}>Leave Request</Text>
             <Text style={styles.cardDesc}>Apply for vacation or sick leave</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.card} activeOpacity={0.8}>
-            <View style={[styles.iconWrapper, { backgroundColor: 'rgba(34, 197, 94, 0.1)' }]}>
-              <Feather name="map" size={24} color="#22c55e" />
+            <View style={[styles.iconWrapper, { backgroundColor: isDarkMode ? 'rgba(34, 197, 94, 0.1)' : 'rgba(22, 163, 74, 0.1)' }]}>
+              <Feather name="map" size={24} color={theme.success} />
             </View>
             <Text style={styles.cardTitle}>Business Trip</Text>
             <Text style={styles.cardDesc}>Request official travel</Text>
@@ -182,8 +191,8 @@ export default function DashboardScreen({ userName, onLogout, onNavigate }: Dash
             activeOpacity={0.8}
             onPress={() => onNavigate('undertime_request')}
           >
-            <View style={[styles.iconWrapper, { backgroundColor: 'rgba(245, 158, 11, 0.1)' }]}>
-              <Feather name="clock" size={24} color="#f59e0b" />
+            <View style={[styles.iconWrapper, { backgroundColor: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : 'rgba(217, 119, 6, 0.1)' }]}>
+              <Feather name="clock" size={24} color={theme.warning} />
             </View>
             <Text style={styles.cardTitle}>Undertime Request</Text>
             <Text style={styles.cardDesc}>Request to leave work early</Text>
@@ -195,7 +204,7 @@ export default function DashboardScreen({ userName, onLogout, onNavigate }: Dash
         <View style={styles.activityCard}>
           <View style={styles.activityItem}>
             <View style={styles.activityIcon}>
-              <Feather name="check-circle" size={16} color="#22c55e" />
+              <Feather name="check-circle" size={16} color={theme.success} />
             </View>
             <View style={styles.activityTextContainer}>
               <Text style={styles.activityTitle}>Time In</Text>
@@ -205,7 +214,7 @@ export default function DashboardScreen({ userName, onLogout, onNavigate }: Dash
           
           <View style={[styles.activityItem, styles.lastActivityItem]}>
             <View style={styles.activityIcon}>
-              <Feather name="clock" size={16} color="#f59e0b" />
+              <Feather name="clock" size={16} color={theme.warning} />
             </View>
             <View style={styles.activityTextContainer}>
               <Text style={styles.activityTitle}>Leave Request Pending</Text>
@@ -219,7 +228,7 @@ export default function DashboardScreen({ userName, onLogout, onNavigate }: Dash
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create({
   container: {
     flex: 1,
     position: 'relative',
@@ -230,7 +239,7 @@ const styles = StyleSheet.create({
     left: -100,
     width: 300,
     height: 300,
-    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+    backgroundColor: theme.glow1,
     borderRadius: 150,
     transform: [{ scale: 2 }],
   },
@@ -240,7 +249,7 @@ const styles = StyleSheet.create({
     right: -100,
     width: 300,
     height: 300,
-    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+    backgroundColor: theme.glow2,
     borderRadius: 150,
     transform: [{ scale: 2 }],
   },
@@ -252,32 +261,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 24,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(51, 65, 85, 0.5)',
-    backgroundColor: 'rgba(2, 6, 23, 0.5)',
+    borderBottomColor: theme.border,
+    backgroundColor: theme.inputBg,
   },
   headerTextContainer: {
     marginLeft: 16,
   },
   greeting: {
-    color: '#94a3b8',
+    color: theme.textSecondary,
     fontSize: 14,
     marginBottom: 4,
   },
   userName: {
-    color: '#f8fafc',
+    color: theme.textPrimary,
     fontSize: 24,
     fontWeight: '700',
   },
   menuButton: {
     padding: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: theme.cardBg,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: theme.border,
     borderRadius: 0, // Sharp corners
   },
   sidebarOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(2, 6, 23, 0.85)',
+    backgroundColor: theme.sidebarOverlay,
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
   },
@@ -285,9 +294,9 @@ const styles = StyleSheet.create({
     width: '80%',
     maxWidth: 320,
     height: '100%',
-    backgroundColor: '#0f172a',
+    backgroundColor: theme.sidebarBg,
     borderRightWidth: 1,
-    borderRightColor: 'rgba(51, 65, 85, 0.5)',
+    borderRightColor: theme.border,
     position: 'relative',
     shadowColor: '#000',
     shadowOffset: { width: 10, height: 0 },
@@ -309,8 +318,8 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingTop: Platform.OS === 'ios' ? 60 : 40,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(51, 65, 85, 0.5)',
-    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+    borderBottomColor: theme.border,
+    backgroundColor: theme.sidebarBg,
   },
   sidebarProfile: {
     flexDirection: 'row',
@@ -319,15 +328,15 @@ const styles = StyleSheet.create({
   sidebarAvatar: {
     width: 48,
     height: 48,
-    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+    backgroundColor: theme.glow1,
     borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.5)',
+    borderColor: theme.border,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   sidebarAvatarText: {
-    color: '#38bdf8',
+    color: theme.primary,
     fontSize: 20,
     fontWeight: '700',
   },
@@ -335,13 +344,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   sidebarUserName: {
-    color: '#f8fafc',
+    color: theme.textPrimary,
     fontSize: 16,
     fontWeight: '700',
     marginBottom: 2,
   },
   sidebarUserRole: {
-    color: '#94a3b8',
+    color: theme.textSecondary,
     fontSize: 12,
   },
   closeButton: {
@@ -352,7 +361,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   sidebarSectionTitle: {
-    color: '#64748b',
+    color: theme.textMuted,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 1.5,
@@ -371,32 +380,32 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   sidebarItemText: {
-    color: '#e2e8f0',
+    color: theme.textPrimary,
     fontSize: 15,
     fontWeight: '500',
   },
   sidebarDivider: {
     height: 1,
-    backgroundColor: 'rgba(51, 65, 85, 0.5)',
+    backgroundColor: theme.border,
     marginVertical: 16,
   },
   sidebarFooter: {
     padding: 24,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(51, 65, 85, 0.5)',
-    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+    borderTopColor: theme.border,
+    backgroundColor: theme.sidebarBg,
   },
   logoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    backgroundColor: isDarkMode ? 'rgba(239, 68, 68, 0.1)' : 'rgba(220, 38, 38, 0.1)',
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.3)',
+    borderColor: isDarkMode ? 'rgba(239, 68, 68, 0.3)' : 'rgba(220, 38, 38, 0.3)',
     paddingVertical: 12,
   },
   logoutBtnText: {
-    color: '#ef4444',
+    color: theme.error,
     fontSize: 15,
     fontWeight: '600',
     marginLeft: 8,
@@ -411,10 +420,10 @@ const styles = StyleSheet.create({
   dateContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    backgroundColor: theme.dateContainerBg,
     padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.3)',
+    borderColor: theme.border,
     borderRadius: 0, // Sharp corners
     marginBottom: 32,
   },
@@ -422,12 +431,12 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   dateText: {
-    color: '#e2e8f0',
+    color: theme.textPrimary,
     fontSize: 15,
     fontWeight: '500',
   },
   sectionTitle: {
-    color: '#64748b',
+    color: theme.textMuted,
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 1.5,
@@ -441,9 +450,9 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '48%',
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    backgroundColor: theme.cardBg,
     borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.5)',
+    borderColor: theme.border,
     padding: 20,
     borderRadius: 0, // Sharp corners
     marginBottom: 16,
@@ -460,24 +469,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: theme.border,
     borderRadius: 0, // Sharp corners
   },
   cardTitle: {
-    color: '#f8fafc',
+    color: theme.textPrimary,
     fontSize: 15,
     fontWeight: '600',
     marginBottom: 6,
   },
   cardDesc: {
-    color: '#64748b',
+    color: theme.textMuted,
     fontSize: 12,
     lineHeight: 18,
   },
   activityCard: {
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    backgroundColor: theme.cardBg,
     borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.5)',
+    borderColor: theme.border,
     borderRadius: 0, // Sharp corners
     padding: 20,
   },
@@ -486,7 +495,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(51, 65, 85, 0.5)',
+    borderBottomColor: theme.border,
     marginBottom: 16,
   },
   lastActivityItem: {
@@ -502,13 +511,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   activityTitle: {
-    color: '#e2e8f0',
+    color: theme.textPrimary,
     fontSize: 15,
     fontWeight: '500',
     marginBottom: 4,
   },
   activityTime: {
-    color: '#64748b',
+    color: theme.textMuted,
     fontSize: 12,
   },
 });

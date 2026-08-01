@@ -7,6 +7,7 @@ import LeaveRequestScreen from './src/screens/LeaveRequestScreen';
 import LeaveRequestFormScreen from './src/screens/LeaveRequestFormScreen';
 import UndertimeRequestScreen from './src/screens/UndertimeRequestScreen';
 import UndertimeRequestFormScreen from './src/screens/UndertimeRequestFormScreen';
+import { ThemeProvider } from './src/theme/ThemeContext';
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -74,46 +75,74 @@ export default function App() {
   }
 
   if (!isLoggedIn) {
-    return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
+    return (
+      <ThemeProvider>
+        <LoginScreen onLoginSuccess={handleLoginSuccess} />
+      </ThemeProvider>
+    );
   }
 
   if (currentScreen === 'attendance') {
-    return <TimeInOutScreen employeeId={employeeId} token={authToken} onBack={() => handleNavigate('dashboard')} />;
+    return (
+      <ThemeProvider>
+        <TimeInOutScreen employeeId={employeeId} token={authToken} onBack={() => handleNavigate('dashboard')} />
+      </ThemeProvider>
+    );
   }
 
   if (currentScreen === 'leave_request') {
-    return <LeaveRequestScreen 
-      token={authToken}
-      onBack={() => handleNavigate('dashboard')} 
-      onNavigateToForm={() => handleNavigate('leave_request_form')}
-    />;
+    return (
+      <ThemeProvider>
+        <LeaveRequestScreen 
+          token={authToken}
+          onBack={() => handleNavigate('dashboard')} 
+          onNavigateToForm={() => handleNavigate('leave_request_form')}
+        />
+      </ThemeProvider>
+    );
   }
 
   if (currentScreen === 'leave_request_form') {
-    return <LeaveRequestFormScreen 
-      token={authToken}
-      employeeId={employeeId}
-      onBack={() => handleNavigate('leave_request')}
-      onSubmitSuccess={() => handleNavigate('leave_request')}
-    />;
+    return (
+      <ThemeProvider>
+        <LeaveRequestFormScreen 
+          token={authToken}
+          employeeId={employeeId}
+          onBack={() => handleNavigate('leave_request')}
+          onSubmitSuccess={() => handleNavigate('leave_request')}
+        />
+      </ThemeProvider>
+    );
   }
 
   if (currentScreen === 'undertime_request') {
-    return <UndertimeRequestScreen 
-      token={authToken}
-      onBack={() => handleNavigate('dashboard')} 
-      onNavigateToForm={() => handleNavigate('undertime_request_form')}
-    />;
+    return (
+      <ThemeProvider>
+        <UndertimeRequestScreen 
+          token={authToken}
+          onBack={() => handleNavigate('dashboard')} 
+          onNavigateToForm={() => handleNavigate('undertime_request_form')}
+        />
+      </ThemeProvider>
+    );
   }
 
   if (currentScreen === 'undertime_request_form') {
-    return <UndertimeRequestFormScreen 
-      token={authToken}
-      employeeId={employeeId}
-      onBack={() => handleNavigate('undertime_request')}
-      onSubmitSuccess={() => handleNavigate('undertime_request')}
-    />;
+    return (
+      <ThemeProvider>
+        <UndertimeRequestFormScreen 
+          token={authToken}
+          employeeId={employeeId}
+          onBack={() => handleNavigate('undertime_request')}
+          onSubmitSuccess={() => handleNavigate('undertime_request')}
+        />
+      </ThemeProvider>
+    );
   }
 
-  return <DashboardScreen userName={userName} onLogout={handleLogout} onNavigate={handleNavigate} />;
+  return (
+    <ThemeProvider>
+      <DashboardScreen userName={userName} onLogout={handleLogout} onNavigate={handleNavigate} />
+    </ThemeProvider>
+  );
 }
