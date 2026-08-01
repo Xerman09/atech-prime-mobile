@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform 
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, ActivityIndicator 
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -9,16 +9,47 @@ import { Feather } from '@expo/vector-icons';
 interface LeaveRequestScreenProps {
   onBack: () => void;
   onNavigateToForm: () => void;
+  token?: string | null;
 }
 
-export default function LeaveRequestScreen({ onBack, onNavigateToForm }: LeaveRequestScreenProps) {
-  
-  // Mock history data
-  const history = [
-    { id: '1', type: 'Sick Leave', startDate: '2026-08-01', endDate: '2026-08-02', status: 'Pending', submittedAt: 'Yesterday' },
-    { id: '2', type: 'Vacation', startDate: '2026-06-15', endDate: '2026-06-20', status: 'Approved', submittedAt: 'June 01, 2026' },
-    { id: '3', type: 'Emergency', startDate: '2026-05-10', endDate: '2026-05-10', status: 'Rejected', submittedAt: 'May 09, 2026' },
-  ];
+export default function LeaveRequestScreen({ onBack, onNavigateToForm, token }: LeaveRequestScreenProps) {
+  const [history, setHistory] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      if (!token) return;
+      try {
+        const url = Platform.OS === 'web' 
+          ? 'http://localhost/atech_prime/backend/public/api/leave-requests?scope=personal'
+          : 'http://192.168.100.31/atech_prime/backend/public/api/leave-requests?scope=personal';
+          
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          cache: 'no-store'
+        });
+        
+        if (response.ok) {
+          const responseData = await response.json();
+          // The backend might return the array directly or wrapped in { data: [...] }
+          if (Array.isArray(responseData)) {
+            setHistory(responseData);
+          } else {
+            setHistory(responseData.data || []);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch leave history:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchHistory();
+  }, [token]);
 
   const getStatusColor = (status: string) => {
     switch(status) {
@@ -62,7 +93,11 @@ export default function LeaveRequestScreen({ onBack, onNavigateToForm }: LeaveRe
 
       <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
         
-        {history.length === 0 ? (
+        {isLoading ? (
+          <View style={[styles.emptyState, { marginTop: 40 }]}>
+            <ActivityIndicator size="large" color="#a855f7" />
+          </View>
+        ) : history.length === 0 ? (
           <View style={styles.emptyState}>
             <View style={styles.emptyIconWrapper}>
               <Feather name="inbox" size={32} color="#64748b" />
@@ -77,7 +112,7 @@ export default function LeaveRequestScreen({ onBack, onNavigateToForm }: LeaveRe
                   <View style={[styles.typeIcon, { backgroundColor: 'rgba(168, 85, 247, 0.1)' }]}>
                     <Feather name="file-text" size={16} color="#a855f7" />
                   </View>
-                  <Text style={styles.typeText}>{item.type}</Text>
+                  <Text style={styles.typeText}>{item.leave_type || item.type}</Text>
                 </View>
                 <View style={[styles.statusBadge, { backgroundColor: getStatusBg(item.status), borderColor: getStatusColor(item.status) }]}>
                   <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>{item.status}</Text>
@@ -87,17 +122,17 @@ export default function LeaveRequestScreen({ onBack, onNavigateToForm }: LeaveRe
               <View style={styles.dateContainer}>
                 <View style={styles.dateBlock}>
                   <Text style={styles.dateLabel}>Start Date</Text>
-                  <Text style={styles.dateValue}>{item.startDate}</Text>
+                  <Text style={styles.dateValue}>{item.start_date || item.startDate}</Text>
                 </View>
                 <Feather name="arrow-right" size={16} color="#64748b" />
                 <View style={styles.dateBlock}>
                   <Text style={styles.dateLabel}>End Date</Text>
-                  <Text style={styles.dateValue}>{item.endDate}</Text>
+                  <Text style={styles.dateValue}>{item.end_date || item.endDate}</Text>
                 </View>
               </View>
 
               <View style={styles.cardFooter}>
-                <Text style={styles.submittedText}>Submitted: {item.submittedAt}</Text>
+                <Text style={styles.submittedText}>Submitted: {item.created_at ? new Date(item.created_at).toLocaleDateString() : item.submittedAt}</Text>
               </View>
             </View>
           ))

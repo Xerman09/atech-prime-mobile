@@ -1,31 +1,118 @@
 import React, { useState } from 'react';
 import { 
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, TextInput
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, TextInput, Alert, createElement
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { Feather } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 interface LeaveRequestFormScreenProps {
   onBack: () => void;
   onSubmitSuccess: () => void;
+  token?: string | null;
+  employeeId?: number | null;
 }
 
-export default function LeaveRequestFormScreen({ onBack, onSubmitSuccess }: LeaveRequestFormScreenProps) {
+export default function LeaveRequestFormScreen({ onBack, onSubmitSuccess, token, employeeId }: LeaveRequestFormScreenProps) {
   const [leaveType, setLeaveType] = useState<string>('Vacation');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [reason, setReason] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const handleSubmit = () => {
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
+
+  // Helper to parse "YYYY-MM-DD" back to Date
+  const parseDateString = (dateStr: string) => {
+    if (!dateStr) return new Date();
+    const [y, m, d] = dateStr.split('-');
+    if (y && m && d) return new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+    return new Date();
+  };
+
+  const handleDateChange = (text: string, setDate: (date: string) => void) => {
+    let cleaned = text.replace(/\D/g, '');
+    let formatted = '';
+    
+    if (cleaned.length > 0) {
+      formatted = cleaned.substring(0, 4);
+    }
+    if (cleaned.length > 4) {
+      formatted += '-' + cleaned.substring(4, 6);
+    }
+    if (cleaned.length > 6) {
+      formatted += '-' + cleaned.substring(6, 8);
+    }
+    setDate(formatted);
+  };
+
+  const handleDateChangePicker = (event: any, selectedDate: Date | undefined, isStart: boolean) => {
+    if (Platform.OS !== 'ios') {
+      if (isStart) setShowStartPicker(false);
+      else setShowEndPicker(false);
+    }
+    
+    if (selectedDate) {
+      // Create local date string YYYY-MM-DD
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      const formatted = `${year}-${month}-${day}`;
+      
+      if (isStart) setStartDate(formatted);
+      else setEndDate(formatted);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!token) {
+      setErrorMsg('You are not properly logged in. Please log out and log back in to get a valid token.');
+      return;
+    }
+    if (!employeeId) {
+      setErrorMsg('No employee profile linked to your account. You cannot submit leave requests.');
+      return;
+    }
+    
     setIsSubmitting(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    setErrorMsg(null);
+    
+    try {
+      const url = Platform.OS === 'web' 
+        ? 'http://localhost/atech_prime/backend/public/api/leave-requests'
+        : 'http://192.168.100.31/atech_prime/backend/public/api/leave-requests';
+        
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          employee_id: employeeId,
+          leave_type: leaveType,
+          start_date: startDate,
+          end_date: endDate,
+          reason: reason
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to submit request');
+      }
+      
       setSubmitted(true);
-    }, 1500);
+    } catch (error: any) {
+      setErrorMsg(error.message || 'An error occurred while submitting.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -100,29 +187,111 @@ export default function LeaveRequestFormScreen({ onBack, onSubmitSuccess }: Leav
           <View style={styles.dateRow}>
             <View style={styles.dateInputWrapper}>
               <Text style={styles.label}>Start Date</Text>
-              <View style={styles.inputContainer}>
-                <Feather name="calendar" size={16} color="#64748b" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor="#475569"
-                  value={startDate}
-                  onChangeText={setStartDate}
+              
+              {Platform.OS === 'web' ? (
+                <View style={[styles.inputContainer, { position: 'relative', paddingRight: 0 }]}>
+                  <Feather name="calendar" size={16} color="#64748b" style={styles.inputIcon} />
+                  <Text style={[styles.input, { paddingTop: 14 }]}>
+                    {startDate || 'YYYY-MM-DD'}
+                  </Text>
+                  {createElement('input', {
+                    type: 'date',
+                    value: startDate,
+                    onChange: (e: any) => handleDateChangePicker(null, new Date(e.target.value), true),
+                    onClick: (e: any) => {
+                      try {
+                        if (e.target && typeof e.target.showPicker === 'function') {
+                          e.target.showPicker();
+                        }
+                      } catch (err) {}
+                    },
+                    style: {
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      opacity: 0,
+                      cursor: 'pointer'
+                    }
+                  })}
+                </View>
+              ) : (
+                <TouchableOpacity 
+                  style={styles.inputContainer} 
+                  onPress={() => setShowStartPicker(true)}
+                  activeOpacity={0.7}
+                >
+                  <Feather name="calendar" size={16} color="#64748b" style={styles.inputIcon} />
+                  <Text style={[styles.input, { paddingTop: 14 }]}>
+                    {startDate || 'YYYY-MM-DD'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+              {showStartPicker && Platform.OS !== 'web' && (
+                <DateTimePicker
+                  value={parseDateString(startDate)}
+                  mode="date"
+                  display="default"
+                  onChange={(e: any, d?: Date) => handleDateChangePicker(e, d, true)}
                 />
-              </View>
+              )}
+
             </View>
             <View style={styles.dateInputWrapper}>
               <Text style={styles.label}>End Date</Text>
-              <View style={styles.inputContainer}>
-                <Feather name="calendar" size={16} color="#64748b" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor="#475569"
-                  value={endDate}
-                  onChangeText={setEndDate}
+
+              {Platform.OS === 'web' ? (
+                <View style={[styles.inputContainer, { position: 'relative', paddingRight: 0 }]}>
+                  <Feather name="calendar" size={16} color="#64748b" style={styles.inputIcon} />
+                  <Text style={[styles.input, { paddingTop: 14 }]}>
+                    {endDate || 'YYYY-MM-DD'}
+                  </Text>
+                  {createElement('input', {
+                    type: 'date',
+                    value: endDate,
+                    onChange: (e: any) => handleDateChangePicker(null, new Date(e.target.value), false),
+                    onClick: (e: any) => {
+                      try {
+                        if (e.target && typeof e.target.showPicker === 'function') {
+                          e.target.showPicker();
+                        }
+                      } catch (err) {}
+                    },
+                    style: {
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      opacity: 0,
+                      cursor: 'pointer'
+                    }
+                  })}
+                </View>
+              ) : (
+                <TouchableOpacity 
+                  style={styles.inputContainer} 
+                  onPress={() => setShowEndPicker(true)}
+                  activeOpacity={0.7}
+                >
+                  <Feather name="calendar" size={16} color="#64748b" style={styles.inputIcon} />
+                  <Text style={[styles.input, { paddingTop: 14 }]}>
+                    {endDate || 'YYYY-MM-DD'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+              {showEndPicker && Platform.OS !== 'web' && (
+                <DateTimePicker
+                  value={parseDateString(endDate)}
+                  mode="date"
+                  display="default"
+                  onChange={(e: any, d?: Date) => handleDateChangePicker(e, d, false)}
                 />
-              </View>
+              )}
+
             </View>
           </View>
 
@@ -140,6 +309,13 @@ export default function LeaveRequestFormScreen({ onBack, onSubmitSuccess }: Leav
             />
           </View>
         </View>
+
+        {errorMsg && (
+          <View style={styles.errorContainer}>
+            <Feather name="alert-circle" size={16} color="#ef4444" style={{ marginRight: 8 }} />
+            <Text style={styles.errorText}>{errorMsg}</Text>
+          </View>
+        )}
 
         <TouchableOpacity 
           style={[
@@ -353,5 +529,19 @@ const styles = StyleSheet.create({
     color: '#020617',
     fontSize: 14,
     fontWeight: '700',
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderWidth: 1,
+    borderColor: '#ef4444',
+    padding: 12,
+    marginBottom: 24,
+  },
+  errorText: {
+    color: '#f8fafc',
+    fontSize: 13,
+    flex: 1,
   },
 });

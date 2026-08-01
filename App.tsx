@@ -41,6 +41,7 @@ export default function App() {
 
   if (currentScreen === 'leave_request') {
     return <LeaveRequestScreen 
+      token={authToken}
       onBack={() => handleNavigate('dashboard')} 
       onNavigateToForm={() => handleNavigate('leave_request_form')}
     />;
@@ -48,6 +49,8 @@ export default function App() {
 
   if (currentScreen === 'leave_request_form') {
     return <LeaveRequestFormScreen 
+      token={authToken}
+      employeeId={employeeId}
       onBack={() => handleNavigate('leave_request')}
       onSubmitSuccess={() => handleNavigate('leave_request')}
     />;
