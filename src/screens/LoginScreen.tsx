@@ -8,7 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Feather } from '@expo/vector-icons';
 
 interface LoginScreenProps {
-  onLoginSuccess: (name: string) => void;
+  onLoginSuccess: (name: string, employeeId?: number, token?: string) => void;
 }
 
 export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
@@ -66,7 +66,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         throw new Error(data.error || 'Login failed.');
       }
 
-      onLoginSuccess(data.name || 'Employee');
+      onLoginSuccess(data.name || 'Employee', data.employee_id, data.token);
       
     } catch (error: any) {
       alert(error.message);

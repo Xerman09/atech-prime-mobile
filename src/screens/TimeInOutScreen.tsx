@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform 
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, ActivityIndicator 
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -8,13 +8,25 @@ import { Feather } from '@expo/vector-icons';
 
 interface TimeInOutScreenProps {
   onBack: () => void;
+  employeeId: number | null;
+  token: string | null;
 }
 
-export default function TimeInOutScreen({ onBack }: TimeInOutScreenProps) {
+export default function TimeInOutScreen({ onBack, employeeId, token }: TimeInOutScreenProps) {
   const [currentTime, setCurrentTime] = useState<string>('');
   const [currentDate, setCurrentDate] = useState<string>('');
-  const [status, setStatus] = useState<'Out' | 'In'>('Out');
-  const [lastActionTime, setLastActionTime] = useState<string | null>(null);
+  const [hasTimedIn, setHasTimedIn] = useState(false);
+  const [hasTimedOut, setHasTimedOut] = useState(false);
+  const [timeInLog, setTimeInLog] = useState<string | null>(null);
+  const [timeOutLog, setTimeOutLog] = useState<string | null>(null);
+  const [isLoadingLogs, setIsLoadingLogs] = useState(true);
+
+  const getStatus = () => {
+    if (hasTimedIn && hasTimedOut) return 'Completed';
+    if (hasTimedIn && !hasTimedOut) return 'In';
+    return 'Out';
+  };
+  const status = getStatus();
 
   useEffect(() => {
     const updateDateTime = () => {
@@ -38,10 +50,88 @@ export default function TimeInOutScreen({ onBack }: TimeInOutScreenProps) {
     return () => clearInterval(interval);
   }, []);
 
-  const handleTimeAction = (action: 'In' | 'Out') => {
-    // In a real app, this would make an API call to record attendance
-    setStatus(action);
-    setLastActionTime(currentTime);
+  useEffect(() => {
+    const fetchTodayLogs = async () => {
+      if (!token) return;
+      try {
+        const url = Platform.OS === 'web' 
+          ? 'http://localhost/atech_prime/backend/public/api/attendance/my-logs/today'
+          : 'http://192.168.100.31/atech_prime/backend/public/api/attendance/my-logs/today';
+          
+        const response = await fetch(url, {
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.hasTimedIn) {
+            setHasTimedIn(true);
+            setTimeInLog(data.timeInLog);
+          }
+          if (data.hasTimedOut) {
+            setHasTimedOut(true);
+            setTimeOutLog(data.timeOutLog);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch today logs:', error);
+      } finally {
+        setIsLoadingLogs(false);
+      }
+    };
+
+    fetchTodayLogs();
+  }, [token]);
+
+  const handleTimeAction = async (action: 'In' | 'Out') => {
+    if (!employeeId) {
+      alert('Error: Employee ID not found.');
+      return;
+    }
+
+    try {
+      const apiUrl = Platform.OS === 'web' 
+        ? 'http://localhost/atech_prime/backend/public/api/attendance/tap'
+        : 'http://192.168.100.31/atech_prime/backend/public/api/attendance/tap';
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ 
+          face_descriptor_match: true,
+          employee_id: employeeId 
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to record attendance.');
+      }
+
+      if (action === 'In') {
+        setHasTimedIn(true);
+        setTimeInLog(currentTime);
+      } else if (action === 'Out') {
+        setHasTimedOut(true);
+        setTimeOutLog(currentTime);
+      }
+      
+    } catch (error: any) {
+      alert(error.message);
+    }
   };
 
   return (
@@ -69,41 +159,43 @@ export default function TimeInOutScreen({ onBack }: TimeInOutScreenProps) {
         <View style={styles.clockContainer}>
           <Text style={styles.dateText}>{currentDate}</Text>
           <Text style={styles.timeText}>{currentTime}</Text>
-          <View style={[styles.statusBadge, status === 'In' ? styles.statusIn : styles.statusOut]}>
-            <View style={[styles.statusDot, { backgroundColor: status === 'In' ? '#22c55e' : '#ef4444' }]} />
-            <Text style={styles.statusText}>Currently {status}</Text>
+          <View style={[styles.statusBadge, status === 'In' ? styles.statusIn : (status === 'Out' ? styles.statusOut : styles.statusCompleted)]}>
+            <View style={[styles.statusDot, { backgroundColor: status === 'In' ? '#22c55e' : (status === 'Out' ? '#ef4444' : '#3b82f6') }]} />
+            <Text style={styles.statusText}>
+              {status === 'Completed' ? 'Shift Completed' : `Currently ${status}`}
+            </Text>
           </View>
         </View>
 
         {/* Action Buttons */}
         <View style={styles.actionContainer}>
           <TouchableOpacity 
-            style={[styles.actionButton, status === 'In' && styles.actionButtonDisabled]}
+            style={[styles.actionButton, hasTimedIn && styles.actionButtonDisabled]}
             activeOpacity={0.8}
             onPress={() => handleTimeAction('In')}
-            disabled={status === 'In'}
+            disabled={hasTimedIn}
           >
             <LinearGradient
-              colors={status === 'In' ? ['#334155', '#1e293b'] : ['#059669', '#10b981']}
+              colors={hasTimedIn ? ['#334155', '#1e293b'] : ['#059669', '#10b981']}
               style={styles.gradientButton}
             >
-              <Feather name="log-in" size={24} color={status === 'In' ? '#94a3b8' : '#ffffff'} />
-              <Text style={[styles.buttonText, status === 'In' && { color: '#94a3b8' }]}>TIME IN</Text>
+              <Feather name="log-in" size={24} color={hasTimedIn ? '#94a3b8' : '#ffffff'} />
+              <Text style={[styles.buttonText, hasTimedIn && { color: '#94a3b8' }]}>TIME IN</Text>
             </LinearGradient>
           </TouchableOpacity>
 
           <TouchableOpacity 
-            style={[styles.actionButton, status === 'Out' && styles.actionButtonDisabled]}
+            style={[styles.actionButton, (!hasTimedIn || hasTimedOut) && styles.actionButtonDisabled]}
             activeOpacity={0.8}
             onPress={() => handleTimeAction('Out')}
-            disabled={status === 'Out'}
+            disabled={!hasTimedIn || hasTimedOut}
           >
             <LinearGradient
-              colors={status === 'Out' ? ['#334155', '#1e293b'] : ['#e11d48', '#f43f5e']}
+              colors={(!hasTimedIn || hasTimedOut) ? ['#334155', '#1e293b'] : ['#e11d48', '#f43f5e']}
               style={styles.gradientButton}
             >
-              <Feather name="log-out" size={24} color={status === 'Out' ? '#94a3b8' : '#ffffff'} />
-              <Text style={[styles.buttonText, status === 'Out' && { color: '#94a3b8' }]}>TIME OUT</Text>
+              <Feather name="log-out" size={24} color={(!hasTimedIn || hasTimedOut) ? '#94a3b8' : '#ffffff'} />
+              <Text style={[styles.buttonText, (!hasTimedIn || hasTimedOut) && { color: '#94a3b8' }]}>TIME OUT</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -111,22 +203,35 @@ export default function TimeInOutScreen({ onBack }: TimeInOutScreenProps) {
         {/* Logs */}
         <Text style={styles.sectionTitle}>TODAY'S LOG</Text>
         <View style={styles.logCard}>
-          {lastActionTime ? (
-            <View style={styles.logItem}>
-              <View style={styles.logIcon}>
-                <Feather 
-                  name={status === 'In' ? 'log-in' : 'log-out'} 
-                  size={16} 
-                  color={status === 'In' ? '#22c55e' : '#ef4444'} 
-                />
-              </View>
-              <View style={styles.logTextContainer}>
-                <Text style={styles.logTitle}>Time {status}</Text>
-                <Text style={styles.logTime}>{lastActionTime}</Text>
-              </View>
-            </View>
-          ) : (
+          {isLoadingLogs ? (
+            <ActivityIndicator size="small" color="#6366f1" />
+          ) : !timeInLog && !timeOutLog ? (
             <Text style={styles.emptyLogText}>No records for today yet.</Text>
+          ) : (
+            <View>
+              {timeInLog && (
+                <View style={[styles.logItem, timeOutLog && { marginBottom: 16 }]}>
+                  <View style={styles.logIcon}>
+                    <Feather name="log-in" size={16} color="#22c55e" />
+                  </View>
+                  <View style={styles.logTextContainer}>
+                    <Text style={styles.logTitle}>Time In</Text>
+                    <Text style={styles.logTime}>{timeInLog}</Text>
+                  </View>
+                </View>
+              )}
+              {timeOutLog && (
+                <View style={styles.logItem}>
+                  <View style={styles.logIcon}>
+                    <Feather name="log-out" size={16} color="#ef4444" />
+                  </View>
+                  <View style={styles.logTextContainer}>
+                    <Text style={styles.logTitle}>Time Out</Text>
+                    <Text style={styles.logTime}>{timeOutLog}</Text>
+                  </View>
+                </View>
+              )}
+            </View>
           )}
         </View>
 
@@ -233,6 +338,10 @@ const styles = StyleSheet.create({
   statusOut: {
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
     borderColor: 'rgba(239, 68, 68, 0.3)',
+  },
+  statusCompleted: {
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    borderColor: 'rgba(59, 130, 246, 0.3)',
   },
   statusDot: {
     width: 8,

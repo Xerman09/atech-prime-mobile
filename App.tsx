@@ -9,9 +9,13 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentScreen, setCurrentScreen] = useState('dashboard');
   const [userName, setUserName] = useState('');
+  const [employeeId, setEmployeeId] = useState<number | null>(null);
+  const [authToken, setAuthToken] = useState<string | null>(null);
 
-  const handleLoginSuccess = (name: string) => {
+  const handleLoginSuccess = (name: string, empId?: number, token?: string) => {
     setUserName(name);
+    if (empId) setEmployeeId(empId);
+    if (token) setAuthToken(token);
     setIsLoggedIn(true);
     setCurrentScreen('dashboard');
   };
@@ -19,6 +23,8 @@ export default function App() {
   const handleLogout = () => {
     setIsLoggedIn(false);
     setUserName('');
+    setEmployeeId(null);
+    setAuthToken(null);
   };
 
   const handleNavigate = (screen: string) => {
@@ -30,7 +36,7 @@ export default function App() {
   }
 
   if (currentScreen === 'attendance') {
-    return <TimeInOutScreen onBack={() => handleNavigate('dashboard')} />;
+    return <TimeInOutScreen employeeId={employeeId} token={authToken} onBack={() => handleNavigate('dashboard')} />;
   }
 
   if (currentScreen === 'leave_request') {
