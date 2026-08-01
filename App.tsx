@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import LoginScreen from './src/screens/LoginScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
 import TimeInOutScreen from './src/screens/TimeInOutScreen';
@@ -13,16 +14,51 @@ export default function App() {
   const [userName, setUserName] = useState('');
   const [employeeId, setEmployeeId] = useState<number | null>(null);
   const [authToken, setAuthToken] = useState<string | null>(null);
+  const [isAppReady, setIsAppReady] = useState(false);
 
-  const handleLoginSuccess = (name: string, empId?: number, token?: string) => {
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      try {
+        const storedUser = await AsyncStorage.getItem('user_session');
+        if (storedUser) {
+          const { name, empId, token } = JSON.parse(storedUser);
+          setUserName(name);
+          if (empId) setEmployeeId(empId);
+          if (token) setAuthToken(token);
+          setIsLoggedIn(true);
+        }
+      } catch (e) {
+        console.error('Failed to load session');
+      } finally {
+        setIsAppReady(true);
+      }
+    };
+    checkLoginStatus();
+  }, []);
+
+  const handleLoginSuccess = async (name: string, empId?: number, token?: string, rememberMe?: boolean) => {
     setUserName(name);
     if (empId) setEmployeeId(empId);
     if (token) setAuthToken(token);
+    
+    if (rememberMe) {
+      try {
+        await AsyncStorage.setItem('user_session', JSON.stringify({ name, empId, token }));
+      } catch (e) {
+        console.error('Failed to save session');
+      }
+    }
+    
     setIsLoggedIn(true);
     setCurrentScreen('dashboard');
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem('user_session');
+    } catch (e) {
+      console.error('Failed to clear session');
+    }
     setIsLoggedIn(false);
     setUserName('');
     setEmployeeId(null);
@@ -32,6 +68,10 @@ export default function App() {
   const handleNavigate = (screen: string) => {
     setCurrentScreen(screen);
   };
+
+  if (!isAppReady) {
+    return null; // or a splash screen
+  }
 
   if (!isLoggedIn) {
     return <LoginScreen onLoginSuccess={handleLoginSuccess} />;

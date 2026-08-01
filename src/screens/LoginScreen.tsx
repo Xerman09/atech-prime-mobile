@@ -8,7 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Feather } from '@expo/vector-icons';
 
 interface LoginScreenProps {
-  onLoginSuccess: (name: string, employeeId?: number, token?: string) => void;
+  onLoginSuccess: (name: string, employeeId?: number, token?: string, rememberMe?: boolean) => void;
 }
 
 export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
@@ -18,6 +18,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
   const [isEmailFocused, setIsEmailFocused] = useState(false);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -66,7 +67,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         throw new Error(data.error || 'Login failed.');
       }
 
-      onLoginSuccess(data.name || 'Employee', data.employee_id, data.token);
+      onLoginSuccess(data.name || 'Employee', data.employee_id, data.token, rememberMe);
       
     } catch (error: any) {
       alert(error.message);
@@ -144,9 +145,22 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.forgotPassword}>
-            <Text style={styles.forgotPasswordText}>Recover Password</Text>
-          </TouchableOpacity>
+          <View style={styles.loginOptions}>
+            <TouchableOpacity 
+              style={styles.checkboxContainer} 
+              onPress={() => setRememberMe(!rememberMe)}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+                {rememberMe && <Feather name="check" size={14} color="#0f172a" />}
+              </View>
+              <Text style={styles.checkboxText}>Remember Me</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.forgotPassword}>
+              <Text style={styles.forgotPasswordText}>Recover Password</Text>
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity 
             style={styles.loginButton} 
@@ -276,9 +290,35 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     fontSize: 16,
   },
-  forgotPassword: {
-    alignSelf: 'flex-end',
+  loginOptions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 32,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 1,
+    borderColor: '#64748b',
+    borderRadius: 0, // Sharp corners rule
+    marginRight: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: '#38bdf8',
+    borderColor: '#38bdf8',
+  },
+  checkboxText: {
+    color: '#94a3b8',
+    fontSize: 14,
+  },
+  forgotPassword: {
   },
   forgotPasswordText: {
     color: '#38bdf8',
