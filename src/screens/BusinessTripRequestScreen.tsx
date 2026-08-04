@@ -7,13 +7,13 @@ import { StatusBar } from 'expo-status-bar';
 import { Feather } from '@expo/vector-icons';
 import { useTheme, ThemeColors } from '../theme/ThemeContext';
 
-interface LeaveRequestScreenProps {
+interface BusinessTripRequestScreenProps {
   onBack: () => void;
   onNavigateToForm: () => void;
   token?: string | null;
 }
 
-export default function LeaveRequestScreen({ onBack, onNavigateToForm, token }: LeaveRequestScreenProps) {
+export default function BusinessTripRequestScreen({ onBack, onNavigateToForm, token }: BusinessTripRequestScreenProps) {
   const { theme, isDarkMode } = useTheme();
   const styles = getStyles(theme, isDarkMode);
   const [history, setHistory] = useState<any[]>([]);
@@ -25,8 +25,8 @@ export default function LeaveRequestScreen({ onBack, onNavigateToForm, token }: 
       if (!token) return;
       try {
         const url = Platform.OS === 'web' 
-          ? 'http://localhost/atech_prime/backend/public/api/leave-requests?scope=personal'
-          : 'http://192.168.100.31/atech_prime/backend/public/api/leave-requests?scope=personal';
+          ? 'http://localhost/atech_prime/backend/public/api/business-trip-requests?scope=personal'
+          : 'http://192.168.100.31/atech_prime/backend/public/api/business-trip-requests?scope=personal';
           
         const response = await fetch(url, {
           method: 'GET',
@@ -45,6 +45,12 @@ export default function LeaveRequestScreen({ onBack, onNavigateToForm, token }: 
           } else {
             setHistory(responseData.data || []);
           }
+        } else if (response.status === 401) {
+          console.error('Session expired.');
+          setHistory([]);
+          Alert.alert('Session Expired', 'Your login session has expired. Please log out and log back in.');
+        } else {
+          console.error('Failed to fetch business trip history:', response.status);
         }
       } catch (error) {
         console.error('Failed to fetch leave history:', error);
@@ -97,7 +103,7 @@ export default function LeaveRequestScreen({ onBack, onNavigateToForm, token }: 
           <TouchableOpacity style={styles.backButton} onPress={onBack}>
             <Feather name="arrow-left" size={24} color={theme.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Leave History</Text>
+          <Text style={styles.headerTitle}>Business Trips</Text>
         </View>
         
         <TouchableOpacity style={styles.addButton} onPress={onNavigateToForm}>
@@ -110,24 +116,24 @@ export default function LeaveRequestScreen({ onBack, onNavigateToForm, token }: 
         
         {isLoading ? (
           <View style={[styles.emptyState, { marginTop: 40 }]}>
-            <ActivityIndicator size="large" color={theme.purple} />
+            <ActivityIndicator size="large" color={theme.success} />
           </View>
         ) : history.length === 0 ? (
           <View style={styles.emptyState}>
             <View style={styles.emptyIconWrapper}>
               <Feather name="inbox" size={32} color={theme.textMuted} />
             </View>
-            <Text style={styles.emptyText}>No leave requests found</Text>
+            <Text style={styles.emptyText}>No business trip requests found</Text>
           </View>
         ) : (
           history.map(item => (
             <View key={item.id} style={styles.historyCard}>
               <View style={styles.cardHeader}>
                 <View style={styles.typeWrapper}>
-                  <View style={[styles.typeIcon, { backgroundColor: 'rgba(168, 85, 247, 0.1)' }]}>
-                    <Feather name="file-text" size={16} color={theme.purple} />
+                  <View style={[styles.typeIcon, { backgroundColor: 'rgba(34, 197, 94, 0.1)' }]}>
+                    <Feather name="map" size={16} color={theme.success} />
                   </View>
-                  <Text style={styles.typeText}>{item.leave_type || item.type}</Text>
+                  <Text style={styles.typeText}>{item.destination || item.type}</Text>
                 </View>
                 <View style={[styles.statusBadge, { backgroundColor: getStatusBg(item.status), borderColor: getStatusColor(item.status) }]}>
                   <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>{item.status}</Text>
@@ -191,8 +197,8 @@ export default function LeaveRequestScreen({ onBack, onNavigateToForm, token }: 
               {selectedRequest && (
                 <>
                   <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>LEAVE TYPE</Text>
-                    <Text style={styles.detailValue}>{selectedRequest.leave_type || selectedRequest.type}</Text>
+                    <Text style={styles.detailLabel}>DESTINATION</Text>
+                    <Text style={styles.detailValue}>{selectedRequest.destination || selectedRequest.type}</Text>
                   </View>
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>STATUS</Text>
@@ -209,9 +215,9 @@ export default function LeaveRequestScreen({ onBack, onNavigateToForm, token }: 
                     <Text style={styles.detailValue}>{formatDate(selectedRequest.end_date || selectedRequest.endDate)}</Text>
                   </View>
                   <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>REASON</Text>
+                    <Text style={styles.detailLabel}>PURPOSE</Text>
                     <Text style={[styles.detailValue, { lineHeight: 22 }]}>
-                      {selectedRequest.reason || 'No reason provided.'}
+                      {selectedRequest.purpose || 'No reason provided.'}
                     </Text>
                   </View>
                 </>
@@ -235,7 +241,7 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
     left: -100,
     width: 300,
     height: 300,
-    backgroundColor: isDarkMode ? 'rgba(168, 85, 247, 0.1)' : 'rgba(147, 51, 234, 0.1)',
+    backgroundColor: isDarkMode ? 'rgba(34, 197, 94, 0.1)' : 'rgba(147, 51, 234, 0.1)',
     borderRadius: 150,
     transform: [{ scale: 2 }],
   },
@@ -276,7 +282,7 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.purple,
+    backgroundColor: theme.success,
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 0,

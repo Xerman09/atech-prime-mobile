@@ -1,6 +1,6 @@
-import React, { useState, createElement } from 'react';
+import React, { useState } from 'react';
 import { 
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, TextInput
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, TextInput, Alert, createElement
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -8,29 +8,28 @@ import { Feather } from '@expo/vector-icons';
 import { useTheme, ThemeColors } from '../theme/ThemeContext';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-interface UndertimeRequestFormScreenProps {
+interface BusinessTripRequestFormScreenProps {
   onBack: () => void;
   onSubmitSuccess: () => void;
   token?: string | null;
   employeeId?: number | null;
 }
 
-export default function UndertimeRequestFormScreen({ onBack, onSubmitSuccess, token, employeeId }: UndertimeRequestFormScreenProps) {
+export default function BusinessTripRequestFormScreen({ onBack, onSubmitSuccess, token, employeeId }: BusinessTripRequestFormScreenProps) {
   const { theme, isDarkMode } = useTheme();
   const styles = getStyles(theme, isDarkMode);
-  const [date, setDate] = useState<string>('');
-  const [startTime, setStartTime] = useState<string>('');
-  const [endTime, setEndTime] = useState<string>('');
-  const [reason, setReason] = useState<string>('');
-  
+  const [destination, setDestination] = useState<string>('');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+  const [purpose, setPurpose] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
-  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
 
+  // Helper to parse "YYYY-MM-DD" back to Date
   const parseDateString = (dateStr: string) => {
     if (!dateStr) return new Date();
     const [y, m, d] = dateStr.split('-');
@@ -38,36 +37,37 @@ export default function UndertimeRequestFormScreen({ onBack, onSubmitSuccess, to
     return new Date();
   };
 
-  const parseTimeString = (timeStr: string) => {
-    if (!timeStr) return new Date();
-    const [h, m] = timeStr.split(':');
-    const d = new Date();
-    if (h && m) {
-      d.setHours(parseInt(h), parseInt(m), 0, 0);
+  const handleDateChange = (text: string, setDate: (date: string) => void) => {
+    let cleaned = text.replace(/\D/g, '');
+    let formatted = '';
+    
+    if (cleaned.length > 0) {
+      formatted = cleaned.substring(0, 4);
     }
-    return d;
+    if (cleaned.length > 4) {
+      formatted += '-' + cleaned.substring(4, 6);
+    }
+    if (cleaned.length > 6) {
+      formatted += '-' + cleaned.substring(6, 8);
+    }
+    setDate(formatted);
   };
 
-  const handleDateChangePicker = (event: any, selectedDate: Date | undefined) => {
-    if (Platform.OS !== 'ios') setShowDatePicker(false);
+  const handleDateChangePicker = (event: any, selectedDate: Date | undefined, isStart: boolean) => {
+    if (Platform.OS !== 'ios') {
+      if (isStart) setShowStartPicker(false);
+      else setShowEndPicker(false);
+    }
+    
     if (selectedDate) {
+      // Create local date string YYYY-MM-DD
       const year = selectedDate.getFullYear();
       const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
       const day = String(selectedDate.getDate()).padStart(2, '0');
-      setDate(`${year}-${month}-${day}`);
-    }
-  };
-
-  const handleTimeChangePicker = (event: any, selectedTime: Date | undefined, isStart: boolean) => {
-    if (Platform.OS !== 'ios') {
-      if (isStart) setShowStartTimePicker(false);
-      else setShowEndTimePicker(false);
-    }
-    if (selectedTime) {
-      const hours = String(selectedTime.getHours()).padStart(2, '0');
-      const minutes = String(selectedTime.getMinutes()).padStart(2, '0');
-      if (isStart) setStartTime(`${hours}:${minutes}`);
-      else setEndTime(`${hours}:${minutes}`);
+      const formatted = `${year}-${month}-${day}`;
+      
+      if (isStart) setStartDate(formatted);
+      else setEndDate(formatted);
     }
   };
 
@@ -77,7 +77,7 @@ export default function UndertimeRequestFormScreen({ onBack, onSubmitSuccess, to
       return;
     }
     if (!employeeId) {
-      setErrorMsg('No employee profile linked to your account. You cannot submit undertime requests.');
+      setErrorMsg('No employee profile linked to your account. You cannot submit leave requests.');
       return;
     }
     
@@ -86,8 +86,8 @@ export default function UndertimeRequestFormScreen({ onBack, onSubmitSuccess, to
     
     try {
       const url = Platform.OS === 'web' 
-        ? 'http://localhost/atech_prime/backend/public/api/undertime-requests'
-        : 'http://192.168.100.31/atech_prime/backend/public/api/undertime-requests';
+        ? 'http://localhost/atech_prime/backend/public/api/business-trip-requests'
+        : 'http://192.168.100.31/atech_prime/backend/public/api/business-trip-requests';
         
       const response = await fetch(url, {
         method: 'POST',
@@ -98,15 +98,18 @@ export default function UndertimeRequestFormScreen({ onBack, onSubmitSuccess, to
         },
         body: JSON.stringify({
           employee_id: employeeId,
-          date: date,
-          start_time: startTime,
-          end_time: endTime,
-          reason: reason
+          destination: destination,
+          start_date: startDate,
+          end_date: endDate,
+          purpose: purpose
         })
       });
       
       if (!response.ok) {
         const errorData = await response.json();
+        if (response.status === 401 || (errorData.error && errorData.error.includes('token'))) {
+          throw new Error('Your session has expired. Please return to the dashboard, log out, and log back in.');
+        }
         throw new Error(errorData.error || 'Failed to submit request');
       }
       
@@ -126,7 +129,7 @@ export default function UndertimeRequestFormScreen({ onBack, onSubmitSuccess, to
           <TouchableOpacity style={styles.backButton} onPress={onSubmitSuccess}>
             <Feather name="arrow-left" size={24} color={theme.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Undertime Request</Text>
+          <Text style={styles.headerTitle}>Business Trip Request</Text>
           <View style={{ width: 24 }} />
         </View>
 
@@ -135,7 +138,7 @@ export default function UndertimeRequestFormScreen({ onBack, onSubmitSuccess, to
             <Feather name="check" size={48} color={theme.success} />
           </View>
           <Text style={styles.successTitle}>Request Submitted</Text>
-          <Text style={styles.successDesc}>Your undertime request has been sent to HR for approval.</Text>
+          <Text style={styles.successDesc}>Your leave request has been sent to HR for approval.</Text>
           <TouchableOpacity style={styles.primaryButton} onPress={onSubmitSuccess}>
             <Text style={styles.primaryButtonText}>Return to History</Text>
           </TouchableOpacity>
@@ -147,6 +150,8 @@ export default function UndertimeRequestFormScreen({ onBack, onSubmitSuccess, to
   return (
     <LinearGradient colors={theme.backgroundGradient} style={styles.container}>
       <StatusBar style={isDarkMode ? "light" : "dark"} />
+      
+      {/* Decorative Background Elements */}
       <View style={styles.glow1} />
       <View style={styles.glow2} />
 
@@ -154,118 +159,147 @@ export default function UndertimeRequestFormScreen({ onBack, onSubmitSuccess, to
         <TouchableOpacity style={styles.backButton} onPress={onBack}>
           <Feather name="arrow-left" size={24} color={theme.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>New Undertime Request</Text>
+        <Text style={styles.headerTitle}>New Business Trip Request</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
         
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>DATE AND TIME</Text>
-          
-          {/* Date Input */}
-          <View style={styles.dateInputWrapperFull}>
-            <Text style={styles.label}>Date</Text>
-            {Platform.OS === 'web' ? (
-              <View style={[styles.inputContainer, { position: 'relative', paddingRight: 0 }]}>
-                <Feather name="calendar" size={16} color={theme.textMuted} style={styles.inputIcon} />
-                <Text style={[styles.input, { paddingTop: 14 }]}>
-                  {date || 'YYYY-MM-DD'}
-                </Text>
-                {createElement('input', {
-                  type: 'date',
-                  value: date,
-                  onChange: (e: any) => handleDateChangePicker(null, new Date(e.target.value)),
-                  onClick: (e: any) => {
-                    try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {}
-                  },
-                  style: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }
-                })}
-              </View>
-            ) : (
-              <TouchableOpacity style={styles.inputContainer} onPress={() => setShowDatePicker(true)} activeOpacity={0.7}>
-                <Feather name="calendar" size={16} color={theme.textMuted} style={styles.inputIcon} />
-                <Text style={[styles.input, { paddingTop: 14 }]}>{date || 'YYYY-MM-DD'}</Text>
-              </TouchableOpacity>
-            )}
-            {showDatePicker && Platform.OS !== 'web' && (
-              <DateTimePicker value={parseDateString(date)} mode="date" display="default" onChange={handleDateChangePicker} />
-            )}
+          <Text style={styles.sectionTitle}>DESTINATION</Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter destination..."
+              placeholderTextColor="#475569"
+              value={destination}
+              onChangeText={setDestination}
+            />
           </View>
 
+          <Text style={[styles.sectionTitle, { marginTop: 24 }]}>DURATION</Text>
           <View style={styles.dateRow}>
-            {/* Start Time Input */}
             <View style={styles.dateInputWrapper}>
-              <Text style={styles.label}>Start Time</Text>
+              <Text style={styles.label}>Start Date</Text>
+              
               {Platform.OS === 'web' ? (
                 <View style={[styles.inputContainer, { position: 'relative', paddingRight: 0 }]}>
-                  <Feather name="clock" size={16} color={theme.textMuted} style={styles.inputIcon} />
+                  <Feather name="calendar" size={16} color={theme.textMuted} style={styles.inputIcon} />
                   <Text style={[styles.input, { paddingTop: 14 }]}>
-                    {startTime || 'HH:MM'}
+                    {startDate || 'YYYY-MM-DD'}
                   </Text>
                   {createElement('input', {
-                    type: 'time',
-                    value: startTime,
-                    onChange: (e: any) => setStartTime(e.target.value),
+                    type: 'date',
+                    value: startDate,
+                    onChange: (e: any) => handleDateChangePicker(null, new Date(e.target.value), true),
                     onClick: (e: any) => {
-                      try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {}
+                      try {
+                        if (e.target && typeof e.target.showPicker === 'function') {
+                          e.target.showPicker();
+                        }
+                      } catch (err) {}
                     },
-                    style: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }
+                    style: {
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      opacity: 0,
+                      cursor: 'pointer'
+                    }
                   })}
                 </View>
               ) : (
-                <TouchableOpacity style={styles.inputContainer} onPress={() => setShowStartTimePicker(true)} activeOpacity={0.7}>
-                  <Feather name="clock" size={16} color={theme.textMuted} style={styles.inputIcon} />
-                  <Text style={[styles.input, { paddingTop: 14 }]}>{startTime || 'HH:MM'}</Text>
+                <TouchableOpacity 
+                  style={styles.inputContainer} 
+                  onPress={() => setShowStartPicker(true)}
+                  activeOpacity={0.7}
+                >
+                  <Feather name="calendar" size={16} color={theme.textMuted} style={styles.inputIcon} />
+                  <Text style={[styles.input, { paddingTop: 14 }]}>
+                    {startDate || 'YYYY-MM-DD'}
+                  </Text>
                 </TouchableOpacity>
               )}
-              {showStartTimePicker && Platform.OS !== 'web' && (
-                <DateTimePicker value={parseTimeString(startTime)} mode="time" display="default" onChange={(e: any, d?: Date) => handleTimeChangePicker(e, d, true)} />
-              )}
-            </View>
 
-            {/* End Time Input */}
+              {showStartPicker && Platform.OS !== 'web' && (
+                <DateTimePicker
+                  value={parseDateString(startDate)}
+                  mode="date"
+                  display="default"
+                  onChange={(e: any, d?: Date) => handleDateChangePicker(e, d, true)}
+                />
+              )}
+
+            </View>
             <View style={styles.dateInputWrapper}>
-              <Text style={styles.label}>End Time</Text>
+              <Text style={styles.label}>End Date</Text>
+
               {Platform.OS === 'web' ? (
                 <View style={[styles.inputContainer, { position: 'relative', paddingRight: 0 }]}>
-                  <Feather name="clock" size={16} color={theme.textMuted} style={styles.inputIcon} />
+                  <Feather name="calendar" size={16} color={theme.textMuted} style={styles.inputIcon} />
                   <Text style={[styles.input, { paddingTop: 14 }]}>
-                    {endTime || 'HH:MM'}
+                    {endDate || 'YYYY-MM-DD'}
                   </Text>
                   {createElement('input', {
-                    type: 'time',
-                    value: endTime,
-                    onChange: (e: any) => setEndTime(e.target.value),
+                    type: 'date',
+                    value: endDate,
+                    onChange: (e: any) => handleDateChangePicker(null, new Date(e.target.value), false),
                     onClick: (e: any) => {
-                      try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {}
+                      try {
+                        if (e.target && typeof e.target.showPicker === 'function') {
+                          e.target.showPicker();
+                        }
+                      } catch (err) {}
                     },
-                    style: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }
+                    style: {
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      opacity: 0,
+                      cursor: 'pointer'
+                    }
                   })}
                 </View>
               ) : (
-                <TouchableOpacity style={styles.inputContainer} onPress={() => setShowEndTimePicker(true)} activeOpacity={0.7}>
-                  <Feather name="clock" size={16} color={theme.textMuted} style={styles.inputIcon} />
-                  <Text style={[styles.input, { paddingTop: 14 }]}>{endTime || 'HH:MM'}</Text>
+                <TouchableOpacity 
+                  style={styles.inputContainer} 
+                  onPress={() => setShowEndPicker(true)}
+                  activeOpacity={0.7}
+                >
+                  <Feather name="calendar" size={16} color={theme.textMuted} style={styles.inputIcon} />
+                  <Text style={[styles.input, { paddingTop: 14 }]}>
+                    {endDate || 'YYYY-MM-DD'}
+                  </Text>
                 </TouchableOpacity>
               )}
-              {showEndTimePicker && Platform.OS !== 'web' && (
-                <DateTimePicker value={parseTimeString(endTime)} mode="time" display="default" onChange={(e: any, d?: Date) => handleTimeChangePicker(e, d, false)} />
+
+              {showEndPicker && Platform.OS !== 'web' && (
+                <DateTimePicker
+                  value={parseDateString(endDate)}
+                  mode="date"
+                  display="default"
+                  onChange={(e: any, d?: Date) => handleDateChangePicker(e, d, false)}
+                />
               )}
+
             </View>
           </View>
 
-          <Text style={[styles.sectionTitle, { marginTop: 24 }]}>REASON</Text>
+          <Text style={[styles.sectionTitle, { marginTop: 24 }]}>PURPOSE</Text>
           <View style={[styles.inputContainer, styles.textAreaContainer]}>
             <TextInput
               style={[styles.input, styles.textArea]}
-              placeholder="Provide details about your undertime request..."
+              placeholder="Provide details about your business trip..."
               placeholderTextColor="#475569"
               multiline
               numberOfLines={4}
               textAlignVertical="top"
-              value={reason}
-              onChangeText={setReason}
+              value={purpose}
+              onChangeText={setPurpose}
             />
           </View>
         </View>
@@ -280,10 +314,10 @@ export default function UndertimeRequestFormScreen({ onBack, onSubmitSuccess, to
         <TouchableOpacity 
           style={[
             styles.submitButton, 
-            (!date || !startTime || !endTime || !reason || isSubmitting) && styles.submitButtonDisabled
+            (!startDate || !endDate || !purpose || isSubmitting) && styles.submitButtonDisabled
           ]} 
           onPress={handleSubmit}
-          disabled={!date || !startTime || !endTime || !reason || isSubmitting}
+          disabled={!startDate || !endDate || !purpose || isSubmitting}
         >
           {isSubmitting ? (
             <Text style={styles.submitButtonText}>Submitting...</Text>
@@ -311,7 +345,7 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
     left: -100,
     width: 300,
     height: 300,
-    backgroundColor: theme.glow1,
+    backgroundColor: isDarkMode ? 'rgba(168, 85, 247, 0.1)' : 'rgba(147, 51, 234, 0.1)',
     borderRadius: 150,
     transform: [{ scale: 2 }],
   },
@@ -321,7 +355,7 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
     right: -100,
     width: 300,
     height: 300,
-    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    backgroundColor: theme.glow2,
     borderRadius: 150,
     transform: [{ scale: 2 }],
   },
@@ -366,16 +400,39 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
     letterSpacing: 1.5,
     marginBottom: 12,
   },
+  typeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  typeButton: {
+    borderWidth: 1,
+    borderColor: theme.border,
+    backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 0,
+    marginBottom: 8,
+  },
+  typeButtonActive: {
+    borderColor: theme.success,
+    backgroundColor: isDarkMode ? 'rgba(168, 85, 247, 0.1)' : 'rgba(147, 51, 234, 0.1)',
+  },
+  typeButtonText: {
+    color: theme.textSecondary,
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  typeButtonTextActive: {
+    color: theme.success,
+    fontWeight: '700',
+  },
   dateRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   dateInputWrapper: {
     width: '48%',
-  },
-  dateInputWrapperFull: {
-    width: '100%',
-    marginBottom: 16,
   },
   label: {
     color: theme.textSecondary,
@@ -411,7 +468,7 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
   },
   submitButton: {
     flexDirection: 'row',
-    backgroundColor: theme.primary,
+    backgroundColor: theme.success,
     paddingVertical: 16,
     borderRadius: 0,
     alignItems: 'center',
@@ -422,7 +479,7 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
     opacity: 0.5,
   },
   submitButtonText: {
-    color: '#020617',
+    color: theme.textPrimary,
     fontSize: 16,
     fontWeight: '700',
   },

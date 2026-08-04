@@ -5,6 +5,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { Feather } from '@expo/vector-icons';
+import { useTheme, ThemeColors } from '../theme/ThemeContext';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 interface LeaveRequestFormScreenProps {
@@ -15,6 +16,8 @@ interface LeaveRequestFormScreenProps {
 }
 
 export default function LeaveRequestFormScreen({ onBack, onSubmitSuccess, token, employeeId }: LeaveRequestFormScreenProps) {
+  const { theme, isDarkMode } = useTheme();
+  const styles = getStyles(theme, isDarkMode);
   const [leaveType, setLeaveType] = useState<string>('Vacation');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
@@ -117,11 +120,11 @@ export default function LeaveRequestFormScreen({ onBack, onSubmitSuccess, token,
 
   if (submitted) {
     return (
-      <LinearGradient colors={['#020617', '#0f172a', '#020617']} style={styles.container}>
-        <StatusBar style="light" />
+      <LinearGradient colors={theme.backgroundGradient} style={styles.container}>
+        <StatusBar style={isDarkMode ? "light" : "dark"} />
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={onSubmitSuccess}>
-            <Feather name="arrow-left" size={24} color="#f8fafc" />
+            <Feather name="arrow-left" size={24} color={theme.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Leave Request</Text>
           <View style={{ width: 24 }} />
@@ -129,7 +132,7 @@ export default function LeaveRequestFormScreen({ onBack, onSubmitSuccess, token,
 
         <View style={styles.successContainer}>
           <View style={styles.successIconWrapper}>
-            <Feather name="check" size={48} color="#22c55e" />
+            <Feather name="check" size={48} color={theme.success} />
           </View>
           <Text style={styles.successTitle}>Request Submitted</Text>
           <Text style={styles.successDesc}>Your leave request has been sent to HR for approval.</Text>
@@ -142,8 +145,8 @@ export default function LeaveRequestFormScreen({ onBack, onSubmitSuccess, token,
   }
 
   return (
-    <LinearGradient colors={['#020617', '#0f172a', '#020617']} style={styles.container}>
-      <StatusBar style="light" />
+    <LinearGradient colors={theme.backgroundGradient} style={styles.container}>
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
       
       {/* Decorative Background Elements */}
       <View style={styles.glow1} />
@@ -151,7 +154,7 @@ export default function LeaveRequestFormScreen({ onBack, onSubmitSuccess, token,
 
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Feather name="arrow-left" size={24} color="#f8fafc" />
+          <Feather name="arrow-left" size={24} color={theme.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>New Leave Request</Text>
         <View style={{ width: 24 }} />
@@ -190,7 +193,7 @@ export default function LeaveRequestFormScreen({ onBack, onSubmitSuccess, token,
               
               {Platform.OS === 'web' ? (
                 <View style={[styles.inputContainer, { position: 'relative', paddingRight: 0 }]}>
-                  <Feather name="calendar" size={16} color="#64748b" style={styles.inputIcon} />
+                  <Feather name="calendar" size={16} color={theme.textMuted} style={styles.inputIcon} />
                   <Text style={[styles.input, { paddingTop: 14 }]}>
                     {startDate || 'YYYY-MM-DD'}
                   </Text>
@@ -222,7 +225,7 @@ export default function LeaveRequestFormScreen({ onBack, onSubmitSuccess, token,
                   onPress={() => setShowStartPicker(true)}
                   activeOpacity={0.7}
                 >
-                  <Feather name="calendar" size={16} color="#64748b" style={styles.inputIcon} />
+                  <Feather name="calendar" size={16} color={theme.textMuted} style={styles.inputIcon} />
                   <Text style={[styles.input, { paddingTop: 14 }]}>
                     {startDate || 'YYYY-MM-DD'}
                   </Text>
@@ -244,7 +247,7 @@ export default function LeaveRequestFormScreen({ onBack, onSubmitSuccess, token,
 
               {Platform.OS === 'web' ? (
                 <View style={[styles.inputContainer, { position: 'relative', paddingRight: 0 }]}>
-                  <Feather name="calendar" size={16} color="#64748b" style={styles.inputIcon} />
+                  <Feather name="calendar" size={16} color={theme.textMuted} style={styles.inputIcon} />
                   <Text style={[styles.input, { paddingTop: 14 }]}>
                     {endDate || 'YYYY-MM-DD'}
                   </Text>
@@ -276,7 +279,7 @@ export default function LeaveRequestFormScreen({ onBack, onSubmitSuccess, token,
                   onPress={() => setShowEndPicker(true)}
                   activeOpacity={0.7}
                 >
-                  <Feather name="calendar" size={16} color="#64748b" style={styles.inputIcon} />
+                  <Feather name="calendar" size={16} color={theme.textMuted} style={styles.inputIcon} />
                   <Text style={[styles.input, { paddingTop: 14 }]}>
                     {endDate || 'YYYY-MM-DD'}
                   </Text>
@@ -312,7 +315,7 @@ export default function LeaveRequestFormScreen({ onBack, onSubmitSuccess, token,
 
         {errorMsg && (
           <View style={styles.errorContainer}>
-            <Feather name="alert-circle" size={16} color="#ef4444" style={{ marginRight: 8 }} />
+            <Feather name="alert-circle" size={16} color={theme.error} style={{ marginRight: 8 }} />
             <Text style={styles.errorText}>{errorMsg}</Text>
           </View>
         )}
@@ -329,7 +332,7 @@ export default function LeaveRequestFormScreen({ onBack, onSubmitSuccess, token,
             <Text style={styles.submitButtonText}>Submitting...</Text>
           ) : (
             <>
-              <Feather name="send" size={18} color="#f8fafc" style={{ marginRight: 8 }} />
+              <Feather name="send" size={18} color={theme.textPrimary} style={{ marginRight: 8 }} />
               <Text style={styles.submitButtonText}>Submit Request</Text>
             </>
           )}
@@ -340,7 +343,7 @@ export default function LeaveRequestFormScreen({ onBack, onSubmitSuccess, token,
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create({
   container: {
     flex: 1,
     position: 'relative',
@@ -351,7 +354,7 @@ const styles = StyleSheet.create({
     left: -100,
     width: 300,
     height: 300,
-    backgroundColor: 'rgba(168, 85, 247, 0.1)',
+    backgroundColor: isDarkMode ? 'rgba(168, 85, 247, 0.1)' : 'rgba(147, 51, 234, 0.1)',
     borderRadius: 150,
     transform: [{ scale: 2 }],
   },
@@ -361,7 +364,7 @@ const styles = StyleSheet.create({
     right: -100,
     width: 300,
     height: 300,
-    backgroundColor: 'rgba(236, 72, 153, 0.1)',
+    backgroundColor: theme.glow2,
     borderRadius: 150,
     transform: [{ scale: 2 }],
   },
@@ -373,14 +376,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(51, 65, 85, 0.5)',
-    backgroundColor: 'rgba(2, 6, 23, 0.5)',
+    borderBottomColor: theme.border,
+    backgroundColor: theme.inputBg,
   },
   backButton: {
     padding: 8,
   },
   headerTitle: {
-    color: '#f8fafc',
+    color: theme.textPrimary,
     fontSize: 18,
     fontWeight: '600',
   },
@@ -392,15 +395,15 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   card: {
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    backgroundColor: theme.cardBg,
     borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.5)',
+    borderColor: theme.border,
     borderRadius: 0,
     padding: 20,
     marginBottom: 24,
   },
   sectionTitle: {
-    color: '#64748b',
+    color: theme.textMuted,
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 1.5,
@@ -413,24 +416,24 @@ const styles = StyleSheet.create({
   },
   typeButton: {
     borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.5)',
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    borderColor: theme.border,
+    backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 0,
     marginBottom: 8,
   },
   typeButtonActive: {
-    borderColor: '#a855f7',
-    backgroundColor: 'rgba(168, 85, 247, 0.1)',
+    borderColor: theme.purple,
+    backgroundColor: isDarkMode ? 'rgba(168, 85, 247, 0.1)' : 'rgba(147, 51, 234, 0.1)',
   },
   typeButtonText: {
-    color: '#94a3b8',
+    color: theme.textSecondary,
     fontSize: 13,
     fontWeight: '500',
   },
   typeButtonTextActive: {
-    color: '#a855f7',
+    color: theme.purple,
     fontWeight: '700',
   },
   dateRow: {
@@ -441,7 +444,7 @@ const styles = StyleSheet.create({
     width: '48%',
   },
   label: {
-    color: '#94a3b8',
+    color: theme.textSecondary,
     fontSize: 12,
     marginBottom: 6,
   },
@@ -449,8 +452,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.5)',
-    backgroundColor: 'rgba(2, 6, 23, 0.5)',
+    borderColor: theme.border,
+    backgroundColor: theme.inputBg,
     borderRadius: 0,
     paddingHorizontal: 12,
     height: 48,
@@ -460,7 +463,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: '#f8fafc',
+    color: theme.textPrimary,
     fontSize: 14,
     height: '100%',
   },
@@ -474,7 +477,7 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     flexDirection: 'row',
-    backgroundColor: '#a855f7',
+    backgroundColor: theme.purple,
     paddingVertical: 16,
     borderRadius: 0,
     alignItems: 'center',
@@ -485,7 +488,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   submitButtonText: {
-    color: '#f8fafc',
+    color: theme.textPrimary,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -504,23 +507,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 24,
     borderWidth: 2,
-    borderColor: '#22c55e',
+    borderColor: theme.success,
   },
   successTitle: {
-    color: '#f8fafc',
+    color: theme.textPrimary,
     fontSize: 24,
     fontWeight: '700',
     marginBottom: 8,
   },
   successDesc: {
-    color: '#94a3b8',
+    color: theme.textSecondary,
     fontSize: 14,
     textAlign: 'center',
     marginBottom: 32,
     paddingHorizontal: 24,
   },
   primaryButton: {
-    backgroundColor: '#38bdf8',
+    backgroundColor: theme.primary,
     paddingVertical: 14,
     paddingHorizontal: 32,
     borderRadius: 0,
@@ -535,12 +538,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
     borderWidth: 1,
-    borderColor: '#ef4444',
+    borderColor: theme.error,
     padding: 12,
     marginBottom: 24,
   },
   errorText: {
-    color: '#f8fafc',
+    color: theme.textPrimary,
     fontSize: 13,
     flex: 1,
   },

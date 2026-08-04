@@ -153,49 +153,57 @@ export default function DashboardScreen({ userName, onLogout, onNavigate }: Dash
 
         <Text style={styles.sectionTitle}>QUICK ACTIONS</Text>
         
-        <View style={styles.grid}>
-          <TouchableOpacity 
-            style={styles.card} 
-            activeOpacity={0.8}
-            onPress={() => onNavigate('attendance')}
-          >
-            <View style={[styles.iconWrapper, { backgroundColor: theme.glow1 }]}>
-              <Feather name="clock" size={24} color={theme.primary} />
+        <View style={styles.actionList}>
+          <TouchableOpacity style={styles.actionRow} activeOpacity={0.8} onPress={() => onNavigate('attendance')}>
+            <View style={styles.actionRowLeft}>
+              <View style={[styles.actionIconMini, { backgroundColor: theme.glow1 }]}>
+                <Feather name="clock" size={16} color={theme.primary} />
+              </View>
+              <View>
+                <Text style={styles.actionTitleMini}>Time In/Out</Text>
+                <Text style={styles.actionDescMini}>Record daily attendance</Text>
+              </View>
             </View>
-            <Text style={styles.cardTitle}>Time In/Out</Text>
-            <Text style={styles.cardDesc}>Record your daily attendance</Text>
+            <Feather name="chevron-right" size={16} color={theme.textMuted} />
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.card} 
-            activeOpacity={0.8}
-            onPress={() => onNavigate('leave_request')}
-          >
-            <View style={[styles.iconWrapper, { backgroundColor: isDarkMode ? 'rgba(168, 85, 247, 0.1)' : 'rgba(147, 51, 234, 0.1)' }]}>
-              <Feather name="file-text" size={24} color={theme.purple} />
+          <TouchableOpacity style={styles.actionRow} activeOpacity={0.8} onPress={() => onNavigate('leave_request')}>
+            <View style={styles.actionRowLeft}>
+              <View style={[styles.actionIconMini, { backgroundColor: isDarkMode ? 'rgba(168, 85, 247, 0.1)' : 'rgba(147, 51, 234, 0.1)' }]}>
+                <Feather name="file-text" size={16} color={theme.purple} />
+              </View>
+              <View>
+                <Text style={styles.actionTitleMini}>Leave Request</Text>
+                <Text style={styles.actionDescMini}>Apply for vacation or sick leave</Text>
+              </View>
             </View>
-            <Text style={styles.cardTitle}>Leave Request</Text>
-            <Text style={styles.cardDesc}>Apply for vacation or sick leave</Text>
+            <Feather name="chevron-right" size={16} color={theme.textMuted} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.card} activeOpacity={0.8}>
-            <View style={[styles.iconWrapper, { backgroundColor: isDarkMode ? 'rgba(34, 197, 94, 0.1)' : 'rgba(22, 163, 74, 0.1)' }]}>
-              <Feather name="map" size={24} color={theme.success} />
+          <TouchableOpacity style={styles.actionRow} activeOpacity={0.8} onPress={() => onNavigate('business_trip_request')}>
+            <View style={styles.actionRowLeft}>
+              <View style={[styles.actionIconMini, { backgroundColor: isDarkMode ? 'rgba(34, 197, 94, 0.1)' : 'rgba(22, 163, 74, 0.1)' }]}>
+                <Feather name="map" size={16} color={theme.success} />
+              </View>
+              <View>
+                <Text style={styles.actionTitleMini}>Business Trip</Text>
+                <Text style={styles.actionDescMini}>Request official travel</Text>
+              </View>
             </View>
-            <Text style={styles.cardTitle}>Business Trip</Text>
-            <Text style={styles.cardDesc}>Request official travel</Text>
+            <Feather name="chevron-right" size={16} color={theme.textMuted} />
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.card} 
-            activeOpacity={0.8}
-            onPress={() => onNavigate('undertime_request')}
-          >
-            <View style={[styles.iconWrapper, { backgroundColor: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : 'rgba(217, 119, 6, 0.1)' }]}>
-              <Feather name="clock" size={24} color={theme.warning} />
+          <TouchableOpacity style={[styles.actionRow, { borderBottomWidth: 0 }]} activeOpacity={0.8} onPress={() => onNavigate('undertime_request')}>
+            <View style={styles.actionRowLeft}>
+              <View style={[styles.actionIconMini, { backgroundColor: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : 'rgba(217, 119, 6, 0.1)' }]}>
+                <Feather name="clock" size={16} color={theme.warning} />
+              </View>
+              <View>
+                <Text style={styles.actionTitleMini}>Undertime Request</Text>
+                <Text style={styles.actionDescMini}>Request to leave work early</Text>
+              </View>
             </View>
-            <Text style={styles.cardTitle}>Undertime Request</Text>
-            <Text style={styles.cardDesc}>Request to leave work early</Text>
+            <Feather name="chevron-right" size={16} color={theme.textMuted} />
           </TouchableOpacity>
         </View>
 
@@ -298,11 +306,11 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
     borderRightWidth: 1,
     borderRightColor: theme.border,
     position: 'relative',
-    shadowColor: '#000',
-    shadowOffset: { width: 10, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
-    elevation: 20,
+    
+    
+    
+    
+    
   },
   modalGradientStrip: {
     position: 'absolute',
@@ -442,46 +450,44 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
     letterSpacing: 1.5,
     marginBottom: 16,
   },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 32,
-  },
-  card: {
-    width: '48%',
+  actionList: {
     backgroundColor: theme.cardBg,
     borderWidth: 1,
     borderColor: theme.border,
-    padding: 20,
-    borderRadius: 0, // Sharp corners
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
+    borderRadius: 0,
+    marginBottom: 32,
   },
-  iconWrapper: {
-    width: 48,
-    height: 48,
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.border,
+  },
+  actionRowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  actionIconMini: {
+    width: 36,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
     borderWidth: 1,
     borderColor: theme.border,
-    borderRadius: 0, // Sharp corners
+    borderRadius: 0,
+    marginRight: 16,
   },
-  cardTitle: {
+  actionTitleMini: {
     color: theme.textPrimary,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
-    marginBottom: 6,
+    marginBottom: 2,
   },
-  cardDesc: {
+  actionDescMini: {
     color: theme.textMuted,
     fontSize: 12,
-    lineHeight: 18,
   },
   activityCard: {
     backgroundColor: theme.cardBg,

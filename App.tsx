@@ -7,6 +7,8 @@ import LeaveRequestScreen from './src/screens/LeaveRequestScreen';
 import LeaveRequestFormScreen from './src/screens/LeaveRequestFormScreen';
 import UndertimeRequestScreen from './src/screens/UndertimeRequestScreen';
 import UndertimeRequestFormScreen from './src/screens/UndertimeRequestFormScreen';
+import BusinessTripRequestScreen from './src/screens/BusinessTripRequestScreen';
+import BusinessTripRequestFormScreen from './src/screens/BusinessTripRequestFormScreen';
 import { ThemeProvider } from './src/theme/ThemeContext';
 
 export default function App() {
@@ -135,6 +137,31 @@ export default function App() {
           employeeId={employeeId}
           onBack={() => handleNavigate('undertime_request')}
           onSubmitSuccess={() => handleNavigate('undertime_request')}
+        />
+      </ThemeProvider>
+    );
+  }
+
+  if (currentScreen === 'business_trip_request') {
+    return (
+      <ThemeProvider>
+        <BusinessTripRequestScreen 
+          token={authToken}
+          onBack={() => handleNavigate('dashboard')} 
+          onNavigateToForm={() => handleNavigate('business_trip_request_form')}
+        />
+      </ThemeProvider>
+    );
+  }
+
+  if (currentScreen === 'business_trip_request_form') {
+    return (
+      <ThemeProvider>
+        <BusinessTripRequestFormScreen 
+          token={authToken}
+          employeeId={employeeId}
+          onBack={() => handleNavigate('business_trip_request')}
+          onSubmitSuccess={() => handleNavigate('business_trip_request')}
         />
       </ThemeProvider>
     );
