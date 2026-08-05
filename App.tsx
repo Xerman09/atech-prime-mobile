@@ -9,6 +9,8 @@ import UndertimeRequestScreen from './src/screens/UndertimeRequestScreen';
 import UndertimeRequestFormScreen from './src/screens/UndertimeRequestFormScreen';
 import BusinessTripRequestScreen from './src/screens/BusinessTripRequestScreen';
 import BusinessTripRequestFormScreen from './src/screens/BusinessTripRequestFormScreen';
+import CoeRequestScreen from './src/screens/CoeRequestScreen';
+import CoeRequestFormScreen from './src/screens/CoeRequestFormScreen';
 import { ThemeProvider } from './src/theme/ThemeContext';
 
 export default function App() {
@@ -162,6 +164,31 @@ export default function App() {
           employeeId={employeeId}
           onBack={() => handleNavigate('business_trip_request')}
           onSubmitSuccess={() => handleNavigate('business_trip_request')}
+        />
+      </ThemeProvider>
+    );
+  }
+
+  if (currentScreen === 'coe_request') {
+    return (
+      <ThemeProvider>
+        <CoeRequestScreen 
+          token={authToken}
+          onBack={() => handleNavigate('dashboard')} 
+          onNavigateToForm={() => handleNavigate('coe_request_form')}
+        />
+      </ThemeProvider>
+    );
+  }
+
+  if (currentScreen === 'coe_request_form') {
+    return (
+      <ThemeProvider>
+        <CoeRequestFormScreen 
+          token={authToken}
+          employeeId={employeeId}
+          onBack={() => handleNavigate('coe_request')}
+          onSubmitSuccess={() => handleNavigate('coe_request')}
         />
       </ThemeProvider>
     );

@@ -108,6 +108,11 @@ export default function DashboardScreen({ userName, onLogout, onNavigate }: Dash
                 <Text style={styles.sidebarItemText}>Undertime Requests</Text>
               </TouchableOpacity>
 
+              <TouchableOpacity style={styles.sidebarItem} onPress={() => { setIsMenuOpen(false); onNavigate('coe_request'); }}>
+                <Feather name="award" size={20} color={theme.textSecondary} style={styles.sidebarItemIcon} />
+                <Text style={styles.sidebarItemText}>COE Requests</Text>
+              </TouchableOpacity>
+
               <View style={styles.sidebarDivider} />
               <Text style={styles.sidebarSectionTitle}>ACCOUNT</Text>
 
@@ -193,7 +198,7 @@ export default function DashboardScreen({ userName, onLogout, onNavigate }: Dash
             <Feather name="chevron-right" size={16} color={theme.textMuted} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.actionRow, { borderBottomWidth: 0 }]} activeOpacity={0.8} onPress={() => onNavigate('undertime_request')}>
+          <TouchableOpacity style={styles.actionRow} activeOpacity={0.8} onPress={() => onNavigate('undertime_request')}>
             <View style={styles.actionRowLeft}>
               <View style={[styles.actionIconMini, { backgroundColor: isDarkMode ? 'rgba(245, 158, 11, 0.1)' : 'rgba(217, 119, 6, 0.1)' }]}>
                 <Feather name="clock" size={16} color={theme.warning} />
@@ -201,6 +206,19 @@ export default function DashboardScreen({ userName, onLogout, onNavigate }: Dash
               <View>
                 <Text style={styles.actionTitleMini}>Undertime Request</Text>
                 <Text style={styles.actionDescMini}>Request to leave work early</Text>
+              </View>
+            </View>
+            <Feather name="chevron-right" size={16} color={theme.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.actionRow, { borderBottomWidth: 0 }]} activeOpacity={0.8} onPress={() => onNavigate('coe_request')}>
+            <View style={styles.actionRowLeft}>
+              <View style={[styles.actionIconMini, { backgroundColor: isDarkMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(37, 99, 235, 0.1)' }]}>
+                <Feather name="award" size={16} color="#3b82f6" />
+              </View>
+              <View>
+                <Text style={styles.actionTitleMini}>COE Request</Text>
+                <Text style={styles.actionDescMini}>Request employment certificate</Text>
               </View>
             </View>
             <Feather name="chevron-right" size={16} color={theme.textMuted} />
