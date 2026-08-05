@@ -11,6 +11,7 @@ import BusinessTripRequestScreen from './src/screens/BusinessTripRequestScreen';
 import BusinessTripRequestFormScreen from './src/screens/BusinessTripRequestFormScreen';
 import CoeRequestScreen from './src/screens/CoeRequestScreen';
 import CoeRequestFormScreen from './src/screens/CoeRequestFormScreen';
+import ProfileScreen from './src/screens/ProfileScreen';
 import { ThemeProvider } from './src/theme/ThemeContext';
 
 export default function App() {
@@ -189,6 +190,19 @@ export default function App() {
           employeeId={employeeId}
           onBack={() => handleNavigate('coe_request')}
           onSubmitSuccess={() => handleNavigate('coe_request')}
+        />
+      </ThemeProvider>
+    );
+  }
+
+  if (currentScreen === 'profile') {
+    return (
+      <ThemeProvider>
+        <ProfileScreen 
+          token={authToken}
+          employeeId={employeeId}
+          userName={userName}
+          onBack={() => handleNavigate('dashboard')} 
         />
       </ThemeProvider>
     );
