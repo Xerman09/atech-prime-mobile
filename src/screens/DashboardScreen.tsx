@@ -113,6 +113,11 @@ export default function DashboardScreen({ userName, onLogout, onNavigate }: Dash
                 <Text style={styles.sidebarItemText}>COE Requests</Text>
               </TouchableOpacity>
 
+              <TouchableOpacity style={styles.sidebarItem} onPress={() => { setIsMenuOpen(false); onNavigate('policies'); }}>
+                <Feather name="book" size={20} color={theme.textSecondary} style={styles.sidebarItemIcon} />
+                <Text style={styles.sidebarItemText}>Company Policies</Text>
+              </TouchableOpacity>
+
               <View style={styles.sidebarDivider} />
               <Text style={styles.sidebarSectionTitle}>ACCOUNT</Text>
 

@@ -12,6 +12,7 @@ import BusinessTripRequestFormScreen from './src/screens/BusinessTripRequestForm
 import CoeRequestScreen from './src/screens/CoeRequestScreen';
 import CoeRequestFormScreen from './src/screens/CoeRequestFormScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
+import PoliciesScreen from './src/screens/PoliciesScreen';
 import { ThemeProvider } from './src/theme/ThemeContext';
 
 export default function App() {
@@ -202,6 +203,17 @@ export default function App() {
           token={authToken}
           employeeId={employeeId}
           userName={userName}
+          onBack={() => handleNavigate('dashboard')} 
+        />
+      </ThemeProvider>
+    );
+  }
+
+  if (currentScreen === 'policies') {
+    return (
+      <ThemeProvider>
+        <PoliciesScreen 
+          token={authToken}
           onBack={() => handleNavigate('dashboard')} 
         />
       </ThemeProvider>
