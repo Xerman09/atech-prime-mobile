@@ -9,22 +9,55 @@ import { useTheme, ThemeColors } from '../theme/ThemeContext';
 
 interface DashboardScreenProps {
   userName: string;
+  token: string | null;
   onLogout: () => void;
   onNavigate: (screen: string) => void;
 }
 
-export default function DashboardScreen({ userName, onLogout, onNavigate }: DashboardScreenProps) {
+export default function DashboardScreen({ userName, token, onLogout, onNavigate }: DashboardScreenProps) {
   const { theme, isDarkMode, toggleTheme } = useTheme();
   const styles = getStyles(theme, isDarkMode);
   const [currentDate, setCurrentDate] = useState<string>('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [isLoadingAnnouncements, setIsLoadingAnnouncements] = useState(true);
 
   useEffect(() => {
-    // In a real app, we would fetch user details from AsyncStorage or context
     const now = new Date();
     const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
     setCurrentDate(now.toLocaleDateString(undefined, options));
-  }, []);
+
+    const fetchAnnouncements = async () => {
+      if (!token) {
+        setIsLoadingAnnouncements(false);
+        return;
+      }
+      try {
+        const apiUrl = Platform.OS === 'web' 
+          ? `http://localhost/atech_prime/backend/public/api/hr/announcements`
+          : `http://192.168.100.31/atech_prime/backend/public/api/hr/announcements`;
+          
+        const response = await fetch(apiUrl, {
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const published = data.filter((a: any) => a.status === 'published');
+          setAnnouncements(published.slice(0, 3)); // Show top 3
+        }
+      } catch (error) {
+        console.error('Failed to fetch announcements:', error);
+      } finally {
+        setIsLoadingAnnouncements(false);
+      }
+    };
+
+    fetchAnnouncements();
+  }, [token]);
 
   return (
     <LinearGradient
@@ -161,6 +194,37 @@ export default function DashboardScreen({ userName, onLogout, onNavigate }: Dash
           <Text style={styles.dateText}>Today is {currentDate}</Text>
         </View>
 
+        {/* Announcements Section */}
+        {announcements.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>COMPANY ANNOUNCEMENTS</Text>
+            <View style={styles.announcementList}>
+              {announcements.map((ann, index) => (
+                <View 
+                  key={ann.id} 
+                  style={[
+                    styles.announcementItem,
+                    index === announcements.length - 1 ? { borderBottomWidth: 0 } : {}
+                  ]}
+                >
+                  <View style={styles.announcementHeader}>
+                    <Text style={styles.announcementPriority}>
+                      {ann.priority.toUpperCase()} PRIORITY
+                    </Text>
+                    <Text style={styles.announcementDate}>
+                      {new Date(ann.created_at).toLocaleDateString()}
+                    </Text>
+                  </View>
+                  <Text style={styles.announcementTitle}>{ann.title}</Text>
+                  <Text style={styles.announcementDesc} numberOfLines={2}>
+                    {ann.content}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </>
+        )}
+
         <Text style={styles.sectionTitle}>QUICK ACTIONS</Text>
         
         <View style={styles.actionList}>
@@ -230,6 +294,8 @@ export default function DashboardScreen({ userName, onLogout, onNavigate }: Dash
           </TouchableOpacity>
         </View>
 
+
+
         <Text style={styles.sectionTitle}>RECENT ACTIVITY</Text>
         
         <View style={styles.activityCard}>
@@ -291,9 +357,7 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
     paddingTop: Platform.OS === 'ios' ? 60 : 40,
     paddingHorizontal: 24,
     paddingBottom: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
-    backgroundColor: theme.inputBg,
+    backgroundColor: 'transparent',
   },
   headerTextContainer: {
     marginLeft: 16,
@@ -548,5 +612,43 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
   activityTime: {
     color: theme.textMuted,
     fontSize: 12,
+  },
+  announcementList: {
+    backgroundColor: theme.cardBg,
+    borderWidth: 1,
+    borderColor: theme.border,
+    borderRadius: 0,
+    marginBottom: 32,
+  },
+  announcementItem: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.border,
+  },
+  announcementHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  announcementPriority: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: theme.primary,
+    letterSpacing: 1,
+  },
+  announcementDate: {
+    fontSize: 10,
+    color: theme.textMuted,
+  },
+  announcementTitle: {
+    color: theme.textPrimary,
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  announcementDesc: {
+    color: theme.textSecondary,
+    fontSize: 13,
+    lineHeight: 18,
   },
 });

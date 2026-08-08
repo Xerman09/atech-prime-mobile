@@ -222,7 +222,7 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      <DashboardScreen userName={userName} onLogout={handleLogout} onNavigate={handleNavigate} />
+      <DashboardScreen userName={userName} token={authToken} onLogout={handleLogout} onNavigate={handleNavigate} />
     </ThemeProvider>
   );
 }
