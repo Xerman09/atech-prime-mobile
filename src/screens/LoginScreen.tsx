@@ -23,6 +23,10 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
+  const [requiresOtp, setRequiresOtp] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [userId, setUserId] = useState<number | null>(null);
+
   // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -42,6 +46,13 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
     ]).start();
   }, []);
 
+  const getApiUrl = (endpoint: string) => {
+    if (Platform.OS === 'web') {
+      return `http://${window.location.hostname}/atech_prime/backend/public/api/${endpoint}`;
+    }
+    return `http://192.168.100.31/atech_prime/backend/public/api/${endpoint}`;
+  };
+
   const handleLogin = async () => {
     if (!email || !password) {
       alert('Please enter both email and password.');
@@ -50,12 +61,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
     setIsLoading(true);
     try {
-      // Use localhost for Web, and the local computer IP for physical phones/emulators
-      const apiUrl = Platform.OS === 'web' 
-        ? 'http://localhost/atech_prime/backend/public/api/login'
-        : 'http://192.168.100.31/atech_prime/backend/public/api/login';
-
-      const response = await fetch(apiUrl, {
+      const response = await fetch(getApiUrl('login'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -70,10 +76,40 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         throw new Error(data.error || 'Login failed.');
       }
 
+      if (data['2fa_required']) {
+        setUserId(data.user_id);
+        setRequiresOtp(true);
+        alert(data.message + (data.dev_otp ? ` (DEV OTP: ${data.dev_otp})` : ''));
+        return;
+      }
+
       onLoginSuccess(data.name || 'Employee', data.employee_id, data.token, rememberMe);
       
     } catch (error: any) {
       alert(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otp || !userId) {
+      alert('Please enter the OTP.');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const response = await fetch(getApiUrl('login/verify-2fa'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ user_id: userId, otp, remember_me: rememberMe })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Verification failed.');
+      
+      onLoginSuccess(data.name || 'Employee', data.employee_id, data.token, rememberMe);
+    } catch (err: any) {
+      alert(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -109,84 +145,132 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             <Text style={styles.subtitle}>Securely sign in to your HR workspace</Text>
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>EMAIL ADDRESS</Text>
-            <View style={[styles.inputWrapper, isEmailFocused && styles.inputWrapperFocused]}>
-              <Feather name="mail" size={18} color={isEmailFocused ? theme.primary : theme.textMuted} style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="name@company.com"
-                placeholderTextColor="#475569"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                onFocus={() => setIsEmailFocused(true)}
-                onBlur={() => setIsEmailFocused(false)}
-              />
-            </View>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>PASSWORD</Text>
-            <View style={[styles.inputWrapper, isPasswordFocused && styles.inputWrapperFocused]}>
-              <Feather name="lock" size={18} color={isPasswordFocused ? theme.primary : theme.textMuted} style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your password"
-                placeholderTextColor="#475569"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                onFocus={() => setIsPasswordFocused(true)}
-                onBlur={() => setIsPasswordFocused(false)}
-              />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-                <Feather name={showPassword ? "eye" : "eye-off"} size={18} color={theme.textMuted} />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <View style={styles.loginOptions}>
-            <TouchableOpacity 
-              style={styles.checkboxContainer} 
-              onPress={() => setRememberMe(!rememberMe)}
-              activeOpacity={0.8}
-            >
-              <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
-                {rememberMe && <Feather name="check" size={14} color={theme.cardBgSolid} />}
-              </View>
-              <Text style={styles.checkboxText}>Remember Me</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.forgotPassword}>
-              <Text style={styles.forgotPasswordText}>Recover Password</Text>
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity 
-            style={styles.loginButton} 
-            onPress={handleLogin}
-            disabled={isLoading}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={theme.primaryGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.gradientButton}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#ffffff" />
-              ) : (
-                <View style={styles.buttonContent}>
-                  <Text style={styles.loginButtonText}>AUTHENTICATE</Text>
-                  <Feather name="arrow-right" size={18} color="#ffffff" style={styles.buttonIcon} />
+          {requiresOtp ? (
+            <>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>ENTER OTP</Text>
+                <View style={styles.inputWrapper}>
+                  <Feather name="shield" size={18} color={theme.primary} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="6-digit code"
+                    placeholderTextColor="#475569"
+                    value={otp}
+                    onChangeText={setOtp}
+                    keyboardType="numeric"
+                  />
                 </View>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
+              </View>
+              
+              <TouchableOpacity 
+                style={styles.loginButton} 
+                onPress={handleVerifyOtp}
+                disabled={isLoading}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={theme.primaryGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.gradientButton}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator color="#ffffff" />
+                  ) : (
+                    <View style={styles.buttonContent}>
+                      <Text style={styles.loginButtonText}>VERIFY CODE</Text>
+                      <Feather name="check" size={18} color="#ffffff" style={styles.buttonIcon} />
+                    </View>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={{ marginTop: 20 }} onPress={() => setRequiresOtp(false)}>
+                <Text style={{ color: theme.textSecondary, textAlign: 'center' }}>Cancel</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>EMAIL ADDRESS</Text>
+                <View style={[styles.inputWrapper, isEmailFocused && styles.inputWrapperFocused]}>
+                  <Feather name="mail" size={18} color={isEmailFocused ? theme.primary : theme.textMuted} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="name@company.com"
+                    placeholderTextColor="#475569"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    onFocus={() => setIsEmailFocused(true)}
+                    onBlur={() => setIsEmailFocused(false)}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>PASSWORD</Text>
+                <View style={[styles.inputWrapper, isPasswordFocused && styles.inputWrapperFocused]}>
+                  <Feather name="lock" size={18} color={isPasswordFocused ? theme.primary : theme.textMuted} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter your password"
+                    placeholderTextColor="#475569"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                    onFocus={() => setIsPasswordFocused(true)}
+                    onBlur={() => setIsPasswordFocused(false)}
+                  />
+                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+                    <Feather name={showPassword ? "eye" : "eye-off"} size={18} color={theme.textMuted} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View style={styles.loginOptions}>
+                <TouchableOpacity 
+                  style={styles.checkboxContainer} 
+                  onPress={() => setRememberMe(!rememberMe)}
+                  activeOpacity={0.8}
+                >
+                  <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+                    {rememberMe && <Feather name="check" size={14} color={theme.cardBgSolid} />}
+                  </View>
+                  <Text style={styles.checkboxText}>Remember Me</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.forgotPassword}>
+                  <Text style={styles.forgotPasswordText}>Recover Password</Text>
+                </TouchableOpacity>
+              </View>
+
+              <TouchableOpacity 
+                style={styles.loginButton} 
+                onPress={handleLogin}
+                disabled={isLoading}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={theme.primaryGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.gradientButton}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator color="#ffffff" />
+                  ) : (
+                    <View style={styles.buttonContent}>
+                      <Text style={styles.loginButtonText}>AUTHENTICATE</Text>
+                      <Feather name="arrow-right" size={18} color="#ffffff" style={styles.buttonIcon} />
+                    </View>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+            </>
+          )}
         </Animated.View>
       </KeyboardAvoidingView>
     </LinearGradient>

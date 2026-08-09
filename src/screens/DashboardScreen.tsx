@@ -33,11 +33,14 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
         return;
       }
       try {
-        const apiUrl = Platform.OS === 'web' 
-          ? `http://localhost/atech_prime/backend/public/api/hr/announcements`
-          : `http://192.168.100.31/atech_prime/backend/public/api/hr/announcements`;
+        let apiUrl = `http://192.168.100.31/atech_prime/backend/public/api/hr/announcements`;
+        if (Platform.OS === 'web') {
+          apiUrl = `http://${window.location.hostname}/atech_prime/backend/public/api/hr/announcements`;
+        }
           
         const response = await fetch(apiUrl, {
+          method: 'GET',
+          cache: 'no-store',
           headers: {
             'Accept': 'application/json',
             'Authorization': `Bearer ${token}`
@@ -149,6 +152,11 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
               <TouchableOpacity style={styles.sidebarItem} onPress={() => { setIsMenuOpen(false); onNavigate('policies'); }}>
                 <Feather name="book" size={20} color={theme.textSecondary} style={styles.sidebarItemIcon} />
                 <Text style={styles.sidebarItemText}>Company Policies</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.sidebarItem} onPress={() => { setIsMenuOpen(false); onNavigate('memos'); }}>
+                <Feather name="file-text" size={20} color={theme.textSecondary} style={styles.sidebarItemIcon} />
+                <Text style={styles.sidebarItemText}>Memorandums</Text>
               </TouchableOpacity>
 
               <View style={styles.sidebarDivider} />
