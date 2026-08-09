@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import LoginScreen from './src/screens/LoginScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
 import TimeInOutScreen from './src/screens/TimeInOutScreen';
+import AttendanceReportScreen from './src/screens/AttendanceReportScreen';
 import LeaveRequestScreen from './src/screens/LeaveRequestScreen';
 import LeaveRequestFormScreen from './src/screens/LeaveRequestFormScreen';
 import UndertimeRequestScreen from './src/screens/UndertimeRequestScreen';
@@ -93,6 +94,17 @@ export default function App() {
     return (
       <ThemeProvider>
         <TimeInOutScreen employeeId={employeeId} token={authToken} onBack={() => handleNavigate('dashboard')} />
+      </ThemeProvider>
+    );
+  }
+
+  if (currentScreen === 'attendance_report') {
+    return (
+      <ThemeProvider>
+        <AttendanceReportScreen 
+          token={authToken}
+          onBack={() => handleNavigate('dashboard')} 
+        />
       </ThemeProvider>
     );
   }

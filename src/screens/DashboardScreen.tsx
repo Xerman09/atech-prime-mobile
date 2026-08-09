@@ -134,6 +134,11 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
                 <Text style={styles.sidebarItemText}>Time In/Out</Text>
               </TouchableOpacity>
               
+              <TouchableOpacity style={styles.sidebarItem} onPress={() => { setIsMenuOpen(false); onNavigate('attendance_report'); }}>
+                <Feather name="calendar" size={20} color={theme.textSecondary} style={styles.sidebarItemIcon} />
+                <Text style={styles.sidebarItemText}>Attendance Report</Text>
+              </TouchableOpacity>
+              
               <TouchableOpacity style={styles.sidebarItem} onPress={() => { setIsMenuOpen(false); onNavigate('leave_request'); }}>
                 <Feather name="file-text" size={20} color={theme.textSecondary} style={styles.sidebarItemIcon} />
                 <Text style={styles.sidebarItemText}>Leave Requests</Text>
