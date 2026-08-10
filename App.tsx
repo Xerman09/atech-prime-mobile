@@ -4,6 +4,8 @@ import LoginScreen from './src/screens/LoginScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
 import TimeInOutScreen from './src/screens/TimeInOutScreen';
 import AttendanceReportScreen from './src/screens/AttendanceReportScreen';
+import AttendanceModificationRequestScreen from './src/screens/AttendanceModificationRequestScreen';
+import AttendanceModificationFormScreen from './src/screens/AttendanceModificationFormScreen';
 import LeaveRequestScreen from './src/screens/LeaveRequestScreen';
 import LeaveRequestFormScreen from './src/screens/LeaveRequestFormScreen';
 import UndertimeRequestScreen from './src/screens/UndertimeRequestScreen';
@@ -24,6 +26,7 @@ export default function App() {
   const [employeeId, setEmployeeId] = useState<number | null>(null);
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [isAppReady, setIsAppReady] = useState(false);
+  const [modificationDate, setModificationDate] = useState<string>('');
 
   useEffect(() => {
     const checkLoginStatus = async () => {
@@ -104,6 +107,36 @@ export default function App() {
         <AttendanceReportScreen 
           token={authToken}
           onBack={() => handleNavigate('dashboard')} 
+          onNavigateToModificationRequests={() => handleNavigate('attendance_modification_request')}
+          onNavigateToForm={(date) => {
+            setModificationDate(date);
+            handleNavigate('attendance_modification_form');
+          }}
+        />
+      </ThemeProvider>
+    );
+  }
+
+  if (currentScreen === 'attendance_modification_request') {
+    return (
+      <ThemeProvider>
+        <AttendanceModificationRequestScreen 
+          token={authToken}
+          onBack={() => handleNavigate('dashboard')}
+          onNavigateToForm={() => handleNavigate('attendance_modification_form')}
+        />
+      </ThemeProvider>
+    );
+  }
+
+  if (currentScreen === 'attendance_modification_form') {
+    return (
+      <ThemeProvider>
+        <AttendanceModificationFormScreen 
+          token={authToken}
+          initialDate={modificationDate}
+          onBack={() => handleNavigate('attendance_report')}
+          onSubmitSuccess={() => handleNavigate('attendance_modification_request')}
         />
       </ThemeProvider>
     );

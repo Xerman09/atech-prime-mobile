@@ -10,6 +10,8 @@ import { useTheme } from '../theme/ThemeContext';
 interface AttendanceReportScreenProps {
   token: string | null;
   onBack: () => void;
+  onNavigateToModificationRequests: () => void;
+  onNavigateToForm: (date: string) => void;
 }
 
 interface AttendanceRecord {
@@ -18,7 +20,7 @@ interface AttendanceRecord {
   timeOut: string | null;
 }
 
-export default function AttendanceReportScreen({ token, onBack }: AttendanceReportScreenProps) {
+export default function AttendanceReportScreen({ token, onBack, onNavigateToModificationRequests, onNavigateToForm }: AttendanceReportScreenProps) {
   const { theme, isDarkMode } = useTheme();
   const styles = getStyles(theme);
   const [logs, setLogs] = useState<AttendanceRecord[]>([]);
@@ -93,7 +95,9 @@ export default function AttendanceReportScreen({ token, onBack }: AttendanceRepo
           <Feather name="arrow-left" size={24} color={theme.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Attendance History</Text>
-        <View style={{ width: 40 }} />
+        <TouchableOpacity style={styles.modifyButton} onPress={onNavigateToModificationRequests}>
+          <Feather name="list" size={20} color={theme.primary} />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.subtitleContainer}>
@@ -119,16 +123,24 @@ export default function AttendanceReportScreen({ token, onBack }: AttendanceRepo
                   <Feather name="calendar" size={16} color={theme.textSecondary} />
                   <Text style={styles.logDate}>{formatDate(record.date)}</Text>
                 </View>
-                <View style={[
-                  styles.statusBadge, 
-                  { borderColor: getStatusColor(record.timeIn, record.timeOut) }
-                ]}>
-                  <Text style={[
-                    styles.statusText, 
-                    { color: getStatusColor(record.timeIn, record.timeOut) }
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <View style={[
+                    styles.statusBadge, 
+                    { borderColor: getStatusColor(record.timeIn, record.timeOut) }
                   ]}>
-                    {getStatusText(record.timeIn, record.timeOut)}
-                  </Text>
+                    <Text style={[
+                      styles.statusText, 
+                      { color: getStatusColor(record.timeIn, record.timeOut) }
+                    ]}>
+                      {getStatusText(record.timeIn, record.timeOut)}
+                    </Text>
+                  </View>
+                  <TouchableOpacity 
+                    style={{ marginLeft: 12 }} 
+                    onPress={() => onNavigateToForm(record.date)}
+                  >
+                    <Feather name="edit-3" size={18} color={theme.primary} />
+                  </TouchableOpacity>
                 </View>
               </View>
               
@@ -191,6 +203,16 @@ const getStyles = (theme: any) => StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.border,
     borderRadius: 0, // Enforcing Anti-AI Slop Rule (sharp edges)
+  },
+  modifyButton: {
+    width: 40,
+    height: 40,
+    backgroundColor: theme.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: theme.primary,
+    borderRadius: 0, // Enforcing Anti-AI Slop Rule
   },
   headerTitle: {
     fontSize: 20,
