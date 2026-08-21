@@ -67,6 +67,21 @@ export default function TodoScreen({ onBack, token }: TodoScreenProps) {
   };
   const todayStr = toDateString(new Date());
 
+  const formatDisplayDate = (start: string | null, due: string | null) => {
+    const format = (dStr: string) => {
+      const parts = dStr.split('-');
+      if (parts.length !== 3) return dStr;
+      const dateObj = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+      return dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+    if (!start && !due) return '';
+    if (start && due && start === due) return format(start);
+    if (start && due) return `${format(start)} to ${format(due)}`;
+    if (start) return `Starts ${format(start)}`;
+    if (due) return `Due ${format(due)}`;
+    return '';
+  };
+
   const fetchTodos = async () => {
     if (!token) return;
     try {
@@ -338,7 +353,7 @@ export default function TodoScreen({ onBack, token }: TodoScreenProps) {
                         <View style={styles.metaItem}>
                           <Feather name="clock" size={12} color={theme.textSecondary} />
                           <Text style={styles.metaText}>
-                            {todo.start_date} {todo.due_date && todo.start_date !== todo.due_date ? ` to ${todo.due_date}` : ''}
+                            {formatDisplayDate(todo.start_date, todo.due_date)}
                           </Text>
                         </View>
                       )}
