@@ -20,6 +20,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
   const [currentDate, setCurrentDate] = useState<string>('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [todayTasks, setTodayTasks] = useState<any[]>([]);
   const [isLoadingAnnouncements, setIsLoadingAnnouncements] = useState(true);
 
   useEffect(() => {
@@ -59,7 +60,37 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
       }
     };
 
+    const fetchTasks = async () => {
+      if (!token) return;
+      try {
+        let apiUrl = `http://192.168.100.31/atech_prime/backend/public/api/todos`;
+        if (Platform.OS === 'web') {
+          apiUrl = `http://${window.location.hostname}/atech_prime/backend/public/api/todos`;
+        }
+        const response = await fetch(apiUrl, {
+          headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const today = new Date();
+          const y = today.getFullYear();
+          const m = String(today.getMonth() + 1).padStart(2, '0');
+          const d = String(today.getDate()).padStart(2, '0');
+          const todayStr = `${y}-${m}-${d}`;
+
+          const filtered = data.filter((t: any) => 
+            !t.is_completed && 
+            (t.due_date === todayStr || t.start_date === todayStr || (t.start_date && t.due_date && t.start_date <= todayStr && t.due_date >= todayStr))
+          );
+          setTodayTasks(filtered.slice(0, 3));
+        }
+      } catch (e) {
+        console.error('Failed to fetch tasks:', e);
+      }
+    };
+
     fetchAnnouncements();
+    fetchTasks();
   }, [token]);
 
   return (
@@ -238,6 +269,40 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
                     {ann.content}
                   </Text>
                 </View>
+              ))}
+            </View>
+          </>
+        )}
+
+        {/* Today's Tasks Section */}
+        {todayTasks.length > 0 && (
+          <>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={styles.sectionTitle}>TODAY'S FOCUS</Text>
+              <TouchableOpacity onPress={() => onNavigate('todo')} style={{ marginBottom: 12, marginRight: 24 }}>
+                <Text style={{ fontSize: 12, fontWeight: 'bold', color: theme.primary, textTransform: 'uppercase' }}>View All</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.announcementList}>
+              {todayTasks.map((task, index) => (
+                <TouchableOpacity 
+                  key={task.id} 
+                  style={[
+                    styles.announcementItem,
+                    index === todayTasks.length - 1 ? { borderBottomWidth: 0 } : {}
+                  ]}
+                  onPress={() => onNavigate('todo')}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, paddingRight: 12 }}>
+                      <Feather name="circle" size={16} color={theme.textSecondary} style={{ marginRight: 12 }} />
+                      <Text style={[styles.announcementTitle, { marginBottom: 0 }]} numberOfLines={1}>{task.title}</Text>
+                    </View>
+                    <View style={{ paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1, borderRadius: 0, borderColor: task.priority === 'High' ? theme.error + '50' : task.priority === 'Medium' ? theme.warning + '50' : theme.primary + '50', backgroundColor: task.priority === 'High' ? theme.error + '10' : task.priority === 'Medium' ? theme.warning + '10' : theme.primary + '10' }}>
+                      <Text style={{ fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase', color: task.priority === 'High' ? theme.error : task.priority === 'Medium' ? theme.warning : theme.primary }}>{task.priority}</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
               ))}
             </View>
           </>
