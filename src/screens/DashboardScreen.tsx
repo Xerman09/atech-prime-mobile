@@ -164,6 +164,11 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
                 <Text style={styles.sidebarItemText}>Memorandums</Text>
               </TouchableOpacity>
 
+              <TouchableOpacity style={styles.sidebarItem} onPress={() => { setIsMenuOpen(false); onNavigate('todo'); }}>
+                <Feather name="layers" size={20} color={theme.textSecondary} style={styles.sidebarItemIcon} />
+                <Text style={styles.sidebarItemText}>To Do List</Text>
+              </TouchableOpacity>
+
               <View style={styles.sidebarDivider} />
               <Text style={styles.sidebarSectionTitle}>ACCOUNT</Text>
 

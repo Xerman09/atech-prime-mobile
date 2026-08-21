@@ -17,6 +17,7 @@ import CoeRequestFormScreen from './src/screens/CoeRequestFormScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import PoliciesScreen from './src/screens/PoliciesScreen';
 import MemosScreen from './src/screens/MemosScreen';
+import TodoScreen from './src/screens/TodoScreen';
 import { ThemeProvider } from './src/theme/ThemeContext';
 
 export default function App() {
@@ -270,6 +271,17 @@ export default function App() {
     return (
       <ThemeProvider>
         <MemosScreen 
+          token={authToken}
+          onBack={() => handleNavigate('dashboard')} 
+        />
+      </ThemeProvider>
+    );
+  }
+
+  if (currentScreen === 'todo') {
+    return (
+      <ThemeProvider>
+        <TodoScreen 
           token={authToken}
           onBack={() => handleNavigate('dashboard')} 
         />
