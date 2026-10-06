@@ -66,9 +66,19 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         return;
       }
 
+      const userPayload = {
+        id: data.user_id,
+        name: data.name || data.email || 'Workstation User',
+        email: data.email,
+        role: data.role,
+        employee_id: data.employee_id || null,
+        company_name: data.company?.name || 'ATECH PRIME',
+        company_plan: data.company?.plan || 'ENTERPRISE',
+      };
+
       await AsyncStorage.setItem('auth_token', data.token);
-      await AsyncStorage.setItem('user_data', JSON.stringify(data.user));
-      onLoginSuccess(data.token, data.user);
+      await AsyncStorage.setItem('user_data', JSON.stringify(userPayload));
+      onLoginSuccess(data.token, userPayload);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -99,9 +109,19 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Invalid code.');
 
+      const userPayload = {
+        id: data.user_id,
+        name: data.name || data.email || 'Workstation User',
+        email: data.email,
+        role: data.role,
+        employee_id: data.employee_id || null,
+        company_name: data.company?.name || 'ATECH PRIME',
+        company_plan: data.company?.plan || 'ENTERPRISE',
+      };
+
       await AsyncStorage.setItem('auth_token', data.token);
-      await AsyncStorage.setItem('user_data', JSON.stringify(data.user));
-      onLoginSuccess(data.token, data.user);
+      await AsyncStorage.setItem('user_data', JSON.stringify(userPayload));
+      onLoginSuccess(data.token, userPayload);
     } catch (err: any) {
       setError(err.message);
     } finally {

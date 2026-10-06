@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LoginScreen from './src/screens/LoginScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
@@ -34,10 +35,59 @@ export default function App() {
       try {
         const storedUser = await AsyncStorage.getItem('user_session');
         if (storedUser) {
-          const { name, empId, token } = JSON.parse(storedUser);
+          const parsed = JSON.parse(storedUser);
+          let { name, empId, token } = parsed;
+
+          // Check if 'name' was mistakenly saved as a token string
+          const isTokenString = (str: string) => !str || str.startsWith('MS4') || (str.length > 30 && str.includes('.'));
+          if (isTokenString(name)) {
+            const userDataRaw = await AsyncStorage.getItem('user_data');
+            if (userDataRaw) {
+              try {
+                const u = JSON.parse(userDataRaw);
+                name = u.name || u.email || 'Workstation User';
+                if (!empId && u.employee_id) empId = u.employee_id;
+              } catch {
+                name = 'Workstation User';
+              }
+            } else {
+              name = 'Workstation User';
+            }
+          }
+
+          // Fetch fresh profile from /api/auth/me to always get accurate name & permissions
+          if (token) {
+            setAuthToken(token);
+            try {
+              let meUrl = Platform.OS === 'web'
+                ? `http://${window.location.hostname}/atech_prime/backend/public/api/auth/me`
+                : `http://192.168.100.31/atech_prime/backend/public/api/auth/me`;
+              const res = await fetch(meUrl, {
+                cache: 'no-store',
+                headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token}` }
+              });
+              if (res.ok) {
+                const meData = await res.json();
+                if (meData.name) name = meData.name;
+                if (meData.employee_id) empId = meData.employee_id;
+                await AsyncStorage.setItem('user_data', JSON.stringify({
+                  id: meData.user_id,
+                  name: meData.name,
+                  email: meData.email,
+                  role: meData.role,
+                  employee_id: meData.employee_id,
+                  company_name: meData.company?.name || 'ATECH PRIME',
+                  company_plan: meData.company?.plan || 'ENTERPRISE',
+                }));
+              }
+            } catch (e) {
+              // Fallback to cached name
+            }
+          }
+
           setUserName(name);
           if (empId) setEmployeeId(empId);
-          if (token) setAuthToken(token);
+          await AsyncStorage.setItem('user_session', JSON.stringify({ name, empId, token }));
           setIsLoggedIn(true);
         }
       } catch (e) {
@@ -55,14 +105,23 @@ export default function App() {
     let token = '';
 
     if (typeof param1 === 'string' && typeof param2 === 'object' && param2 !== null) {
-      // Called as onLoginSuccess(token, user)
+      // Called as onLoginSuccess(token, userPayload)
       token = param1;
       name = param2.name || param2.email || 'Workstation User';
       empId = param2.employee_id || param2.id || null;
+    } else if (typeof param1 === 'object' && param1 !== null) {
+      token = param1.token || '';
+      name = param1.name || param1.email || 'Workstation User';
+      empId = param1.employee_id || param1.id || null;
     } else {
-      name = param1 || 'Workstation User';
+      if (typeof param1 === 'string' && (param1.startsWith('MS4') || (param1.length > 30 && param1.includes('.')))) {
+        token = param1;
+        name = 'Workstation User';
+      } else {
+        name = param1 || 'Workstation User';
+        token = param3 || '';
+      }
       empId = param2 || null;
-      token = param3 || '';
     }
 
     setUserName(name);

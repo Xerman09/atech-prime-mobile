@@ -29,7 +29,34 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
   const [todayTasks, setTodayTasks] = useState<any[]>([]);
   const [isLoadingAnnouncements, setIsLoadingAnnouncements] = useState(true);
 
-  const initials = userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  const isTokenString = (str: string) => !str || str.startsWith('MS4') || (str.length > 30 && str.includes('.'));
+  const [localName, setLocalName] = useState(userName);
+
+  useEffect(() => {
+    if (!isTokenString(userName)) {
+      setLocalName(userName);
+    }
+  }, [userName]);
+
+  useEffect(() => {
+    const loadTenantInfo = async () => {
+      try {
+        const storedUser = await AsyncStorage.getItem('user_data');
+        if (storedUser) {
+          const parsed = JSON.parse(storedUser);
+          if (parsed.name && !isTokenString(parsed.name)) {
+            setLocalName(parsed.name);
+          }
+          if (parsed.company_name) setCompanyName(parsed.company_name);
+          if (parsed.company_plan) setCompanyPlan(parsed.company_plan.toUpperCase());
+        }
+      } catch (e) {}
+    };
+    loadTenantInfo();
+  }, []);
+
+  const displayName = isTokenString(localName) ? 'Workstation User' : localName;
+  const initials = displayName.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'WU';
 
   useEffect(() => {
     const tick = () => {
@@ -40,20 +67,6 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
     tick();
     const t = setInterval(tick, 10000);
     return () => clearInterval(t);
-  }, []);
-
-  useEffect(() => {
-    const loadTenantInfo = async () => {
-      try {
-        const storedUser = await AsyncStorage.getItem('user_data');
-        if (storedUser) {
-          const parsed = JSON.parse(storedUser);
-          if (parsed.company_name) setCompanyName(parsed.company_name);
-          if (parsed.company_plan) setCompanyPlan(parsed.company_plan.toUpperCase());
-        }
-      } catch (e) {}
-    };
-    loadTenantInfo();
   }, []);
 
   useEffect(() => {
@@ -142,7 +155,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
                 </LinearGradient>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.sidebarName} numberOfLines={1}>{userName}</Text>
+                <Text style={styles.sidebarName} numberOfLines={1}>{displayName}</Text>
                 <View style={styles.sidebarBadgeRow}>
                   <Text style={styles.sidebarRole}>EMPLOYEE</Text>
                   <View style={styles.sidebarBadgeSep} />
@@ -202,7 +215,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
         </TouchableOpacity>
         <View style={styles.headerMid}>
           <Text style={styles.greeting}>WORKFORCE PORTAL</Text>
-          <Text style={styles.headerName} numberOfLines={1}>{userName}</Text>
+          <Text style={styles.headerName} numberOfLines={1}>{displayName}</Text>
         </View>
         <TouchableOpacity style={styles.avatarSmall} onPress={() => onNavigate('profile')}>
           <LinearGradient colors={['#10b981', '#08697A']} style={styles.avatarSmallGrad}>

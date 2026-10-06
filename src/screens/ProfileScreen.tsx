@@ -20,7 +20,11 @@ export default function ProfileScreen({ onBack, employeeId, token, userName }: P
   const [profileData, setProfileData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const initials = userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  const isTokenString = (str: string) => !str || str.startsWith('MS4') || (str.length > 30 && str.includes('.'));
+  const displayName = isTokenString(userName)
+    ? (profileData ? `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || 'Workstation User' : 'Workstation User')
+    : userName;
+  const initials = displayName.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'WU';
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -98,7 +102,7 @@ export default function ProfileScreen({ onBack, employeeId, token, userName }: P
             <LinearGradient colors={['#10b981', '#08697A']} style={styles.avatarRing}>
               <Text style={styles.avatarText}>{initials}</Text>
             </LinearGradient>
-            <Text style={styles.profileName}>{userName}</Text>
+            <Text style={styles.profileName}>{displayName}</Text>
             <Text style={styles.profileRole}>{profileData?.position_name || 'Workstation User'}</Text>
             <View style={styles.statusPill}>
               <View style={[styles.statusDot, { backgroundColor: theme.emerald }]} />
