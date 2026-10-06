@@ -311,78 +311,71 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
             end={{ x: 1, y: 0 }}
             style={styles.heroStrip}
           />
-          <LinearGradient
-            colors={isDarkMode ? ['#0a192f', '#071324'] : ['#062338', '#031624']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.heroGradient}
-          >
-            <View style={styles.heroContent}>
-              {/* Row 1: Shift Status Badge + Date */}
-              <View style={styles.heroBadgeRow}>
-                <View style={styles.heroPill}>
-                  <View style={styles.heroPillDot} />
-                  <Text style={styles.heroPillText}>SHIFT IN PROGRESS</Text>
-                </View>
-                <View style={styles.heroDatePill}>
-                  <Feather name="calendar" size={11} color="rgba(255,255,255,0.7)" style={{ marginRight: 5 }} />
-                  <Text style={styles.heroDate}>{currentDate}</Text>
-                </View>
+          <View style={styles.heroContent}>
+            {/* Row 1: Shift Status Badge + Date */}
+            <View style={styles.heroBadgeRow}>
+              <View style={styles.heroPill}>
+                <View style={styles.heroPillDot} />
+                <Text style={styles.heroPillText}>SHIFT IN PROGRESS</Text>
               </View>
-
-              {/* Row 2: Live Clock & Shift Details */}
-              <View style={styles.clockSection}>
-                <View style={styles.clockLeft}>
-                  <View style={styles.clockHeader}>
-                    <View style={styles.liveClockDot} />
-                    <Text style={styles.heroClockLabel}>SYSTEM TIME</Text>
-                  </View>
-                  <View style={styles.timeValueRow}>
-                    <Text style={styles.heroTimeDigits}>{currentTime.split(' ')[0] || currentTime}</Text>
-                    {currentTime.split(' ')[1] ? (
-                      <View style={styles.periodBadge}>
-                        <Text style={styles.periodBadgeText}>{currentTime.split(' ')[1]}</Text>
-                      </View>
-                    ) : null}
-                  </View>
-                </View>
-
-                <View style={styles.clockRightMeta}>
-                  <View style={styles.shiftMetaTag}>
-                    <Feather name="shield" size={10} color="#38bdf8" style={{ marginRight: 4 }} />
-                    <Text style={styles.shiftMetaTagText}>TIMEKEEPING</Text>
-                  </View>
-                  <Text style={styles.shiftHoursText}>08:00 AM – 05:00 PM</Text>
-                  <Text style={styles.shiftHoursSub}>Standard Day Shift</Text>
-                </View>
+              <View style={styles.heroDatePill}>
+                <Feather name="calendar" size={11} color={theme.textMuted} style={{ marginRight: 5 }} />
+                <Text style={styles.heroDate}>{currentDate}</Text>
               </View>
-
-              {/* Row 3: Full-Width High-Contrast Emerald Punch Button */}
-              <TouchableOpacity
-                style={styles.punchBtn}
-                onPress={() => onNavigate('attendance')}
-                activeOpacity={0.85}
-              >
-                <LinearGradient
-                  colors={['#10b981', '#059669', '#047857']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.punchBtnGradient}
-                >
-                  <View style={styles.punchIconCircle}>
-                    <Feather name="clock" size={16} color="#ffffff" />
-                  </View>
-                  <View style={styles.punchTextCol}>
-                    <Text style={styles.punchBtnText}>PUNCH ATTENDANCE</Text>
-                    <Text style={styles.punchBtnSub}>Tap to record Time In or Time Out</Text>
-                  </View>
-                  <View style={styles.punchArrowWrap}>
-                    <Feather name="arrow-right" size={16} color="#ffffff" />
-                  </View>
-                </LinearGradient>
-              </TouchableOpacity>
             </View>
-          </LinearGradient>
+
+            {/* Row 2: Live Clock & Shift Details */}
+            <View style={styles.clockSection}>
+              <View style={styles.clockLeft}>
+                <View style={styles.clockHeader}>
+                  <View style={styles.liveClockDot} />
+                  <Text style={styles.heroClockLabel}>SYSTEM TIME</Text>
+                </View>
+                <View style={styles.timeValueRow}>
+                  <Text style={styles.heroTimeDigits}>{currentTime.split(' ')[0] || currentTime}</Text>
+                  {currentTime.split(' ')[1] ? (
+                    <View style={styles.periodBadge}>
+                      <Text style={styles.periodBadgeText}>{currentTime.split(' ')[1]}</Text>
+                    </View>
+                  ) : null}
+                </View>
+              </View>
+
+              <View style={styles.clockRightMeta}>
+                <View style={styles.shiftMetaTag}>
+                  <Feather name="shield" size={10} color={isDarkMode ? '#38bdf8' : theme.primary} style={{ marginRight: 4 }} />
+                  <Text style={styles.shiftMetaTagText}>TIMEKEEPING</Text>
+                </View>
+                <Text style={styles.shiftHoursText}>08:00 AM – 05:00 PM</Text>
+                <Text style={styles.shiftHoursSub}>Standard Day Shift</Text>
+              </View>
+            </View>
+
+            {/* Row 3: Full-Width Emerald Punch Button */}
+            <TouchableOpacity
+              style={styles.punchBtn}
+              onPress={() => onNavigate('attendance')}
+              activeOpacity={0.85}
+            >
+              <LinearGradient
+                colors={['#10b981', '#139D9E', '#08697A']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.punchBtnGradient}
+              >
+                <View style={styles.punchIconCircle}>
+                  <Feather name="clock" size={16} color="#ffffff" />
+                </View>
+                <View style={styles.punchTextCol}>
+                  <Text style={styles.punchBtnText}>PUNCH ATTENDANCE</Text>
+                  <Text style={styles.punchBtnSub}>Tap to record Time In or Time Out</Text>
+                </View>
+                <View style={styles.punchArrowWrap}>
+                  <Feather name="arrow-right" size={16} color="#ffffff" />
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* 3 Unified Metric Summary Tiles */}
@@ -589,16 +582,15 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
   // Hero Card
   heroCard: {
     marginBottom: 20,
-    backgroundColor: isDarkMode ? '#0a192f' : '#062338',
+    backgroundColor: theme.cardBg,
     borderWidth: 1,
-    borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.12)',
+    borderColor: theme.border,
     borderRadius: 0,
     position: 'relative',
     overflow: 'hidden',
   },
   heroStrip: { position: 'absolute', top: 0, left: 0, right: 0, height: 3, zIndex: 10 },
-  heroGradient: { padding: 18 },
-  heroContent: { width: '100%' },
+  heroContent: { padding: 18, width: '100%' },
   heroBadgeRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -610,26 +602,31 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
   heroPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    backgroundColor: theme.emeraldTint,
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.35)',
+    borderColor: isDarkMode ? 'rgba(16, 185, 129, 0.35)' : 'rgba(16, 185, 129, 0.25)',
     paddingHorizontal: 9,
     paddingVertical: 4,
     borderRadius: 0,
   },
-  heroPillDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#10b981', marginRight: 6 },
-  heroPillText: { color: '#34d399', fontSize: 10, fontWeight: '800', letterSpacing: 0.8 },
+  heroPillDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: theme.emerald, marginRight: 6 },
+  heroPillText: {
+    color: isDarkMode ? '#34d399' : '#047857',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
   heroDatePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.07)',
+    backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : '#f8fafc',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: theme.border,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 0,
   },
-  heroDate: { color: '#e2e8f0', fontSize: 11, fontWeight: '600' },
+  heroDate: { color: theme.textSecondary, fontSize: 11, fontWeight: '600' },
   clockSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -637,26 +634,26 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
     marginBottom: 16,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+    borderBottomColor: theme.border,
   },
   clockLeft: {
     flex: 1,
   },
   clockHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 2 },
-  liveClockDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#38bdf8', marginRight: 6 },
-  heroClockLabel: { color: 'rgba(255,255,255,0.65)', fontSize: 9, fontWeight: '800', letterSpacing: 1.2 },
+  liveClockDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: theme.primaryLight, marginRight: 6 },
+  heroClockLabel: { color: theme.textMuted, fontSize: 9, fontWeight: '800', letterSpacing: 1.2 },
   timeValueRow: { flexDirection: 'row', alignItems: 'baseline' },
-  heroTimeDigits: { color: '#ffffff', fontSize: 34, fontWeight: '800', letterSpacing: -0.5 },
+  heroTimeDigits: { color: theme.textPrimary, fontSize: 34, fontWeight: '800', letterSpacing: -0.5 },
   periodBadge: {
     marginLeft: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : '#f1f5f9',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: theme.border,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 0,
   },
-  periodBadgeText: { color: '#e2e8f0', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
+  periodBadgeText: { color: theme.textSecondary, fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
   clockRightMeta: {
     alignItems: 'flex-end',
     justifyContent: 'flex-end',
@@ -664,28 +661,28 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
   shiftMetaTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(56, 189, 248, 0.12)',
+    backgroundColor: theme.tealTint,
     borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.3)',
+    borderColor: isDarkMode ? 'rgba(19, 157, 158, 0.3)' : 'rgba(8, 105, 122, 0.2)',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 0,
     marginBottom: 4,
   },
   shiftMetaTagText: {
-    color: '#38bdf8',
+    color: isDarkMode ? '#38bdf8' : theme.primary,
     fontSize: 9,
     fontWeight: '800',
     letterSpacing: 0.6,
   },
   shiftHoursText: {
-    color: '#ffffff',
+    color: theme.textPrimary,
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.2,
   },
   shiftHoursSub: {
-    color: 'rgba(255, 255, 255, 0.55)',
+    color: theme.textMuted,
     fontSize: 9,
     fontWeight: '500',
     marginTop: 1,
@@ -694,8 +691,6 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
     width: '100%',
     borderRadius: 0,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
   },
   punchBtnGradient: {
     flexDirection: 'row',
@@ -706,7 +701,7 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
   punchIconCircle: {
     width: 32,
     height: 32,
-    backgroundColor: 'rgba(0, 0, 0, 0.22)',
+    backgroundColor: 'rgba(0, 0, 0, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -723,7 +718,7 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
     letterSpacing: 0.6,
   },
   punchBtnSub: {
-    color: 'rgba(255, 255, 255, 0.85)',
+    color: 'rgba(255, 255, 255, 0.9)',
     fontWeight: '500',
     fontSize: 10,
     marginTop: 1,
