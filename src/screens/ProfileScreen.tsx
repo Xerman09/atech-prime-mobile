@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, ActivityIndicator 
+import {
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, ActivityIndicator
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -17,403 +17,153 @@ interface ProfileScreenProps {
 export default function ProfileScreen({ onBack, employeeId, token, userName }: ProfileScreenProps) {
   const { theme, isDarkMode } = useTheme();
   const styles = getStyles(theme, isDarkMode);
-  
   const [profileData, setProfileData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const initials = userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+
   useEffect(() => {
     const fetchProfile = async () => {
-      if (!employeeId || !token) {
-        setIsLoading(false);
-        return;
-      }
+      if (!employeeId || !token) { setIsLoading(false); return; }
       try {
-        const apiUrl = Platform.OS === 'web' 
-          ? `http://localhost/atech_prime/backend/public/api/employees/${employeeId}`
+        const url = Platform.OS === 'web'
+          ? `http://${window.location.hostname}/atech_prime/backend/public/api/employees/${employeeId}`
           : `http://192.168.100.31/atech_prime/backend/public/api/employees/${employeeId}`;
-          
-        const response = await fetch(apiUrl, {
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setProfileData(data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch profile:', error);
-      } finally {
-        setIsLoading(false);
-      }
+        const res = await fetch(url, { headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token}` } });
+        if (res.ok) setProfileData(await res.json());
+      } catch (e) { console.error(e); } finally { setIsLoading(false); }
     };
-
     fetchProfile();
   }, [employeeId, token]);
 
-  const formatDate = (dateString: string) => {
-    if (!dateString || dateString === '0000-00-00') return '-';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const formatDate = (ds: string) => {
+    if (!ds || ds === '0000-00-00') return '-';
+    const d = new Date(ds);
+    if (isNaN(d.getTime())) return '-';
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
-  return (
-    <LinearGradient
-      colors={theme.backgroundGradient}
-      style={styles.container}
-    >
-      <StatusBar style={isDarkMode ? "light" : "dark"} />
-      
-      {/* Decorative Background Elements */}
-      <View style={styles.glow1} />
-      <View style={styles.glow2} />
+  const DetailRow = ({ icon, label, value, last = false }: { icon: string; label: string; value: string; last?: boolean }) => (
+    <View style={[styles.detailRow, last && { borderBottomWidth: 0 }]}>
+      <View style={styles.detailIconBox}>
+        <Feather name={icon as any} size={15} color={theme.primary} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.detailLabel}>{label}</Text>
+        <Text style={styles.detailValue}>{value || '-'}</Text>
+      </View>
+    </View>
+  );
 
+  return (
+    <View style={styles.container}>
+      <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+      <LinearGradient colors={theme.backgroundGradient as any} style={StyleSheet.absoluteFillObject} />
+
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Feather name="arrow-left" size={24} color={theme.textPrimary} />
+        <TouchableOpacity style={styles.backBtn} onPress={onBack}>
+          <Feather name="arrow-left" size={20} color={theme.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>My Profile</Text>
-        <View style={{ width: 24 }} />
+        <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
-        
-        {/* Profile Card */}
-        <View style={styles.profileCard}>
-          <View style={styles.avatarContainer}>
-            <Text style={styles.avatarText}>{userName.charAt(0)}</Text>
+      <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+        {/* Profile hero */}
+        <LinearGradient colors={theme.primaryGradient as any} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.profileHero}>
+          <View style={styles.avatarRing}>
+            <Text style={styles.avatarText}>{initials}</Text>
           </View>
-          <Text style={styles.userName}>{userName}</Text>
-          <Text style={styles.userRole}>{profileData?.position_name || 'Staff'}</Text>
-          <View style={[styles.statusBadge, styles.statusActive]}>
-            <View style={[styles.statusDot, { backgroundColor: theme.success }]} />
+          <Text style={styles.profileName}>{userName}</Text>
+          <Text style={styles.profileRole}>{profileData?.position_name || 'Employee'}</Text>
+          <View style={styles.statusPill}>
+            <View style={styles.statusDot} />
             <Text style={styles.statusText}>{profileData?.status || 'Active'}</Text>
+          </View>
+        </LinearGradient>
+
+        {/* Stats row */}
+        <View style={styles.statsRow}>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{employeeId || '-'}</Text>
+            <Text style={styles.statLabel}>Employee ID</Text>
+          </View>
+          <View style={[styles.statBox, { borderLeftWidth: 1, borderRightWidth: 1, borderColor: theme.border }]}>
+            <Text style={styles.statValue}>{profileData?.department_name ? profileData.department_name.split(' ')[0] : '-'}</Text>
+            <Text style={styles.statLabel}>Department</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{formatDate(profileData?.hire_date).split(' ')[2] || '-'}</Text>
+            <Text style={styles.statLabel}>Year Hired</Text>
           </View>
         </View>
 
         {isLoading ? (
-          <View style={{ padding: 40, alignItems: 'center' }}>
-            <ActivityIndicator size="large" color={theme.primary} />
-          </View>
+          <ActivityIndicator size="large" color={theme.primary} style={{ marginTop: 40 }} />
         ) : (
           <>
-            {/* Employment Details Section */}
-            <Text style={styles.sectionTitle}>EMPLOYMENT DETAILS</Text>
-            <View style={styles.detailsCard}>
-              <View style={styles.detailRow}>
-                <View style={styles.detailIcon}>
-                  <Feather name="hash" size={16} color={theme.primary} />
-                </View>
-                <View style={styles.detailTextContainer}>
-                  <Text style={styles.detailLabel}>Employee ID</Text>
-                  <Text style={styles.detailValue}>{employeeId || '-'}</Text>
-                </View>
-              </View>
-
-              <View style={styles.detailRow}>
-                <View style={styles.detailIcon}>
-                  <Feather name="briefcase" size={16} color={theme.primary} />
-                </View>
-                <View style={styles.detailTextContainer}>
-                  <Text style={styles.detailLabel}>Department</Text>
-                  <Text style={styles.detailValue}>{profileData?.department_name || '-'}</Text>
-                </View>
-              </View>
-
-              <View style={[styles.detailRow, { borderBottomWidth: 0 }]}>
-                <View style={styles.detailIcon}>
-                  <Feather name="calendar" size={16} color={theme.primary} />
-                </View>
-                <View style={styles.detailTextContainer}>
-                  <Text style={styles.detailLabel}>Date Hired</Text>
-                  <Text style={styles.detailValue}>{formatDate(profileData?.hire_date)}</Text>
-                </View>
-              </View>
+            <Text style={styles.sectionLabel}>EMPLOYMENT</Text>
+            <View style={styles.card}>
+              <DetailRow icon="hash" label="Employee ID" value={String(employeeId || '-')} />
+              <DetailRow icon="briefcase" label="Department" value={profileData?.department_name} />
+              <DetailRow icon="tag" label="Position" value={profileData?.position_name} />
+              <DetailRow icon="calendar" label="Date Hired" value={formatDate(profileData?.hire_date)} last />
             </View>
 
-            {/* Personal Details Section */}
-            <Text style={styles.sectionTitle}>PERSONAL DETAILS</Text>
-            <View style={styles.detailsCard}>
-              <View style={styles.detailRow}>
-                <View style={styles.detailIcon}>
-                  <Feather name="mail" size={16} color={theme.primary} />
-                </View>
-                <View style={styles.detailTextContainer}>
-                  <Text style={styles.detailLabel}>Email Address</Text>
-                  <Text style={styles.detailValue}>{profileData?.email || '-'}</Text>
-                </View>
-              </View>
-
-              <View style={styles.detailRow}>
-                <View style={styles.detailIcon}>
-                  <Feather name="phone" size={16} color={theme.primary} />
-                </View>
-                <View style={styles.detailTextContainer}>
-                  <Text style={styles.detailLabel}>Phone Number</Text>
-                  <Text style={styles.detailValue}>{profileData?.phone || '-'}</Text>
-                </View>
-              </View>
-              
-              <View style={styles.detailRow}>
-                <View style={styles.detailIcon}>
-                  <Feather name="calendar" size={16} color={theme.primary} />
-                </View>
-                <View style={styles.detailTextContainer}>
-                  <Text style={styles.detailLabel}>Date of Birth</Text>
-                  <Text style={styles.detailValue}>{formatDate(profileData?.date_of_birth)}</Text>
-                </View>
-              </View>
-
-              <View style={[styles.detailRow, { borderBottomWidth: 0 }]}>
-                <View style={styles.detailIcon}>
-                  <Feather name="map-pin" size={16} color={theme.primary} />
-                </View>
-                <View style={styles.detailTextContainer}>
-                  <Text style={styles.detailLabel}>Address</Text>
-                  <Text style={styles.detailValue}>{profileData?.address || '-'}</Text>
-                </View>
-              </View>
+            <Text style={styles.sectionLabel}>PERSONAL INFORMATION</Text>
+            <View style={styles.card}>
+              <DetailRow icon="mail" label="Email Address" value={profileData?.email} />
+              <DetailRow icon="phone" label="Phone Number" value={profileData?.phone} />
+              <DetailRow icon="calendar" label="Date of Birth" value={formatDate(profileData?.date_of_birth)} />
+              <DetailRow icon="map-pin" label="Address" value={profileData?.address} last />
             </View>
 
-            {/* Government IDs */}
-            <Text style={styles.sectionTitle}>GOVERNMENT IDs</Text>
-            <View style={styles.detailsCard}>
-              <View style={styles.detailRow}>
-                <View style={styles.detailIcon}>
-                  <Feather name="file-text" size={16} color={theme.primary} />
-                </View>
-                <View style={styles.detailTextContainer}>
-                  <Text style={styles.detailLabel}>SSS Number</Text>
-                  <Text style={styles.detailValue}>{profileData?.sss_number || '-'}</Text>
-                </View>
-              </View>
-
-              <View style={styles.detailRow}>
-                <View style={styles.detailIcon}>
-                  <Feather name="file-text" size={16} color={theme.primary} />
-                </View>
-                <View style={styles.detailTextContainer}>
-                  <Text style={styles.detailLabel}>TIN</Text>
-                  <Text style={styles.detailValue}>{profileData?.tin_number || '-'}</Text>
-                </View>
-              </View>
-              
-              <View style={styles.detailRow}>
-                <View style={styles.detailIcon}>
-                  <Feather name="file-text" size={16} color={theme.primary} />
-                </View>
-                <View style={styles.detailTextContainer}>
-                  <Text style={styles.detailLabel}>PhilHealth Number</Text>
-                  <Text style={styles.detailValue}>{profileData?.philhealth_number || '-'}</Text>
-                </View>
-              </View>
-
-              <View style={[styles.detailRow, { borderBottomWidth: 0 }]}>
-                <View style={styles.detailIcon}>
-                  <Feather name="file-text" size={16} color={theme.primary} />
-                </View>
-                <View style={styles.detailTextContainer}>
-                  <Text style={styles.detailLabel}>Pag-IBIG Number</Text>
-                  <Text style={styles.detailValue}>{profileData?.pagibig_number || '-'}</Text>
-                </View>
-              </View>
+            <Text style={styles.sectionLabel}>GOVERNMENT IDs</Text>
+            <View style={styles.card}>
+              <DetailRow icon="file-text" label="SSS Number" value={profileData?.sss_number} />
+              <DetailRow icon="file-text" label="TIN" value={profileData?.tin_number} />
+              <DetailRow icon="file-text" label="PhilHealth" value={profileData?.philhealth_number} />
+              <DetailRow icon="file-text" label="Pag-IBIG" value={profileData?.pagibig_number} last />
             </View>
 
-            {/* Emergency Contact */}
-            <Text style={styles.sectionTitle}>EMERGENCY CONTACT</Text>
-            <View style={[styles.detailsCard, { marginBottom: 40 }]}>
-              <View style={styles.detailRow}>
-                <View style={styles.detailIcon}>
-                  <Feather name="users" size={16} color={theme.primary} />
-                </View>
-                <View style={styles.detailTextContainer}>
-                  <Text style={styles.detailLabel}>Contact Name</Text>
-                  <Text style={styles.detailValue}>{profileData?.emergency_contact_name || '-'}</Text>
-                </View>
-              </View>
-
-              <View style={[styles.detailRow, { borderBottomWidth: 0 }]}>
-                <View style={styles.detailIcon}>
-                  <Feather name="phone-call" size={16} color={theme.primary} />
-                </View>
-                <View style={styles.detailTextContainer}>
-                  <Text style={styles.detailLabel}>Contact Phone</Text>
-                  <Text style={styles.detailValue}>{profileData?.emergency_contact_phone || '-'}</Text>
-                </View>
-              </View>
+            <Text style={styles.sectionLabel}>EMERGENCY CONTACT</Text>
+            <View style={[styles.card, { marginBottom: 40 }]}>
+              <DetailRow icon="users" label="Contact Name" value={profileData?.emergency_contact_name} />
+              <DetailRow icon="phone-call" label="Contact Phone" value={profileData?.emergency_contact_phone} last />
             </View>
           </>
         )}
       </ScrollView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create({
-  container: {
-    flex: 1,
-    position: 'relative',
-  },
-  glow1: {
-    position: 'absolute',
-    top: -50,
-    left: -100,
-    width: 300,
-    height: 300,
-    backgroundColor: theme.glow1,
-    borderRadius: 150,
-    transform: [{ scale: 2 }],
-  },
-  glow2: {
-    position: 'absolute',
-    bottom: -100,
-    right: -100,
-    width: 300,
-    height: 300,
-    backgroundColor: theme.glow2,
-    borderRadius: 150,
-    transform: [{ scale: 2 }],
-  },
+  container: { flex: 1 },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
-    paddingHorizontal: 24,
-    paddingBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
-    backgroundColor: theme.inputBg,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingTop: Platform.OS === 'ios' ? 56 : 36, paddingHorizontal: 20, paddingBottom: 12,
   },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-  },
-  headerTitle: {
-    color: theme.textPrimary,
-    fontSize: 18,
-    fontWeight: '600',
-    letterSpacing: 1,
-  },
-  content: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 24,
-    paddingBottom: 40,
-  },
-  profileCard: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.cardBg,
-    borderWidth: 1,
-    borderColor: theme.border,
-    paddingVertical: 40,
-    paddingHorizontal: 20,
-    borderRadius: 0, // Sharp corners
-    marginBottom: 32,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 15,
-    elevation: 8,
-  },
-  avatarContainer: {
-    width: 80,
-    height: 80,
-    backgroundColor: theme.glow1,
-    borderWidth: 1,
-    borderColor: theme.border,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  avatarText: {
-    color: theme.primary,
-    fontSize: 32,
-    fontWeight: '700',
-  },
-  userName: {
-    color: theme.textPrimary,
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  userRole: {
-    color: theme.textSecondary,
-    fontSize: 16,
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderRadius: 0,
-  },
-  statusActive: {
-    backgroundColor: isDarkMode ? 'rgba(34, 197, 94, 0.1)' : 'rgba(34, 197, 94, 0.2)',
-    borderColor: isDarkMode ? 'rgba(34, 197, 94, 0.3)' : 'rgba(34, 197, 94, 0.4)',
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 8,
-  },
-  statusText: {
-    color: theme.textPrimary,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  sectionTitle: {
-    color: theme.textMuted,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 1.5,
-    marginBottom: 16,
-  },
-  detailsCard: {
-    backgroundColor: theme.cardBg,
-    borderWidth: 1,
-    borderColor: theme.border,
-    borderRadius: 0,
-    padding: 20,
-    marginBottom: 32,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
-  },
-  detailIcon: {
-    width: 36,
-    height: 36,
-    backgroundColor: theme.inputBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: theme.border,
-    marginRight: 16,
-  },
-  detailTextContainer: {
-    flex: 1,
-  },
-  detailLabel: {
-    color: theme.textMuted,
-    fontSize: 12,
-    marginBottom: 4,
-  },
-  detailValue: {
-    color: theme.textPrimary,
-    fontSize: 15,
-    fontWeight: '500',
-  },
+  backBtn: { padding: 8, backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border, borderRadius: 0 },
+  headerTitle: { color: theme.textPrimary, fontSize: 17, fontWeight: '700' },
+  body: { paddingBottom: 20 },
+  profileHero: { alignItems: 'center', paddingTop: 32, paddingBottom: 28, paddingHorizontal: 24, marginBottom: 0 },
+  avatarRing: { width: 76, height: 76, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', marginBottom: 14, borderRadius: 0, borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)' },
+  avatarText: { color: '#fff', fontSize: 28, fontWeight: '800' },
+  profileName: { color: '#fff', fontSize: 20, fontWeight: '700', marginBottom: 4 },
+  profileRole: { color: 'rgba(255,255,255,0.75)', fontSize: 14, marginBottom: 16 },
+  statusPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 0 },
+  statusDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#A6CE38', marginRight: 8 },
+  statusText: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  statsRow: { flexDirection: 'row', backgroundColor: theme.cardBg, borderBottomWidth: 1, borderBottomColor: theme.border, marginBottom: 24 },
+  statBox: { flex: 1, paddingVertical: 16, alignItems: 'center' },
+  statValue: { color: theme.primary, fontSize: 16, fontWeight: '700', marginBottom: 3 },
+  statLabel: { color: theme.textMuted, fontSize: 10, textAlign: 'center' },
+  sectionLabel: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5, color: theme.textMuted, marginBottom: 10, marginHorizontal: 20 },
+  card: { backgroundColor: theme.cardBg, borderTopWidth: 1, borderBottomWidth: 1, borderColor: theme.border, marginBottom: 24 },
+  detailRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: theme.border },
+  detailIconBox: { width: 32, height: 32, backgroundColor: theme.tealTint, alignItems: 'center', justifyContent: 'center', marginRight: 14, borderRadius: 0 },
+  detailLabel: { color: theme.textMuted, fontSize: 11, marginBottom: 3 },
+  detailValue: { color: theme.textPrimary, fontSize: 14, fontWeight: '500' },
 });

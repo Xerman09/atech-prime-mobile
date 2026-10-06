@@ -55,6 +55,17 @@ export default function AttendanceModificationRequestScreen({ token, onBack, onN
     }
   };
 
+  const formatDate = (dateStr: string) => {
+    if (!dateStr || dateStr === '0000-00-00') return '-';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch {
+      return dateStr;
+    }
+  };
+
   const handleOpenAttachment = (path: string) => {
     let baseUrl = `http://192.168.100.31/atech_prime/backend/public/`;
     if (Platform.OS === 'web') baseUrl = `http://${window.location.hostname}/atech_prime/backend/public/`;
@@ -62,105 +73,136 @@ export default function AttendanceModificationRequestScreen({ token, onBack, onN
   };
 
   return (
-    <LinearGradient colors={theme.backgroundGradient as any} style={styles.container}>
-      <StatusBar style={isDarkMode ? "light" : "dark"} />
-      <View style={styles.glow1} />
-      
+    <View style={styles.container}>
+      <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+      <LinearGradient colors={theme.backgroundGradient as any} style={StyleSheet.absoluteFillObject} />
+
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Feather name="arrow-left" size={24} color={theme.textPrimary} />
+        <TouchableOpacity style={styles.backBtn} onPress={onBack}>
+          <Feather name="arrow-left" size={20} color={theme.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Modification Requests</Text>
-        <TouchableOpacity style={styles.addButton} onPress={onNavigateToForm}>
-          <Feather name="plus" size={24} color={theme.primary} />
+        <TouchableOpacity style={styles.addBtn} onPress={onNavigateToForm}>
+          <Feather name="plus" size={18} color="#fff" />
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {loading ? (
-          <ActivityIndicator size="large" color={theme.primary} style={{ marginTop: 40 }} />
+          <View style={styles.centerBox}>
+            <ActivityIndicator size="large" color={theme.primary} />
+            <Text style={styles.centerText}>Loading requests...</Text>
+          </View>
         ) : requests.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Feather name="edit-3" size={48} color={theme.textSecondary} style={{ marginBottom: 16, opacity: 0.5 }} />
-            <Text style={{ color: theme.textSecondary }}>No modification requests found.</Text>
+            <View style={styles.emptyIcon}>
+              <Feather name="edit-3" size={28} color={theme.textMuted} />
+            </View>
+            <Text style={styles.emptyTitle}>No modification requests</Text>
+            <Text style={styles.emptySubtitle}>Tap the '+' button above to submit an attendance adjustment.</Text>
           </View>
         ) : (
-          requests.map((req) => (
-            <View key={req.id} style={styles.card}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.dateText}>{req.date}</Text>
-                <View style={[styles.statusBadge, { borderColor: getStatusColor(req.status) }]}>
-                  <Text style={[styles.statusText, { color: getStatusColor(req.status) }]}>{req.status}</Text>
+          requests.map((req) => {
+            const statusColor = getStatusColor(req.status);
+            return (
+              <View key={req.id} style={styles.card}>
+                <View style={styles.cardHeader}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={[styles.dateDot, { backgroundColor: statusColor }]} />
+                    <Text style={styles.dateText}>{formatDate(req.date)}</Text>
+                  </View>
+                  <View style={[styles.statusBadge, { borderColor: statusColor + '60', backgroundColor: statusColor + '15' }]}>
+                    <Text style={[styles.statusText, { color: statusColor }]}>{req.status}</Text>
+                  </View>
                 </View>
-              </View>
-              
-              <View style={styles.timesContainer}>
-                <View style={styles.timeBlock}>
-                  <Text style={styles.timeLabel}>Req. Time In</Text>
-                  <Text style={styles.timeValue}>{req.requested_time_in || '--:--'}</Text>
+                
+                <View style={styles.timesContainer}>
+                  <View style={styles.timeBlock}>
+                    <Text style={styles.timeLabel}>REQ. TIME IN</Text>
+                    <Text style={[styles.timeValue, !req.requested_time_in && { color: theme.textMuted }]}>
+                      {req.requested_time_in || '--:--'}
+                    </Text>
+                  </View>
+                  <View style={styles.timeSep} />
+                  <View style={styles.timeBlock}>
+                    <Text style={styles.timeLabel}>REQ. TIME OUT</Text>
+                    <Text style={[styles.timeValue, !req.requested_time_out && { color: theme.textMuted }]}>
+                      {req.requested_time_out || '--:--'}
+                    </Text>
+                  </View>
                 </View>
-                <View style={styles.timeBlock}>
-                  <Text style={styles.timeLabel}>Req. Time Out</Text>
-                  <Text style={styles.timeValue}>{req.requested_time_out || '--:--'}</Text>
-                </View>
-              </View>
 
-              <Text style={styles.reasonText}>{req.reason || 'No reason provided.'}</Text>
+                {req.reason ? (
+                  <View style={styles.reasonBox}>
+                    <Text style={styles.reasonLabel}>REASON</Text>
+                    <Text style={styles.reasonText}>{req.reason}</Text>
+                  </View>
+                ) : null}
 
-              {req.attachments && req.attachments.length > 0 && (
-                <View style={styles.attachmentsContainer}>
-                  <Text style={styles.attachmentTitle}>Attachments:</Text>
-                  {req.attachments.map((att: any, idx: number) => (
-                    <TouchableOpacity key={idx} onPress={() => handleOpenAttachment(att.file_path)}>
-                      <Text style={styles.attachmentLink}>{att.file_name}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-            </View>
-          ))
+                {req.attachments && req.attachments.length > 0 && (
+                  <View style={styles.attachmentsContainer}>
+                    <Text style={styles.attachmentTitle}>ATTACHMENTS</Text>
+                    {req.attachments.map((att: any, idx: number) => (
+                      <TouchableOpacity key={idx} style={styles.attachmentLink} onPress={() => handleOpenAttachment(att.file_path)}>
+                        <Feather name="paperclip" size={12} color={theme.primary} style={{ marginRight: 6 }} />
+                        <Text style={styles.attachmentLinkText} numberOfLines={1}>{att.file_name}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </View>
+            );
+          })
         )}
+        <View style={{ height: 32 }} />
       </ScrollView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const getStyles = (theme: any) => StyleSheet.create({
   container: { flex: 1 },
-  glow1: {
-    position: 'absolute', top: -100, right: -100, width: 300, height: 300,
-    borderRadius: 150, backgroundColor: theme.primary, opacity: 0.1,
-    ...Platform.select({ web: { filter: 'blur(60px)' } })
-  },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingTop: Platform.OS === 'ios' ? 60 : 40, paddingHorizontal: 20, paddingBottom: 20, zIndex: 10,
+    paddingTop: Platform.OS === 'ios' ? 56 : 36, paddingHorizontal: 20, paddingBottom: 16,
+    borderBottomWidth: 1, borderBottomColor: theme.border,
   },
-  backButton: {
-    width: 40, height: 40, borderRadius: 0, backgroundColor: theme.surface,
-    alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.border,
+  backBtn: {
+    padding: 8, backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border, borderRadius: 0
   },
-  addButton: {
-    width: 40, height: 40, borderRadius: 0, backgroundColor: theme.surface,
-    alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.primary,
+  addBtn: {
+    padding: 8, backgroundColor: theme.primary, borderRadius: 0, alignItems: 'center', justifyContent: 'center'
   },
-  headerTitle: { fontSize: 20, fontWeight: '700', color: theme.textPrimary },
-  scrollContent: { padding: 20, paddingBottom: 40 },
-  emptyContainer: { padding: 40, alignItems: 'center', borderWidth: 1, borderColor: theme.border, borderRadius: 0 },
+  headerTitle: { color: theme.textPrimary, fontSize: 17, fontWeight: '700' },
+  scrollContent: { padding: 20 },
+  centerBox: { padding: 40, alignItems: 'center', justifyContent: 'center' },
+  centerText: { marginTop: 12, color: theme.textMuted, fontSize: 13 },
+  emptyContainer: {
+    padding: 40, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: theme.border, backgroundColor: theme.cardBg, borderRadius: 0, marginTop: 20
+  },
+  emptyIcon: { width: 56, height: 56, backgroundColor: theme.tealTint, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  emptyTitle: { color: theme.textPrimary, fontSize: 15, fontWeight: '600', marginBottom: 6 },
+  emptySubtitle: { color: theme.textMuted, fontSize: 13, textAlign: 'center', lineHeight: 18 },
   card: {
-    backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border,
-    padding: 16, marginBottom: 16, borderRadius: 0
+    backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border,
+    padding: 16, marginBottom: 12, borderRadius: 0
   },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
-  dateText: { fontSize: 16, fontWeight: '700', color: theme.textPrimary },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1, borderRadius: 0 },
-  statusText: { fontSize: 12, fontWeight: '700' },
-  timesContainer: { flexDirection: 'row', marginBottom: 12, borderBottomWidth: 1, borderBottomColor: theme.border, paddingBottom: 12 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: theme.border },
+  dateDot: { width: 6, height: 6, borderRadius: 3, marginRight: 8 },
+  dateText: { fontSize: 14, fontWeight: '700', color: theme.textPrimary },
+  statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1, borderRadius: 0 },
+  statusText: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
+  timesContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   timeBlock: { flex: 1 },
-  timeLabel: { fontSize: 12, color: theme.textSecondary, marginBottom: 4 },
-  timeValue: { fontSize: 16, fontWeight: '700', color: theme.textPrimary },
-  reasonText: { fontSize: 14, color: theme.textSecondary, fontStyle: 'italic', marginBottom: 12 },
-  attachmentsContainer: { marginTop: 8 },
-  attachmentTitle: { fontSize: 12, fontWeight: '700', color: theme.textPrimary, marginBottom: 4 },
-  attachmentLink: { color: theme.primary, fontSize: 14, textDecorationLine: 'underline', marginBottom: 4 }
+  timeSep: { width: 1, height: 28, backgroundColor: theme.border, marginHorizontal: 16 },
+  timeLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 0.8, color: theme.textMuted, marginBottom: 4 },
+  timeValue: { fontSize: 17, fontWeight: '600', color: theme.textPrimary },
+  reasonBox: { backgroundColor: theme.tealTint, padding: 10, marginBottom: 10, borderWidth: 1, borderColor: theme.border },
+  reasonLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 0.8, color: theme.textMuted, marginBottom: 2 },
+  reasonText: { fontSize: 13, color: theme.textSecondary, lineHeight: 18 },
+  attachmentsContainer: { marginTop: 6, paddingTop: 8, borderTopWidth: 1, borderTopColor: theme.border },
+  attachmentTitle: { fontSize: 10, fontWeight: '700', letterSpacing: 0.8, color: theme.textMuted, marginBottom: 6 },
+  attachmentLink: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
+  attachmentLinkText: { color: theme.primary, fontSize: 12, fontWeight: '600', textDecorationLine: 'underline' }
 });

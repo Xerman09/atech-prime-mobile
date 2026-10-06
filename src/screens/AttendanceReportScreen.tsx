@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { 
+import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, ActivityIndicator
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -22,308 +22,140 @@ interface AttendanceRecord {
 
 export default function AttendanceReportScreen({ token, onBack, onNavigateToModificationRequests, onNavigateToForm }: AttendanceReportScreenProps) {
   const { theme, isDarkMode } = useTheme();
-  const styles = getStyles(theme);
+  const styles = getStyles(theme, isDarkMode);
   const [logs, setLogs] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchLogs = async () => {
-      if (!token) {
-        setLoading(false);
-        return;
-      }
+      if (!token) { setLoading(false); return; }
       try {
-        let apiUrl = `http://192.168.100.31/atech_prime/backend/public/api/attendance/my-logs/history`;
-        if (Platform.OS === 'web') {
-          apiUrl = `http://${window.location.hostname}/atech_prime/backend/public/api/attendance/my-logs/history`;
-        }
-          
-        const response = await fetch(apiUrl, {
-          method: 'GET',
-          cache: 'no-store', // Prevent aggressive caching
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setLogs(Array.isArray(data) ? data : []);
-        } else {
-          console.error(`HTTP Error: ${response.status}`);
-        }
-      } catch (error) {
-        console.error('Failed to fetch logs:', error);
-      } finally {
-        setLoading(false);
-      }
+        let url = `http://192.168.100.31/atech_prime/backend/public/api/attendance/my-logs/history`;
+        if (Platform.OS === 'web') url = `http://${window.location.hostname}/atech_prime/backend/public/api/attendance/my-logs/history`;
+        const res = await fetch(url, { cache: 'no-store', headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token}` } });
+        if (res.ok) { const d = await res.json(); setLogs(Array.isArray(d) ? d : []); }
+      } catch (e) { console.error(e); } finally { setLoading(false); }
     };
-
     fetchLogs();
   }, [token]);
 
-  const formatDate = (dateStr: string) => {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString(undefined, {
-      weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
-    });
+  const formatDate = (ds: string) => {
+    const d = new Date(ds);
+    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  const getStatusColor = (timeIn: string | null, timeOut: string | null) => {
-    if (timeIn && timeOut) return theme.success;
-    if (timeIn && !timeOut) return theme.warning;
-    return theme.error;
-  };
-
-  const getStatusText = (timeIn: string | null, timeOut: string | null) => {
-    if (timeIn && timeOut) return 'Completed';
-    if (timeIn && !timeOut) return 'Missing Out';
-    if (!timeIn && timeOut) return 'Missing In';
-    return 'Absent';
+  const getStatus = (timeIn: string | null, timeOut: string | null) => {
+    if (timeIn && timeOut) return { text: 'Complete', color: theme.success };
+    if (timeIn && !timeOut) return { text: 'No Out', color: theme.warning };
+    if (!timeIn && timeOut) return { text: 'No In', color: theme.warning };
+    return { text: 'Absent', color: theme.error };
   };
 
   return (
-    <LinearGradient colors={theme.backgroundGradient as any} style={styles.container}>
-      <StatusBar style={isDarkMode ? "light" : "dark"} />
-      
-      {/* Decorative Background Elements */}
-      <View style={styles.glow1} />
-      
+    <View style={styles.container}>
+      <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+      <LinearGradient colors={theme.backgroundGradient as any} style={StyleSheet.absoluteFillObject} />
+
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Feather name="arrow-left" size={24} color={theme.textPrimary} />
+        <TouchableOpacity style={styles.backBtn} onPress={onBack}>
+          <Feather name="arrow-left" size={20} color={theme.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Attendance History</Text>
-        <TouchableOpacity style={styles.modifyButton} onPress={onNavigateToModificationRequests}>
-          <Feather name="list" size={20} color={theme.primary} />
+        <TouchableOpacity style={styles.filterBtn} onPress={onNavigateToModificationRequests}>
+          <Feather name="list" size={18} color={theme.primary} />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.subtitleContainer}>
-        <Text style={styles.subtitleText}>Showing last 30 days</Text>
+      <View style={styles.subheader}>
+        <Feather name="calendar" size={13} color={theme.textMuted} style={{ marginRight: 6 }} />
+        <Text style={styles.subheaderText}>Showing last 30 days</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={theme.primary} />
-            <Text style={styles.loadingText}>Loading attendance logs...</Text>
-          </View>
-        ) : logs.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Feather name="calendar" size={48} color={theme.textSecondary} style={styles.emptyIcon} />
-            <Text style={styles.emptyText}>No attendance records found.</Text>
-          </View>
-        ) : (
-          logs.map((record, index) => (
-            <View key={index} style={styles.logCard}>
-              <View style={styles.logHeader}>
-                <View style={styles.dateRow}>
-                  <Feather name="calendar" size={16} color={theme.textSecondary} />
-                  <Text style={styles.logDate}>{formatDate(record.date)}</Text>
+      {loading ? (
+        <View style={styles.centerBox}>
+          <ActivityIndicator size="large" color={theme.primary} />
+          <Text style={styles.loadingText}>Loading records...</Text>
+        </View>
+      ) : logs.length === 0 ? (
+        <View style={styles.centerBox}>
+          <View style={styles.emptyIcon}><Feather name="calendar" size={32} color={theme.textMuted} /></View>
+          <Text style={styles.emptyTitle}>No records found</Text>
+          <Text style={styles.emptySubtitle}>Attendance logs will appear here once available.</Text>
+        </View>
+      ) : (
+        <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+          {logs.map((record, idx) => {
+            const status = getStatus(record.timeIn, record.timeOut);
+            return (
+              <View key={idx} style={styles.logCard}>
+                <View style={styles.logCardHeader}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={styles.logDateDot} />
+                    <Text style={styles.logDate}>{formatDate(record.date)}</Text>
+                  </View>
+                  <View style={styles.logRight}>
+                    <View style={[styles.statusBadge, { borderColor: status.color + '50', backgroundColor: status.color + '12' }]}>
+                      <Text style={[styles.statusText, { color: status.color }]}>{status.text}</Text>
+                    </View>
+                    <TouchableOpacity style={styles.editBtn} onPress={() => onNavigateToForm(record.date)}>
+                      <Feather name="edit-3" size={14} color={theme.primary} />
+                    </TouchableOpacity>
+                  </View>
                 </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <View style={[
-                    styles.statusBadge, 
-                    { borderColor: getStatusColor(record.timeIn, record.timeOut) }
-                  ]}>
-                    <Text style={[
-                      styles.statusText, 
-                      { color: getStatusColor(record.timeIn, record.timeOut) }
-                    ]}>
-                      {getStatusText(record.timeIn, record.timeOut)}
+                <View style={styles.timeRow}>
+                  <View style={styles.timeBlock}>
+                    <Text style={styles.timeBlockLabel}>TIME IN</Text>
+                    <Text style={[styles.timeBlockValue, !record.timeIn && { color: theme.textMuted }]}>
+                      {record.timeIn || '--:--'}
                     </Text>
                   </View>
-                  <TouchableOpacity 
-                    style={{ marginLeft: 12 }} 
-                    onPress={() => onNavigateToForm(record.date)}
-                  >
-                    <Feather name="edit-3" size={18} color={theme.primary} />
-                  </TouchableOpacity>
+                  <View style={styles.timeSep} />
+                  <View style={styles.timeBlock}>
+                    <Text style={styles.timeBlockLabel}>TIME OUT</Text>
+                    <Text style={[styles.timeBlockValue, !record.timeOut && { color: theme.textMuted }]}>
+                      {record.timeOut || '--:--'}
+                    </Text>
+                  </View>
                 </View>
               </View>
-              
-              <View style={styles.timeGrid}>
-                <View style={styles.timeBlock}>
-                  <Text style={styles.timeLabel}>Time In</Text>
-                  <Text style={[styles.timeValue, !record.timeIn && styles.timeMissing]}>
-                    {record.timeIn || '--:--'}
-                  </Text>
-                </View>
-                <View style={styles.timeDivider} />
-                <View style={styles.timeBlock}>
-                  <Text style={styles.timeLabel}>Time Out</Text>
-                  <Text style={[styles.timeValue, !record.timeOut && styles.timeMissing]}>
-                    {record.timeOut || '--:--'}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          ))
-        )}
-      </ScrollView>
-    </LinearGradient>
+            );
+          })}
+          <View style={{ height: 32 }} />
+        </ScrollView>
+      )}
+    </View>
   );
 }
 
-const getStyles = (theme: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  glow1: {
-    position: 'absolute',
-    top: -100,
-    right: -100,
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    backgroundColor: theme.primary,
-    opacity: 0.1,
-    ...Platform.select({
-      web: { filter: 'blur(60px)' }
-    }),
-  },
+const getStyles = (theme: any, isDarkMode: boolean) => StyleSheet.create({
+  container: { flex: 1 },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
-    paddingHorizontal: 20,
-    paddingBottom: 10,
-    zIndex: 10,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingTop: Platform.OS === 'ios' ? 56 : 36, paddingHorizontal: 20, paddingBottom: 12,
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: theme.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: theme.border,
-    borderRadius: 0, // Enforcing Anti-AI Slop Rule (sharp edges)
-  },
-  modifyButton: {
-    width: 40,
-    height: 40,
-    backgroundColor: theme.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: theme.primary,
-    borderRadius: 0, // Enforcing Anti-AI Slop Rule
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: theme.textPrimary,
-  },
-  subtitleContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
-  },
-  subtitleText: {
-    color: theme.textSecondary,
-    fontSize: 14,
-  },
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-  loadingContainer: {
-    padding: 40,
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 10,
-    color: theme.textSecondary,
-    fontSize: 14,
-  },
-  emptyContainer: {
-    padding: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.surface,
-    borderWidth: 1,
-    borderColor: theme.border,
-    borderRadius: 0, // Enforcing Anti-AI Slop Rule
-    marginTop: 20,
-  },
-  emptyIcon: {
-    marginBottom: 16,
-    opacity: 0.5,
-  },
-  emptyText: {
-    color: theme.textSecondary,
-    fontSize: 16,
-  },
-  logCard: {
-    backgroundColor: theme.surface,
-    borderWidth: 1,
-    borderColor: theme.border,
-    padding: 16,
-    marginBottom: 16,
-    borderRadius: 0, // Enforcing Anti-AI Slop Rule
-  },
-  logHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
-  },
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  logDate: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.textPrimary,
-    marginLeft: 8,
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderWidth: 1,
-    borderRadius: 0, // Enforcing Anti-AI Slop Rule
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  timeGrid: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  timeBlock: {
-    flex: 1,
-  },
-  timeDivider: {
-    width: 1,
-    height: 30,
-    backgroundColor: theme.border,
-    marginHorizontal: 16,
-  },
-  timeLabel: {
-    fontSize: 12,
-    color: theme.textSecondary,
-    marginBottom: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  timeValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: theme.textPrimary,
-  },
-  timeMissing: {
-    color: theme.textSecondary,
-    opacity: 0.5,
-  },
+  backBtn: { padding: 8, backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border, borderRadius: 0 },
+  headerTitle: { color: theme.textPrimary, fontSize: 17, fontWeight: '700' },
+  filterBtn: { padding: 8, backgroundColor: theme.tealTint, borderWidth: 1, borderColor: theme.border, borderRadius: 0 },
+  subheader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: theme.border },
+  subheaderText: { color: theme.textMuted, fontSize: 13 },
+  centerBox: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
+  loadingText: { color: theme.textMuted, fontSize: 14, marginTop: 12 },
+  emptyIcon: { width: 64, height: 64, backgroundColor: theme.tealTint, alignItems: 'center', justifyContent: 'center', marginBottom: 16, borderRadius: 0 },
+  emptyTitle: { color: theme.textPrimary, fontSize: 16, fontWeight: '600', marginBottom: 6 },
+  emptySubtitle: { color: theme.textMuted, fontSize: 13, textAlign: 'center' },
+  body: { padding: 20 },
+  logCard: { backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border, borderRadius: 0, marginBottom: 12 },
+  logCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14, borderBottomWidth: 1, borderBottomColor: theme.border },
+  logDateDot: { width: 6, height: 6, backgroundColor: theme.primary, borderRadius: 3, marginRight: 10 },
+  logDate: { color: theme.textPrimary, fontSize: 14, fontWeight: '600' },
+  logRight: { flexDirection: 'row', alignItems: 'center' },
+  statusBadge: { borderWidth: 1, borderRadius: 0, paddingHorizontal: 8, paddingVertical: 3 },
+  statusText: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
+  editBtn: { padding: 6, marginLeft: 10 },
+  timeRow: { flexDirection: 'row', alignItems: 'center', padding: 14 },
+  timeBlock: { flex: 1 },
+  timeSep: { width: 1, height: 32, backgroundColor: theme.border, marginHorizontal: 16 },
+  timeBlockLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 1, color: theme.textMuted, marginBottom: 4 },
+  timeBlockValue: { fontSize: 20, fontWeight: '300', color: theme.textPrimary, letterSpacing: 0.5 },
 });
+

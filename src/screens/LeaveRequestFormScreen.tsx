@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, createElement } from 'react';
 import { 
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, TextInput, Alert, createElement
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, TextInput
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -424,8 +424,8 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
     marginBottom: 8,
   },
   typeButtonActive: {
-    borderColor: theme.purple,
-    backgroundColor: isDarkMode ? 'rgba(168, 85, 247, 0.1)' : 'rgba(147, 51, 234, 0.1)',
+    borderColor: theme.primary,
+    backgroundColor: theme.tealTint,
   },
   typeButtonText: {
     color: theme.textSecondary,
@@ -433,7 +433,7 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
     fontWeight: '500',
   },
   typeButtonTextActive: {
-    color: theme.purple,
+    color: theme.primary,
     fontWeight: '700',
   },
   dateRow: {
@@ -477,7 +477,7 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
   },
   submitButton: {
     flexDirection: 'row',
-    backgroundColor: theme.purple,
+    backgroundColor: theme.primary,
     paddingVertical: 16,
     borderRadius: 0,
     alignItems: 'center',

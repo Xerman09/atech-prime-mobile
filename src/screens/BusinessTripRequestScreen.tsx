@@ -48,7 +48,6 @@ export default function BusinessTripRequestScreen({ onBack, onNavigateToForm, to
         } else if (response.status === 401) {
           console.error('Session expired.');
           setHistory([]);
-          Alert.alert('Session Expired', 'Your login session has expired. Please log out and log back in.');
         } else {
           console.error('Failed to fetch business trip history:', response.status);
         }

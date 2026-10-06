@@ -123,7 +123,7 @@ export default function UndertimeRequestScreen({ onBack, onNavigateToForm, token
         
         {isLoading ? (
           <View style={[styles.emptyState, { marginTop: 40 }]}>
-            <ActivityIndicator size="large" color={theme.purple} />
+            <ActivityIndicator size="large" color={theme.primary} />
           </View>
         ) : history.length === 0 ? (
           <View style={styles.emptyState}>
@@ -137,8 +137,8 @@ export default function UndertimeRequestScreen({ onBack, onNavigateToForm, token
             <View key={item.id} style={styles.historyCard}>
               <View style={styles.cardHeader}>
                 <View style={styles.typeWrapper}>
-                  <View style={[styles.typeIcon, { backgroundColor: 'rgba(168, 85, 247, 0.1)' }]}>
-                    <Feather name="file-text" size={16} color={theme.purple} />
+                  <View style={[styles.typeIcon, { backgroundColor: theme.tealTint }]}>
+                    <Feather name="file-text" size={16} color={theme.primary} />
                   </View>
                   <Text style={styles.typeText}>{'Undertime'}</Text>
                 </View>
@@ -289,13 +289,13 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.purple,
+    backgroundColor: theme.primary,
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 0,
   },
   addButtonText: {
-    color: theme.textPrimary,
+    color: '#ffffff',
     fontSize: 13,
     fontWeight: '600',
     marginLeft: 4,

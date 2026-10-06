@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, createElement } from 'react';
 import { 
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, TextInput, Alert, createElement
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, TextInput, Alert
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';

@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { 
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, TextInput, Alert, createElement
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, TextInput
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { Feather } from '@expo/vector-icons';
 import { useTheme, ThemeColors } from '../theme/ThemeContext';
-import DateTimePicker from '@react-native-community/datetimepicker';
 
 interface CoeRequestFormScreenProps {
   onBack: () => void;
@@ -18,6 +17,12 @@ interface CoeRequestFormScreenProps {
 export default function CoeRequestFormScreen({ onBack, onSubmitSuccess, token, employeeId }: CoeRequestFormScreenProps) {
   const { theme, isDarkMode } = useTheme();
   const styles = getStyles(theme, isDarkMode);
+  
+  const [purpose, setPurpose] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+
   const handleSubmit = async () => {
     if (!token) {
       setErrorMsg('You are not properly logged in. Please log out and log back in to get a valid token.');
@@ -236,8 +241,8 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
     marginBottom: 8,
   },
   typeButtonActive: {
-    borderColor: theme.purple,
-    backgroundColor: isDarkMode ? 'rgba(168, 85, 247, 0.1)' : 'rgba(147, 51, 234, 0.1)',
+    borderColor: theme.primary,
+    backgroundColor: theme.tealTint,
   },
   typeButtonText: {
     color: theme.textSecondary,
@@ -245,7 +250,7 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
     fontWeight: '500',
   },
   typeButtonTextActive: {
-    color: theme.purple,
+    color: theme.primary,
     fontWeight: '700',
   },
   dateRow: {
@@ -289,7 +294,7 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
   },
   submitButton: {
     flexDirection: 'row',
-    backgroundColor: theme.purple,
+    backgroundColor: theme.primary,
     paddingVertical: 16,
     borderRadius: 0,
     alignItems: 'center',

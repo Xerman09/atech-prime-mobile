@@ -10,64 +10,95 @@ export type ThemeColors = {
   textSecondary: string;
   textMuted: string;
   primary: string;
+  primaryLight: string;
   primaryGradient: readonly [string, string];
+  secondary: string;
   error: string;
   success: string;
   warning: string;
-  purple: string;
-  glow1: string;
-  glow2: string;
+  info: string;
+  tealTint: string;
+  greenTint: string;
+  yellowTint: string;
+  redTint: string;
+  blueTint: string;
   inputBg: string;
   inputBgFocused: string;
   sidebarOverlay: string;
   sidebarBg: string;
   dateContainerBg: string;
+  // Aliases for compatibility
+  glow1: string;
+  glow2: string;
+  purple: string;
+  surface: string;
+  background: string;
 };
 
 export const darkTheme: ThemeColors = {
-  backgroundGradient: ['#020617', '#0f172a', '#020617'],
-  cardBg: 'rgba(15, 23, 42, 0.85)',
-  cardBgSolid: '#0f172a',
-  border: 'rgba(51, 65, 85, 0.5)',
-  textPrimary: '#f8fafc',
-  textSecondary: '#94a3b8',
-  textMuted: '#64748b',
-  primary: '#38bdf8',
-  primaryGradient: ['#0284c7', '#2563eb'],
+  backgroundGradient: ['#031c20', '#042a30', '#031c20'],
+  cardBg: 'rgba(8, 42, 48, 0.92)',
+  cardBgSolid: '#062830',
+  border: 'rgba(19, 157, 158, 0.18)',
+  textPrimary: '#e8f5f5',
+  textSecondary: '#8ecece',
+  textMuted: '#4a8c8c',
+  primary: '#139D9E',
+  primaryLight: '#1cc4c5',
+  primaryGradient: ['#08697A', '#139D9E'],
+  secondary: '#A6CE38',
   error: '#ef4444',
-  success: '#22c55e',
+  success: '#A6CE38',
   warning: '#f59e0b',
-  purple: '#a855f7',
-  glow1: 'rgba(56, 189, 248, 0.15)',
-  glow2: 'rgba(37, 99, 235, 0.15)',
-  inputBg: 'rgba(2, 6, 23, 0.5)',
-  inputBgFocused: 'rgba(2, 6, 23, 0.8)',
-  sidebarOverlay: 'rgba(2, 6, 23, 0.85)',
-  sidebarBg: '#0f172a',
-  dateContainerBg: 'rgba(15, 23, 42, 0.6)',
+  info: '#38bdf8',
+  tealTint: 'rgba(19, 157, 158, 0.12)',
+  greenTint: 'rgba(166, 206, 56, 0.12)',
+  yellowTint: 'rgba(245, 158, 11, 0.12)',
+  redTint: 'rgba(239, 68, 68, 0.12)',
+  blueTint: 'rgba(56, 189, 248, 0.12)',
+  inputBg: 'rgba(4, 30, 35, 0.7)',
+  inputBgFocused: 'rgba(4, 30, 35, 0.95)',
+  sidebarOverlay: 'rgba(2, 12, 14, 0.88)',
+  sidebarBg: '#041e22',
+  dateContainerBg: 'rgba(8, 42, 48, 0.6)',
+  glow1: 'rgba(19, 157, 158, 0.15)',
+  glow2: 'rgba(166, 206, 56, 0.08)',
+  purple: '#139D9E', // Harmonized with corporate teal
+  surface: 'rgba(8, 42, 48, 0.92)',
+  background: '#041e22',
 };
 
 export const lightTheme: ThemeColors = {
-  backgroundGradient: ['#f8fafc', '#f1f5f9', '#f8fafc'],
-  cardBg: 'rgba(255, 255, 255, 0.9)',
+  backgroundGradient: ['#f0fafa', '#e8f7f7', '#f0fafa'],
+  cardBg: 'rgba(255, 255, 255, 0.98)',
   cardBgSolid: '#ffffff',
-  border: 'rgba(203, 213, 225, 0.8)',
-  textPrimary: '#0f172a',
-  textSecondary: '#475569',
-  textMuted: '#64748b',
-  primary: '#2563eb', // Darker blue for visibility on light bg
-  primaryGradient: ['#3b82f6', '#1d4ed8'],
+  border: 'rgba(8, 105, 122, 0.14)',
+  textPrimary: '#0a2b32',
+  textSecondary: '#2d6b78',
+  textMuted: '#7aacb5',
+  primary: '#08697A',
+  primaryLight: '#139D9E',
+  primaryGradient: ['#08697A', '#139D9E'],
+  secondary: '#A6CE38',
   error: '#dc2626',
-  success: '#16a34a',
+  success: '#7aaa1e',
   warning: '#d97706',
-  purple: '#9333ea',
-  glow1: 'rgba(56, 189, 248, 0.25)',
-  glow2: 'rgba(37, 99, 235, 0.25)',
+  info: '#0284c7',
+  tealTint: 'rgba(8, 105, 122, 0.08)',
+  greenTint: 'rgba(166, 206, 56, 0.12)',
+  yellowTint: 'rgba(217, 119, 6, 0.1)',
+  redTint: 'rgba(220, 38, 38, 0.08)',
+  blueTint: 'rgba(2, 132, 199, 0.08)',
   inputBg: 'rgba(255, 255, 255, 0.8)',
-  inputBgFocused: 'rgba(255, 255, 255, 1)',
-  sidebarOverlay: 'rgba(255, 255, 255, 0.7)',
+  inputBgFocused: '#ffffff',
+  sidebarOverlay: 'rgba(4, 30, 35, 0.72)',
   sidebarBg: '#ffffff',
-  dateContainerBg: 'rgba(255, 255, 255, 0.7)',
+  dateContainerBg: 'rgba(255, 255, 255, 0.8)',
+  glow1: 'rgba(8, 105, 122, 0.08)',
+  glow2: 'rgba(166, 206, 56, 0.08)',
+  purple: '#08697A', // Harmonized with corporate teal
+  surface: 'rgba(255, 255, 255, 0.98)',
+  background: '#f0fafa',
 };
 
 interface ThemeContextType {
@@ -77,8 +108,8 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType>({
-  isDarkMode: true,
-  theme: darkTheme,
+  isDarkMode: false,
+  theme: lightTheme,
   toggleTheme: () => {},
 });
 
@@ -89,7 +120,7 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider = ({ children }: ThemeProviderProps) => {
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -120,7 +151,7 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
 
   const theme = isDarkMode ? darkTheme : lightTheme;
 
-  if (!isLoaded) return null; // Or a loading spinner
+  if (!isLoaded) return null;
 
   return (
     <ThemeContext.Provider value={{ isDarkMode, theme, toggleTheme }}>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, ActivityIndicator 
+import {
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, ActivityIndicator
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -16,424 +16,217 @@ interface TimeInOutScreenProps {
 export default function TimeInOutScreen({ onBack, employeeId, token }: TimeInOutScreenProps) {
   const { theme, isDarkMode } = useTheme();
   const styles = getStyles(theme, isDarkMode);
-  const [currentTime, setCurrentTime] = useState<string>('');
-  const [currentDate, setCurrentDate] = useState<string>('');
+  const [currentTime, setCurrentTime] = useState('');
+  const [currentDate, setCurrentDate] = useState('');
   const [hasTimedIn, setHasTimedIn] = useState(false);
   const [hasTimedOut, setHasTimedOut] = useState(false);
   const [timeInLog, setTimeInLog] = useState<string | null>(null);
   const [timeOutLog, setTimeOutLog] = useState<string | null>(null);
   const [isLoadingLogs, setIsLoadingLogs] = useState(true);
+  const [isActing, setIsActing] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const getStatus = () => {
-    if (hasTimedIn && hasTimedOut) return 'Completed';
-    if (hasTimedIn && !hasTimedOut) return 'In';
-    return 'Out';
-  };
-  const status = getStatus();
+  const status = hasTimedIn && hasTimedOut ? 'Completed' : hasTimedIn ? 'In Progress' : 'Not Started';
 
   useEffect(() => {
-    const updateDateTime = () => {
+    const tick = () => {
       const now = new Date();
-      
-      // Time formatting (e.g., 08:45:30 AM)
-      const timeOptions: Intl.DateTimeFormatOptions = { 
-        hour: '2-digit', minute: '2-digit', second: '2-digit' 
-      };
-      setCurrentTime(now.toLocaleTimeString(undefined, timeOptions));
-      
-      // Date formatting (e.g., July 31, 2026)
-      const dateOptions: Intl.DateTimeFormatOptions = { 
-        year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' 
-      };
-      setCurrentDate(now.toLocaleDateString(undefined, dateOptions));
+      setCurrentTime(now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+      setCurrentDate(now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));
     };
-
-    updateDateTime();
-    const interval = setInterval(updateDateTime, 1000);
+    tick();
+    const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     const fetchTodayLogs = async () => {
-      if (!token) return;
+      if (!token) { setIsLoadingLogs(false); return; }
       try {
-        const url = Platform.OS === 'web' 
-          ? 'http://localhost/atech_prime/backend/public/api/attendance/my-logs/today'
+        const url = Platform.OS === 'web'
+          ? `http://${window.location.hostname}/atech_prime/backend/public/api/attendance/my-logs/today`
           : 'http://192.168.100.31/atech_prime/backend/public/api/attendance/my-logs/today';
-          
-        const response = await fetch(url, {
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          if (data.hasTimedIn) {
-            setHasTimedIn(true);
-            setTimeInLog(data.timeInLog);
-          }
-          if (data.hasTimedOut) {
-            setHasTimedOut(true);
-            setTimeOutLog(data.timeOutLog);
-          }
+        const res = await fetch(url, { headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token}` } });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.hasTimedIn) { setHasTimedIn(true); setTimeInLog(data.timeInLog); }
+          if (data.hasTimedOut) { setHasTimedOut(true); setTimeOutLog(data.timeOutLog); }
         }
-      } catch (error) {
-        console.error('Failed to fetch today logs:', error);
-      } finally {
-        setIsLoadingLogs(false);
-      }
+      } catch (e) { console.error(e); } finally { setIsLoadingLogs(false); }
     };
-
     fetchTodayLogs();
   }, [token]);
 
   const handleTimeAction = async (action: 'In' | 'Out') => {
-    if (!employeeId) {
-      alert('Error: Employee ID not found.');
-      return;
-    }
-
+    if (!employeeId) { setMessage({ type: 'error', text: 'Employee ID not found.' }); return; }
+    setIsActing(true);
+    setMessage(null);
     try {
-      const apiUrl = Platform.OS === 'web' 
-        ? 'http://localhost/atech_prime/backend/public/api/attendance/tap'
+      const url = Platform.OS === 'web'
+        ? `http://${window.location.hostname}/atech_prime/backend/public/api/attendance/tap`
         : 'http://192.168.100.31/atech_prime/backend/public/api/attendance/tap';
-
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      };
-
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const response = await fetch(apiUrl, {
+      const res = await fetch(url, {
         method: 'POST',
-        headers,
-        body: JSON.stringify({ 
-          face_descriptor_match: true,
-          employee_id: employeeId 
-        })
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ employee_id: employeeId, action }),
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to record attendance.');
-      }
-
-      if (action === 'In') {
-        setHasTimedIn(true);
-        setTimeInLog(currentTime);
-      } else if (action === 'Out') {
-        setHasTimedOut(true);
-        setTimeOutLog(currentTime);
-      }
-      
-    } catch (error: any) {
-      alert(error.message);
-    }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Time ${action} failed.`);
+      if (action === 'In') { setHasTimedIn(true); setTimeInLog(data.time || currentTime); }
+      else { setHasTimedOut(true); setTimeOutLog(data.time || currentTime); }
+      setMessage({ type: 'success', text: `Time ${action} recorded at ${data.time || currentTime}` });
+    } catch (e: any) {
+      setMessage({ type: 'error', text: e.message });
+    } finally { setIsActing(false); }
   };
 
-  return (
-    <LinearGradient
-      colors={theme.backgroundGradient}
-      style={styles.container}
-    >
-      <StatusBar style={isDarkMode ? "light" : "dark"} />
-      
-      {/* Decorative Background Elements */}
-      <View style={styles.glow1} />
-      <View style={styles.glow2} />
+  const formatLog = (log: string | null) => {
+    if (!log) return '--:--';
+    const d = new Date(log);
+    if (isNaN(d.getTime())) return log;
+    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  };
 
+  const statusColor = hasTimedIn && hasTimedOut ? theme.success : hasTimedIn ? theme.warning : theme.textMuted;
+
+  return (
+    <View style={styles.container}>
+      <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+      <LinearGradient colors={theme.backgroundGradient as any} style={StyleSheet.absoluteFillObject} />
+      <View style={styles.blob1} />
+
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Feather name="arrow-left" size={24} color={theme.textPrimary} />
+        <TouchableOpacity style={styles.backBtn} onPress={onBack}>
+          <Feather name="arrow-left" size={20} color={theme.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Attendance</Text>
-        <View style={{ width: 24 }} />
+        <Text style={styles.headerTitle}>Time In / Out</Text>
+        <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
-        
-        {/* Clock Display */}
-        <View style={styles.clockContainer}>
-          <Text style={styles.dateText}>{currentDate}</Text>
-          <Text style={styles.timeText}>{currentTime}</Text>
-          <View style={[styles.statusBadge, status === 'In' ? styles.statusIn : (status === 'Out' ? styles.statusOut : styles.statusCompleted)]}>
-            <View style={[styles.statusDot, { backgroundColor: status === 'In' ? theme.success : (status === 'Out' ? theme.error : theme.primary) }]} />
-            <Text style={styles.statusText}>
-              {status === 'Completed' ? 'Shift Completed' : `Currently ${status}`}
-            </Text>
+      <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+        {/* Clock Card */}
+        <LinearGradient colors={theme.primaryGradient as any} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.clockCard}>
+          <Text style={styles.clockTime}>{currentTime}</Text>
+          <Text style={styles.clockDate}>{currentDate}</Text>
+          <View style={styles.statusRow}>
+            <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+            <Text style={styles.statusText}>{status}</Text>
+          </View>
+        </LinearGradient>
+
+        {/* Feedback message */}
+        {message && (
+          <View style={[styles.msgBanner, { backgroundColor: message.type === 'success' ? theme.greenTint : theme.redTint, borderColor: message.type === 'success' ? theme.success + '50' : theme.error + '50' }]}>
+            <Feather name={message.type === 'success' ? 'check-circle' : 'alert-circle'} size={15} color={message.type === 'success' ? theme.success : theme.error} style={{ marginRight: 8 }} />
+            <Text style={[styles.msgText, { color: message.type === 'success' ? theme.success : theme.error }]}>{message.text}</Text>
+          </View>
+        )}
+
+        {/* Log Cards */}
+        <View style={styles.logRow}>
+          <View style={[styles.logCard, { borderColor: hasTimedIn ? theme.success + '50' : theme.border }]}>
+            <View style={[styles.logIconBox, { backgroundColor: hasTimedIn ? theme.greenTint : theme.tealTint }]}>
+              <Feather name="log-in" size={18} color={hasTimedIn ? theme.success : theme.primary} />
+            </View>
+            <Text style={styles.logLabel}>TIME IN</Text>
+            <Text style={[styles.logValue, { color: hasTimedIn ? theme.success : theme.textMuted }]}>{isLoadingLogs ? '--:--' : formatLog(timeInLog)}</Text>
+          </View>
+          <View style={[styles.logCard, { borderColor: hasTimedOut ? theme.success + '50' : theme.border }]}>
+            <View style={[styles.logIconBox, { backgroundColor: hasTimedOut ? theme.greenTint : theme.tealTint }]}>
+              <Feather name="log-out" size={18} color={hasTimedOut ? theme.success : theme.primary} />
+            </View>
+            <Text style={styles.logLabel}>TIME OUT</Text>
+            <Text style={[styles.logValue, { color: hasTimedOut ? theme.success : theme.textMuted }]}>{isLoadingLogs ? '--:--' : formatLog(timeOutLog)}</Text>
           </View>
         </View>
 
         {/* Action Buttons */}
-        <View style={styles.actionContainer}>
-          <TouchableOpacity 
-            style={[styles.actionButton, hasTimedIn && styles.actionButtonDisabled]}
-            activeOpacity={0.8}
-            onPress={() => handleTimeAction('In')}
-            disabled={hasTimedIn}
-          >
-            <LinearGradient
-              colors={hasTimedIn ? [theme.border, theme.cardBgSolid] : [theme.success, '#10b981']}
-              style={styles.gradientButton}
-            >
-              <Feather name="log-in" size={24} color={hasTimedIn ? theme.textSecondary : '#ffffff'} />
-              <Text style={[styles.buttonText, hasTimedIn && { color: theme.textSecondary }]}>TIME IN</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+        {isLoadingLogs ? (
+          <ActivityIndicator color={theme.primary} style={{ marginTop: 24 }} />
+        ) : (
+          <View style={styles.actionArea}>
+            {!hasTimedIn && (
+              <TouchableOpacity style={styles.actionBtn} onPress={() => handleTimeAction('In')} disabled={isActing} activeOpacity={0.85}>
+                <LinearGradient colors={theme.primaryGradient as any} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.actionBtnGradient}>
+                  {isActing ? <ActivityIndicator color="#fff" /> : (
+                    <View style={styles.actionBtnRow}>
+                      <Feather name="log-in" size={18} color="#fff" style={{ marginRight: 10 }} />
+                      <Text style={styles.actionBtnText}>RECORD TIME IN</Text>
+                    </View>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
 
-          <TouchableOpacity 
-            style={[styles.actionButton, (!hasTimedIn || hasTimedOut) && styles.actionButtonDisabled]}
-            activeOpacity={0.8}
-            onPress={() => handleTimeAction('Out')}
-            disabled={!hasTimedIn || hasTimedOut}
-          >
-            <LinearGradient
-              colors={(!hasTimedIn || hasTimedOut) ? [theme.border, theme.cardBgSolid] : [theme.error, '#f43f5e']}
-              style={styles.gradientButton}
-            >
-              <Feather name="log-out" size={24} color={(!hasTimedIn || hasTimedOut) ? theme.textSecondary : '#ffffff'} />
-              <Text style={[styles.buttonText, (!hasTimedIn || hasTimedOut) && { color: theme.textSecondary }]}>TIME OUT</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-
-        {/* Logs */}
-        <Text style={styles.sectionTitle}>TODAY'S LOG</Text>
-        <View style={styles.logCard}>
-          {isLoadingLogs ? (
-            <ActivityIndicator size="small" color={theme.primary} />
-          ) : !timeInLog && !timeOutLog ? (
-            <Text style={styles.emptyLogText}>No records for today yet.</Text>
-          ) : (
-            <View>
-              {timeInLog && (
-                <View style={[styles.logItem, timeOutLog && { marginBottom: 16 }]}>
-                  <View style={styles.logIcon}>
-                    <Feather name="log-in" size={16} color={theme.success} />
-                  </View>
-                  <View style={styles.logTextContainer}>
-                    <Text style={styles.logTitle}>Time In</Text>
-                    <Text style={styles.logTime}>{timeInLog}</Text>
-                  </View>
+            {hasTimedIn && !hasTimedOut && (
+              <TouchableOpacity style={styles.actionBtn} onPress={() => handleTimeAction('Out')} disabled={isActing} activeOpacity={0.85}>
+                <View style={[styles.actionBtnOutline, { borderColor: theme.error }]}>
+                  {isActing ? <ActivityIndicator color={theme.error} /> : (
+                    <View style={styles.actionBtnRow}>
+                      <Feather name="log-out" size={18} color={theme.error} style={{ marginRight: 10 }} />
+                      <Text style={[styles.actionBtnText, { color: theme.error }]}>RECORD TIME OUT</Text>
+                    </View>
+                  )}
                 </View>
-              )}
-              {timeOutLog && (
-                <View style={styles.logItem}>
-                  <View style={styles.logIcon}>
-                    <Feather name="log-out" size={16} color={theme.error} />
-                  </View>
-                  <View style={styles.logTextContainer}>
-                    <Text style={styles.logTitle}>Time Out</Text>
-                    <Text style={styles.logTime}>{timeOutLog}</Text>
-                  </View>
-                </View>
-              )}
-            </View>
-          )}
-        </View>
+              </TouchableOpacity>
+            )}
 
+            {hasTimedIn && hasTimedOut && (
+              <View style={styles.completedBox}>
+                <Feather name="check-circle" size={24} color={theme.success} style={{ marginBottom: 8 }} />
+                <Text style={styles.completedTitle}>Attendance Recorded</Text>
+                <Text style={styles.completedSub}>You have completed your attendance for today.</Text>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Info note */}
+        <View style={styles.infoBox}>
+          <Feather name="info" size={13} color={theme.textMuted} style={{ marginRight: 8 }} />
+          <Text style={styles.infoText}>Your location and timestamp are automatically recorded for audit purposes.</Text>
+        </View>
       </ScrollView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create({
-  container: {
-    flex: 1,
-    position: 'relative',
-  },
-  glow1: {
-    position: 'absolute',
-    top: -50,
-    left: -100,
-    width: 300,
-    height: 300,
-    backgroundColor: theme.glow1,
-    borderRadius: 150,
-    transform: [{ scale: 2 }],
-  },
-  glow2: {
-    position: 'absolute',
-    bottom: -100,
-    right: -100,
-    width: 300,
-    height: 300,
-    backgroundColor: theme.glow2,
-    borderRadius: 150,
-    transform: [{ scale: 2 }],
+  container: { flex: 1 },
+  blob1: {
+    position: 'absolute', top: -50, right: -50, width: 180, height: 180, borderRadius: 90,
+    backgroundColor: isDarkMode ? 'rgba(19,157,158,0.07)' : 'rgba(8,105,122,0.05)',
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
-    paddingHorizontal: 24,
-    paddingBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
-    backgroundColor: theme.inputBg,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingTop: Platform.OS === 'ios' ? 56 : 36, paddingHorizontal: 20, paddingBottom: 12,
   },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-  },
-  headerTitle: {
-    color: theme.textPrimary,
-    fontSize: 18,
-    fontWeight: '600',
-    letterSpacing: 1,
-  },
-  content: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 24,
-    paddingBottom: 40,
-  },
-  clockContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.cardBg,
-    borderWidth: 1,
-    borderColor: theme.border,
-    paddingVertical: 40,
-    paddingHorizontal: 20,
-    borderRadius: 0, // Sharp corners
-    marginBottom: 32,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 15,
-    elevation: 8,
-  },
-  dateText: {
-    color: theme.textSecondary,
-    fontSize: 16,
-    marginBottom: 8,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  timeText: {
-    color: theme.textPrimary,
-    fontSize: 48,
-    fontWeight: '300',
-    fontVariant: ['tabular-nums'],
-    marginBottom: 16,
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderRadius: 0, // Sharp corners
-  },
-  statusIn: {
-    backgroundColor: isDarkMode ? 'rgba(34, 197, 94, 0.1)' : 'rgba(34, 197, 94, 0.2)',
-    borderColor: isDarkMode ? 'rgba(34, 197, 94, 0.3)' : 'rgba(34, 197, 94, 0.4)',
-  },
-  statusOut: {
-    backgroundColor: isDarkMode ? 'rgba(239, 68, 68, 0.1)' : 'rgba(239, 68, 68, 0.2)',
-    borderColor: isDarkMode ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.4)',
-  },
-  statusCompleted: {
-    backgroundColor: isDarkMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.2)',
-    borderColor: isDarkMode ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.4)',
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 8,
-  },
-  statusText: {
-    color: theme.textPrimary,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  actionContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 40,
-  },
-  actionButton: {
-    width: '48%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  actionButtonDisabled: {
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  gradientButton: {
-    paddingVertical: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 0, // Sharp corners
-  },
-  buttonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 1,
-    marginTop: 8,
-  },
-  sectionTitle: {
-    color: theme.textMuted,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 1.5,
-    marginBottom: 16,
-  },
-  logCard: {
-    backgroundColor: theme.cardBg,
-    borderWidth: 1,
-    borderColor: theme.border,
-    borderRadius: 0, // Sharp corners
-    padding: 20,
-  },
-  logItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  logIcon: {
-    width: 32,
-    height: 32,
-    backgroundColor: theme.inputBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: theme.border,
-    borderRadius: 0,
-    marginRight: 16,
-  },
-  logTextContainer: {
-    flex: 1,
-  },
-  logTitle: {
-    color: theme.textPrimary,
-    fontSize: 15,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  logTime: {
-    color: theme.textSecondary,
-    fontSize: 13,
-  },
-  emptyLogText: {
-    color: theme.textMuted,
-    fontSize: 14,
-    fontStyle: 'italic',
-    textAlign: 'center',
-    paddingVertical: 10,
-  },
+  backBtn: { padding: 8, backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border, borderRadius: 0 },
+  headerTitle: { color: theme.textPrimary, fontSize: 17, fontWeight: '700', letterSpacing: 0.3 },
+  body: { paddingHorizontal: 20, paddingBottom: 40 },
+  clockCard: { padding: 28, marginBottom: 20, borderRadius: 0, alignItems: 'center' },
+  clockTime: { color: '#fff', fontSize: 48, fontWeight: '200', letterSpacing: 2, marginBottom: 6 },
+  clockDate: { color: 'rgba(255,255,255,0.75)', fontSize: 14, marginBottom: 16, textAlign: 'center' },
+  statusRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.15)', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 0 },
+  statusDot: { width: 7, height: 7, borderRadius: 4, marginRight: 8 },
+  statusText: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  msgBanner: { flexDirection: 'row', alignItems: 'center', padding: 12, borderWidth: 1, borderRadius: 0, marginBottom: 16 },
+  msgText: { flex: 1, fontSize: 13, fontWeight: '500' },
+  logRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
+  logCard: { flex: 1, backgroundColor: theme.cardBg, borderWidth: 1, borderRadius: 0, padding: 16, alignItems: 'center' },
+  logIconBox: { width: 40, height: 40, borderRadius: 0, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
+  logLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1.2, color: theme.textMuted, marginBottom: 6 },
+  logValue: { fontSize: 22, fontWeight: '300', letterSpacing: 1 },
+  actionArea: { marginBottom: 24 },
+  actionBtn: { shadowColor: theme.primary, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 12, elevation: 6 },
+  actionBtnGradient: { paddingVertical: 18, alignItems: 'center', justifyContent: 'center', borderRadius: 0 },
+  actionBtnOutline: { paddingVertical: 18, alignItems: 'center', justifyContent: 'center', borderRadius: 0, borderWidth: 1.5, backgroundColor: isDarkMode ? 'rgba(239,68,68,0.06)' : 'rgba(220,38,38,0.04)' },
+  actionBtnRow: { flexDirection: 'row', alignItems: 'center' },
+  actionBtnText: { color: '#fff', fontSize: 14, fontWeight: '800', letterSpacing: 1.5 },
+  completedBox: { alignItems: 'center', paddingVertical: 32, backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border, borderRadius: 0 },
+  completedTitle: { color: theme.textPrimary, fontSize: 16, fontWeight: '700', marginBottom: 6 },
+  completedSub: { color: theme.textMuted, fontSize: 13, textAlign: 'center', paddingHorizontal: 16 },
+  infoBox: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: theme.tealTint, borderWidth: 1, borderColor: theme.border, padding: 12, borderRadius: 0 },
+  infoText: { flex: 1, color: theme.textMuted, fontSize: 12, lineHeight: 18 },
 });
