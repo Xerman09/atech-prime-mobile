@@ -59,15 +59,25 @@ export default function BusinessTripRequestFormScreen({ onBack, onSubmitSuccess,
       else setShowEndPicker(false);
     }
     
-    if (selectedDate) {
+    if (selectedDate && !isNaN(selectedDate.getTime())) {
       // Create local date string YYYY-MM-DD
       const year = selectedDate.getFullYear();
       const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
       const day = String(selectedDate.getDate()).padStart(2, '0');
       const formatted = `${year}-${month}-${day}`;
       
-      if (isStart) setStartDate(formatted);
-      else setEndDate(formatted);
+      if (isStart) {
+        setStartDate(formatted);
+        if (endDate && formatted > endDate) {
+          setEndDate(formatted);
+        }
+      } else {
+        if (startDate && formatted < startDate) {
+          setEndDate(startDate);
+        } else {
+          setEndDate(formatted);
+        }
+      }
     }
   };
 
@@ -246,6 +256,7 @@ export default function BusinessTripRequestFormScreen({ onBack, onSubmitSuccess,
                   {createElement('input', {
                     type: 'date',
                     value: endDate,
+                    min: startDate || undefined,
                     onChange: (e: any) => handleDateChangePicker(null, new Date(e.target.value), false),
                     onClick: (e: any) => {
                       try {
@@ -280,9 +291,10 @@ export default function BusinessTripRequestFormScreen({ onBack, onSubmitSuccess,
 
               {showEndPicker && Platform.OS !== 'web' && (
                 <DateTimePicker
-                  value={parseDateString(endDate)}
+                  value={parseDateString(endDate || startDate)}
                   mode="date"
                   display="default"
+                  minimumDate={startDate ? parseDateString(startDate) : undefined}
                   onChange={(e: any, d?: Date) => handleDateChangePicker(e, d, false)}
                 />
               )}
