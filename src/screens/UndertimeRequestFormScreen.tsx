@@ -1,6 +1,6 @@
 import React, { useState, createElement } from 'react';
 import { 
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, TextInput
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, TextInput, ActivityIndicator
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -48,6 +48,57 @@ export default function UndertimeRequestFormScreen({ onBack, onSubmitSuccess, to
     return d;
   };
 
+  const formatHumanDate = (dateStr: string) => {
+    if (!dateStr) return null;
+    try {
+      const [y, m, d] = dateStr.split('-');
+      if (y && m && d) {
+        const obj = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+        return obj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      }
+    } catch {}
+    return dateStr;
+  };
+
+  const formatHumanTime = (timeStr: string) => {
+    if (!timeStr) return null;
+    try {
+      const [h, m] = timeStr.split(':');
+      if (h !== undefined && m !== undefined) {
+        const d = new Date();
+        d.setHours(parseInt(h), parseInt(m));
+        return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      }
+    } catch {}
+    return timeStr;
+  };
+
+  const getDurationInfo = () => {
+    if (!startTime || !endTime) return null;
+    try {
+      const [h1, m1] = startTime.split(':').map(Number);
+      const [h2, m2] = endTime.split(':').map(Number);
+      const totalMinutes1 = h1 * 60 + m1;
+      const totalMinutes2 = h2 * 60 + m2;
+      const diffMinutes = totalMinutes2 - totalMinutes1;
+      if (diffMinutes <= 0) {
+        return { valid: false, message: 'End time must be after start time' };
+      }
+      const hrs = Math.floor(diffMinutes / 60);
+      const mins = diffMinutes % 60;
+      const hoursText = hrs > 0 ? `${hrs}h ` : '';
+      const minsText = mins > 0 ? `${mins}m ` : '';
+      return { 
+        valid: true, 
+        message: `${(hoursText + minsText).trim()} Undertime Duration` 
+      };
+    } catch {
+      return null;
+    }
+  };
+
+  const durationInfo = getDurationInfo();
+
   const handleDateChangePicker = (event: any, selectedDate: Date | undefined) => {
     if (Platform.OS !== 'ios') setShowDatePicker(false);
     if (selectedDate) {
@@ -80,13 +131,17 @@ export default function UndertimeRequestFormScreen({ onBack, onSubmitSuccess, to
       setErrorMsg('No employee profile linked to your account. You cannot submit undertime requests.');
       return;
     }
+    if (durationInfo && !durationInfo.valid) {
+      setErrorMsg(durationInfo.message);
+      return;
+    }
     
     setIsSubmitting(true);
     setErrorMsg(null);
     
     try {
       const url = Platform.OS === 'web' 
-        ? 'http://localhost/atech_prime/backend/public/api/undertime-requests'
+        ? `http://${window.location.hostname}/atech_prime/backend/public/api/undertime-requests`
         : 'http://192.168.100.31/atech_prime/backend/public/api/undertime-requests';
         
       const response = await fetch(url, {
@@ -118,185 +173,433 @@ export default function UndertimeRequestFormScreen({ onBack, onSubmitSuccess, to
     }
   };
 
+  const isFormComplete = Boolean(
+    date && 
+    startTime && 
+    endTime && 
+    reason.trim() && 
+    (!durationInfo || durationInfo.valid)
+  );
+
   if (submitted) {
     return (
-      <LinearGradient colors={theme.backgroundGradient} style={styles.container}>
+      <View style={styles.container}>
         <StatusBar style={isDarkMode ? "light" : "dark"} />
+        <LinearGradient colors={theme.backgroundGradient as any} style={StyleSheet.absoluteFillObject} />
+
+        {/* Signature Top Gradient Strip */}
+        <LinearGradient
+          colors={theme.accentGradient as any}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.topGradientStrip}
+        />
+
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={onSubmitSuccess}>
-            <Feather name="arrow-left" size={24} color={theme.textPrimary} />
+            <Feather name="arrow-left" size={18} color={theme.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Undertime Request</Text>
-          <View style={{ width: 24 }} />
+          <View style={styles.headerTitleBlock}>
+            <Text style={styles.headerSubtitle}>TIME ADJUSTMENT</Text>
+            <Text style={styles.headerTitle}>Undertime Request</Text>
+          </View>
+          <View style={{ width: 36 }} />
         </View>
 
         <View style={styles.successContainer}>
-          <View style={styles.successIconWrapper}>
-            <Feather name="check" size={48} color={theme.success} />
+          <View style={styles.successCard}>
+            <LinearGradient
+              colors={['#10b981', '#139D9E', '#08697A']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.cardAccentBar}
+            />
+            <View style={styles.successIconWrapper}>
+              <Feather name="check" size={36} color={theme.emerald} />
+            </View>
+            <Text style={styles.successTitle}>Request Submitted</Text>
+            <Text style={styles.successDesc}>
+              Your undertime request for {formatHumanDate(date)} ({formatHumanTime(startTime)} - {formatHumanTime(endTime)}) has been submitted to HR for review.
+            </Text>
+
+            <TouchableOpacity style={styles.submitButtonSuccess} onPress={onSubmitSuccess} activeOpacity={0.85}>
+              <LinearGradient
+                colors={['#10b981', '#139D9E', '#08697A']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.submitGradient}
+              >
+                <Feather name="list" size={16} color="#ffffff" style={{ marginRight: 8 }} />
+                <Text style={styles.submitButtonText}>View Request History</Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
-          <Text style={styles.successTitle}>Request Submitted</Text>
-          <Text style={styles.successDesc}>Your undertime request has been sent to HR for approval.</Text>
-          <TouchableOpacity style={styles.primaryButton} onPress={onSubmitSuccess}>
-            <Text style={styles.primaryButtonText}>Return to History</Text>
-          </TouchableOpacity>
         </View>
-      </LinearGradient>
+      </View>
     );
   }
 
   return (
-    <LinearGradient colors={theme.backgroundGradient} style={styles.container}>
+    <View style={styles.container}>
       <StatusBar style={isDarkMode ? "light" : "dark"} />
-      <View style={styles.glow1} />
-      <View style={styles.glow2} />
+      <LinearGradient colors={theme.backgroundGradient as any} style={StyleSheet.absoluteFillObject} />
+      
+      {/* Signature Top Gradient Strip */}
+      <LinearGradient
+        colors={theme.accentGradient as any}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.topGradientStrip}
+      />
 
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Feather name="arrow-left" size={24} color={theme.textPrimary} />
+        <TouchableOpacity style={styles.backButton} onPress={onBack} activeOpacity={0.7}>
+          <Feather name="arrow-left" size={18} color={theme.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>New Undertime Request</Text>
-        <View style={{ width: 24 }} />
+        <View style={styles.headerTitleBlock}>
+          <Text style={styles.headerSubtitle}>TIME MANAGEMENT</Text>
+          <Text style={styles.headerTitle}>New Undertime Request</Text>
+        </View>
+        <View style={styles.headerBadge}>
+          <View style={styles.headerBadgeDot} />
+          <Text style={styles.headerBadgeText}>NEW DRAFT</Text>
+        </View>
       </View>
 
-      <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
-        
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>DATE AND TIME</Text>
-          
-          {/* Date Input */}
-          <View style={styles.dateInputWrapperFull}>
-            <Text style={styles.label}>Date</Text>
-            {Platform.OS === 'web' ? (
-              <View style={[styles.inputContainer, { position: 'relative', paddingRight: 0 }]}>
-                <Feather name="calendar" size={16} color={theme.textMuted} style={styles.inputIcon} />
-                <Text style={[styles.input, { paddingTop: 14 }]}>
-                  {date || 'YYYY-MM-DD'}
-                </Text>
-                {createElement('input', {
-                  type: 'date',
-                  value: date,
-                  onChange: (e: any) => handleDateChangePicker(null, new Date(e.target.value)),
-                  onClick: (e: any) => {
-                    try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {}
-                  },
-                  style: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }
-                })}
-              </View>
-            ) : (
-              <TouchableOpacity style={styles.inputContainer} onPress={() => setShowDatePicker(true)} activeOpacity={0.7}>
-                <Feather name="calendar" size={16} color={theme.textMuted} style={styles.inputIcon} />
-                <Text style={[styles.input, { paddingTop: 14 }]}>{date || 'YYYY-MM-DD'}</Text>
-              </TouchableOpacity>
-            )}
-            {showDatePicker && Platform.OS !== 'web' && (
-              <DateTimePicker value={parseDateString(date)} mode="date" display="default" onChange={handleDateChangePicker} />
-            )}
+      <ScrollView 
+        style={styles.content} 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.formWrapper}>
+
+          {/* Quick Notice Banner */}
+          <View style={styles.noticeBanner}>
+            <View style={styles.noticeIconWrap}>
+              <Feather name="info" size={14} color={theme.primaryLight} />
+            </View>
+            <Text style={styles.noticeText}>
+              Undertime requests should be lodged prior to early departure or within policy grace limits.
+            </Text>
           </View>
 
-          <View style={styles.dateRow}>
-            {/* Start Time Input */}
-            <View style={styles.dateInputWrapper}>
-              <Text style={styles.label}>Start Time</Text>
-              {Platform.OS === 'web' ? (
-                <View style={[styles.inputContainer, { position: 'relative', paddingRight: 0 }]}>
-                  <Feather name="clock" size={16} color={theme.textMuted} style={styles.inputIcon} />
-                  <Text style={[styles.input, { paddingTop: 14 }]}>
-                    {startTime || 'HH:MM'}
-                  </Text>
-                  {createElement('input', {
-                    type: 'time',
-                    value: startTime,
-                    onChange: (e: any) => setStartTime(e.target.value),
-                    onClick: (e: any) => {
-                      try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {}
-                    },
-                    style: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }
-                  })}
-                </View>
-              ) : (
-                <TouchableOpacity style={styles.inputContainer} onPress={() => setShowStartTimePicker(true)} activeOpacity={0.7}>
-                  <Feather name="clock" size={16} color={theme.textMuted} style={styles.inputIcon} />
-                  <Text style={[styles.input, { paddingTop: 14 }]}>{startTime || 'HH:MM'}</Text>
-                </TouchableOpacity>
-              )}
-              {showStartTimePicker && Platform.OS !== 'web' && (
-                <DateTimePicker value={parseTimeString(startTime)} mode="time" display="default" onChange={(e: any, d?: Date) => handleTimeChangePicker(e, d, true)} />
-              )}
-            </View>
-
-            {/* End Time Input */}
-            <View style={styles.dateInputWrapper}>
-              <Text style={styles.label}>End Time</Text>
-              {Platform.OS === 'web' ? (
-                <View style={[styles.inputContainer, { position: 'relative', paddingRight: 0 }]}>
-                  <Feather name="clock" size={16} color={theme.textMuted} style={styles.inputIcon} />
-                  <Text style={[styles.input, { paddingTop: 14 }]}>
-                    {endTime || 'HH:MM'}
-                  </Text>
-                  {createElement('input', {
-                    type: 'time',
-                    value: endTime,
-                    onChange: (e: any) => setEndTime(e.target.value),
-                    onClick: (e: any) => {
-                      try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {}
-                    },
-                    style: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }
-                  })}
-                </View>
-              ) : (
-                <TouchableOpacity style={styles.inputContainer} onPress={() => setShowEndTimePicker(true)} activeOpacity={0.7}>
-                  <Feather name="clock" size={16} color={theme.textMuted} style={styles.inputIcon} />
-                  <Text style={[styles.input, { paddingTop: 14 }]}>{endTime || 'HH:MM'}</Text>
-                </TouchableOpacity>
-              )}
-              {showEndTimePicker && Platform.OS !== 'web' && (
-                <DateTimePicker value={parseTimeString(endTime)} mode="time" display="default" onChange={(e: any, d?: Date) => handleTimeChangePicker(e, d, false)} />
-              )}
-            </View>
-          </View>
-
-          <Text style={[styles.sectionTitle, { marginTop: 24 }]}>REASON</Text>
-          <View style={[styles.inputContainer, styles.textAreaContainer]}>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              placeholder="Provide details about your undertime request..."
-              placeholderTextColor="#475569"
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-              value={reason}
-              onChangeText={setReason}
+          {/* Main Card */}
+          <View style={styles.card}>
+            <LinearGradient
+              colors={['#10b981', '#139D9E', '#08697A']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.cardAccentBar}
             />
+
+            {/* Section 1: Target Date */}
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionDot} />
+              <Text style={styles.sectionTitle}>EFFECTIVE DATE</Text>
+            </View>
+
+            <View style={styles.dateInputWrapperFull}>
+              {Platform.OS === 'web' ? (
+                <View style={[styles.dateBox, date ? styles.dateBoxFilled : null]}>
+                  <Feather 
+                    name="calendar" 
+                    size={15} 
+                    color={date ? theme.primaryLight : theme.textMuted} 
+                    style={styles.inputIcon} 
+                  />
+                  <View style={styles.dateTextContainer}>
+                    <Text style={[styles.dateValueText, !date && styles.datePlaceholderText]}>
+                      {date ? formatHumanDate(date) : 'Select Undertime Date'}
+                    </Text>
+                    {date ? <Text style={styles.dateIsoSubtext}>{date}</Text> : null}
+                  </View>
+                  {createElement('input', {
+                    type: 'date',
+                    value: date,
+                    onChange: (e: any) => handleDateChangePicker(null, new Date(e.target.value)),
+                    onClick: (e: any) => {
+                      try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {}
+                    },
+                    style: {
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      opacity: 0,
+                      cursor: 'pointer'
+                    }
+                  })}
+                </View>
+              ) : (
+                <TouchableOpacity 
+                  style={[styles.dateBox, date ? styles.dateBoxFilled : null]} 
+                  onPress={() => setShowDatePicker(true)} 
+                  activeOpacity={0.7}
+                >
+                  <Feather 
+                    name="calendar" 
+                    size={15} 
+                    color={date ? theme.primaryLight : theme.textMuted} 
+                    style={styles.inputIcon} 
+                  />
+                  <View style={styles.dateTextContainer}>
+                    <Text style={[styles.dateValueText, !date && styles.datePlaceholderText]}>
+                      {date ? formatHumanDate(date) : 'Select Undertime Date'}
+                    </Text>
+                    {date ? <Text style={styles.dateIsoSubtext}>{date}</Text> : null}
+                  </View>
+                </TouchableOpacity>
+              )}
+
+              {showDatePicker && Platform.OS !== 'web' && (
+                <DateTimePicker 
+                  value={parseDateString(date)} 
+                  mode="date" 
+                  display="default" 
+                  onChange={handleDateChangePicker} 
+                />
+              )}
+            </View>
+
+            {/* Section 2: Time Range */}
+            <View style={[styles.sectionHeader, { marginTop: 20 }]}>
+              <View style={styles.sectionDot} />
+              <Text style={styles.sectionTitle}>TIME DURATION</Text>
+            </View>
+
+            <View style={styles.timeRow}>
+              {/* Start Time */}
+              <View style={styles.timeCol}>
+                <Text style={styles.inputFieldLabel}>START TIME</Text>
+                {Platform.OS === 'web' ? (
+                  <View style={[styles.dateBox, startTime ? styles.dateBoxFilled : null]}>
+                    <Feather 
+                      name="clock" 
+                      size={15} 
+                      color={startTime ? theme.primaryLight : theme.textMuted} 
+                      style={styles.inputIcon} 
+                    />
+                    <View style={styles.dateTextContainer}>
+                      <Text style={[styles.dateValueText, !startTime && styles.datePlaceholderText]}>
+                        {startTime ? formatHumanTime(startTime) : 'Select Start'}
+                      </Text>
+                      {startTime ? <Text style={styles.dateIsoSubtext}>{startTime}</Text> : null}
+                    </View>
+                    {createElement('input', {
+                      type: 'time',
+                      value: startTime,
+                      onChange: (e: any) => setStartTime(e.target.value),
+                      onClick: (e: any) => {
+                        try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {}
+                      },
+                      style: {
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        opacity: 0,
+                        cursor: 'pointer'
+                      }
+                    })}
+                  </View>
+                ) : (
+                  <TouchableOpacity 
+                    style={[styles.dateBox, startTime ? styles.dateBoxFilled : null]} 
+                    onPress={() => setShowStartTimePicker(true)} 
+                    activeOpacity={0.7}
+                  >
+                    <Feather 
+                      name="clock" 
+                      size={15} 
+                      color={startTime ? theme.primaryLight : theme.textMuted} 
+                      style={styles.inputIcon} 
+                    />
+                    <View style={styles.dateTextContainer}>
+                      <Text style={[styles.dateValueText, !startTime && styles.datePlaceholderText]}>
+                        {startTime ? formatHumanTime(startTime) : 'Select Start'}
+                      </Text>
+                      {startTime ? <Text style={styles.dateIsoSubtext}>{startTime}</Text> : null}
+                    </View>
+                  </TouchableOpacity>
+                )}
+
+                {showStartTimePicker && Platform.OS !== 'web' && (
+                  <DateTimePicker 
+                    value={parseTimeString(startTime)} 
+                    mode="time" 
+                    display="default" 
+                    onChange={(e: any, d?: Date) => handleTimeChangePicker(e, d, true)} 
+                  />
+                )}
+              </View>
+
+              {/* End Time */}
+              <View style={styles.timeCol}>
+                <Text style={styles.inputFieldLabel}>END TIME</Text>
+                {Platform.OS === 'web' ? (
+                  <View style={[styles.dateBox, endTime ? styles.dateBoxFilled : null]}>
+                    <Feather 
+                      name="clock" 
+                      size={15} 
+                      color={endTime ? theme.primaryLight : theme.textMuted} 
+                      style={styles.inputIcon} 
+                    />
+                    <View style={styles.dateTextContainer}>
+                      <Text style={[styles.dateValueText, !endTime && styles.datePlaceholderText]}>
+                        {endTime ? formatHumanTime(endTime) : 'Select End'}
+                      </Text>
+                      {endTime ? <Text style={styles.dateIsoSubtext}>{endTime}</Text> : null}
+                    </View>
+                    {createElement('input', {
+                      type: 'time',
+                      value: endTime,
+                      onChange: (e: any) => setEndTime(e.target.value),
+                      onClick: (e: any) => {
+                        try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {}
+                      },
+                      style: {
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        opacity: 0,
+                        cursor: 'pointer'
+                      }
+                    })}
+                  </View>
+                ) : (
+                  <TouchableOpacity 
+                    style={[styles.dateBox, endTime ? styles.dateBoxFilled : null]} 
+                    onPress={() => setShowEndTimePicker(true)} 
+                    activeOpacity={0.7}
+                  >
+                    <Feather 
+                      name="clock" 
+                      size={15} 
+                      color={endTime ? theme.primaryLight : theme.textMuted} 
+                      style={styles.inputIcon} 
+                    />
+                    <View style={styles.dateTextContainer}>
+                      <Text style={[styles.dateValueText, !endTime && styles.datePlaceholderText]}>
+                        {endTime ? formatHumanTime(endTime) : 'Select End'}
+                      </Text>
+                      {endTime ? <Text style={styles.dateIsoSubtext}>{endTime}</Text> : null}
+                    </View>
+                  </TouchableOpacity>
+                )}
+
+                {showEndTimePicker && Platform.OS !== 'web' && (
+                  <DateTimePicker 
+                    value={parseTimeString(endTime)} 
+                    mode="time" 
+                    display="default" 
+                    onChange={(e: any, d?: Date) => handleTimeChangePicker(e, d, false)} 
+                  />
+                )}
+              </View>
+            </View>
+
+            {/* Calculated duration badge */}
+            {durationInfo ? (
+              <View style={[
+                styles.durationBadge,
+                durationInfo.valid ? styles.durationBadgeValid : styles.durationBadgeInvalid
+              ]}>
+                <Feather 
+                  name={durationInfo.valid ? "clock" : "alert-triangle"} 
+                  size={13} 
+                  color={durationInfo.valid ? theme.emerald : theme.error} 
+                  style={{ marginRight: 6 }} 
+                />
+                <Text style={[
+                  styles.durationBadgeText,
+                  { color: durationInfo.valid ? (isDarkMode ? theme.emerald : '#065f46') : theme.error }
+                ]}>
+                  {durationInfo.message}
+                </Text>
+              </View>
+            ) : null}
+
+            {/* Section 3: Reason */}
+            <View style={[styles.sectionHeader, { marginTop: 24 }]}>
+              <View style={styles.sectionDot} />
+              <Text style={styles.sectionTitle}>JUSTIFICATION & REASON</Text>
+              <Text style={styles.requiredIndicator}>*Required</Text>
+            </View>
+
+            <View style={styles.textAreaWrapper}>
+              <TextInput
+                style={styles.textArea}
+                placeholder="State specific reason for early departure or undertime..."
+                placeholderTextColor={theme.textMuted}
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+                value={reason}
+                onChangeText={setReason}
+              />
+              <View style={styles.charCountRow}>
+                <Text style={styles.charCountHint}>Provide concise context for your supervisor</Text>
+                <Text style={styles.charCount}>{reason.length} chars</Text>
+              </View>
+            </View>
+
           </View>
+
+          {/* Error Banner */}
+          {errorMsg ? (
+            <View style={styles.errorContainer}>
+              <Feather name="alert-circle" size={16} color={theme.error} style={{ marginRight: 8, marginTop: 1 }} />
+              <Text style={styles.errorText}>{errorMsg}</Text>
+            </View>
+          ) : null}
+
+          {/* Submit Action */}
+          <TouchableOpacity 
+            style={[
+              styles.submitButton, 
+              !isFormComplete && styles.submitButtonDisabled
+            ]} 
+            onPress={handleSubmit}
+            disabled={!isFormComplete || isSubmitting}
+            activeOpacity={0.85}
+          >
+            {isFormComplete ? (
+              <LinearGradient
+                colors={['#10b981', '#139D9E', '#08697A']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.submitGradient}
+              >
+                {isSubmitting ? (
+                  <>
+                    <ActivityIndicator size="small" color="#ffffff" style={{ marginRight: 10 }} />
+                    <Text style={styles.submitButtonText}>Submitting Undertime Request...</Text>
+                  </>
+                ) : (
+                  <>
+                    <Feather name="send" size={16} color="#ffffff" style={{ marginRight: 8 }} />
+                    <Text style={styles.submitButtonText}>Submit Undertime Request</Text>
+                  </>
+                )}
+              </LinearGradient>
+            ) : (
+              <View style={styles.disabledInner}>
+                <Feather name="send" size={16} color={theme.textMuted} style={{ marginRight: 8 }} />
+                <Text style={[styles.submitButtonText, { color: theme.textMuted }]}>
+                  {isSubmitting ? 'Submitting...' : 'Submit Undertime Request'}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
         </View>
-
-        {errorMsg && (
-          <View style={styles.errorContainer}>
-            <Feather name="alert-circle" size={16} color={theme.error} style={{ marginRight: 8 }} />
-            <Text style={styles.errorText}>{errorMsg}</Text>
-          </View>
-        )}
-
-        <TouchableOpacity 
-          style={[
-            styles.submitButton, 
-            (!date || !startTime || !endTime || !reason || isSubmitting) && styles.submitButtonDisabled
-          ]} 
-          onPress={handleSubmit}
-          disabled={!date || !startTime || !endTime || !reason || isSubmitting}
-        >
-          {isSubmitting ? (
-            <Text style={styles.submitButtonText}>Submitting...</Text>
-          ) : (
-            <>
-              <Feather name="send" size={18} color={theme.textPrimary} style={{ marginRight: 8 }} />
-              <Text style={styles.submitButtonText}>Submit Request</Text>
-            </>
-          )}
-        </TouchableOpacity>
-
       </ScrollView>
-    </LinearGradient>
+    </View>
   );
 }
 
@@ -304,52 +607,106 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
   container: {
     flex: 1,
     position: 'relative',
+    backgroundColor: isDarkMode ? '#070e18' : '#f8fafc',
   },
-  glow1: {
-    position: 'absolute',
-    top: -100,
-    left: -100,
-    width: 300,
-    height: 300,
-    backgroundColor: theme.glow1,
-    borderRadius: 150,
-    transform: [{ scale: 2 }],
-  },
-  glow2: {
-    position: 'absolute',
-    bottom: -100,
-    right: -100,
-    width: 300,
-    height: 300,
-    backgroundColor: 'rgba(34, 197, 94, 0.1)',
-    borderRadius: 150,
-    transform: [{ scale: 2 }],
+  topGradientStrip: {
+    height: 4,
+    width: '100%',
+    zIndex: 10,
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingTop: Platform.OS === 'ios' ? 54 : (Platform.OS === 'web' ? 18 : 20),
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: theme.border,
-    backgroundColor: theme.inputBg,
+    backgroundColor: isDarkMode ? 'rgba(15, 27, 44, 0.95)' : 'rgba(255, 255, 255, 0.95)',
   },
   backButton: {
-    padding: 8,
+    width: 38,
+    height: 38,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: theme.border,
+    backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.04)' : '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  headerTitleBlock: {
+    flex: 1,
+  },
+  headerSubtitle: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+    color: theme.primaryLight,
+    marginBottom: 2,
   },
   headerTitle: {
     color: theme.textPrimary,
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: -0.3,
+  },
+  headerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.tealTint,
+    borderWidth: 1,
+    borderColor: theme.primaryLight,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 0,
+  },
+  headerBadgeDot: {
+    width: 6,
+    height: 6,
+    backgroundColor: theme.emerald,
+    borderRadius: 3,
+    marginRight: 6,
+  },
+  headerBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: theme.primaryLight,
+    letterSpacing: 0.8,
   },
   content: {
     flex: 1,
   },
   scrollContent: {
-    padding: 24,
+    paddingHorizontal: 16,
+    paddingTop: 16,
     paddingBottom: 40,
+  },
+  formWrapper: {
+    width: '100%',
+    maxWidth: 620,
+    alignSelf: 'center',
+  },
+  noticeBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: theme.tealTint,
+    borderWidth: 1,
+    borderColor: isDarkMode ? 'rgba(19, 157, 158, 0.25)' : 'rgba(8, 105, 122, 0.2)',
+    padding: 12,
+    marginBottom: 16,
+    borderRadius: 0,
+  },
+  noticeIconWrap: {
+    marginRight: 10,
+    marginTop: 1,
+  },
+  noticeText: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 18,
+    color: isDarkMode ? theme.textSecondary : '#1e3a47',
+    fontWeight: '500',
   },
   card: {
     backgroundColor: theme.cardBg,
@@ -357,32 +714,59 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
     borderColor: theme.border,
     borderRadius: 0,
     padding: 20,
-    marginBottom: 24,
+    marginBottom: 16,
+    position: 'relative',
+    overflow: 'hidden',
   },
-  sectionTitle: {
-    color: theme.textMuted,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 1.5,
+  cardAccentBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 12,
   },
-  dateRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  sectionDot: {
+    width: 6,
+    height: 6,
+    backgroundColor: theme.primaryLight,
+    marginRight: 8,
+    borderRadius: 0,
   },
-  dateInputWrapper: {
-    width: '48%',
+  sectionTitle: {
+    color: theme.textSecondary,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+    flex: 1,
+  },
+  requiredIndicator: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: theme.textMuted,
   },
   dateInputWrapperFull: {
     width: '100%',
-    marginBottom: 16,
   },
-  label: {
-    color: theme.textSecondary,
-    fontSize: 12,
+  timeRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  timeCol: {
+    flex: 1,
+  },
+  inputFieldLabel: {
+    color: theme.textMuted,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1,
     marginBottom: 6,
   },
-  inputContainer: {
+  dateBox: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
@@ -390,95 +774,181 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
     backgroundColor: theme.inputBg,
     borderRadius: 0,
     paddingHorizontal: 12,
-    height: 48,
+    height: 52,
+    position: 'relative',
+  },
+  dateBoxFilled: {
+    borderColor: isDarkMode ? 'rgba(19, 157, 158, 0.4)' : '#cbd5e1',
   },
   inputIcon: {
-    marginRight: 8,
+    marginRight: 10,
   },
-  input: {
+  dateTextContainer: {
     flex: 1,
-    color: theme.textPrimary,
-    fontSize: 14,
-    height: '100%',
-  },
-  textAreaContainer: {
-    height: 100,
-    paddingVertical: 12,
-    alignItems: 'flex-start',
-  },
-  textArea: {
-    height: '100%',
-  },
-  submitButton: {
-    flexDirection: 'row',
-    backgroundColor: theme.primary,
-    paddingVertical: 16,
-    borderRadius: 0,
-    alignItems: 'center',
     justifyContent: 'center',
   },
+  dateValueText: {
+    color: theme.textPrimary,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  datePlaceholderText: {
+    color: theme.textMuted,
+    fontWeight: '500',
+    fontSize: 12,
+  },
+  dateIsoSubtext: {
+    color: theme.textMuted,
+    fontSize: 10,
+    marginTop: 1,
+  },
+  durationBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    paddingVertical: 7,
+    paddingHorizontal: 10,
+    borderRadius: 0,
+    borderWidth: 1,
+  },
+  durationBadgeValid: {
+    backgroundColor: theme.emeraldTint,
+    borderColor: isDarkMode ? 'rgba(16, 185, 129, 0.3)' : 'rgba(16, 185, 129, 0.4)',
+  },
+  durationBadgeInvalid: {
+    backgroundColor: theme.roseTint,
+    borderColor: isDarkMode ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.4)',
+  },
+  durationBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  textAreaWrapper: {
+    borderWidth: 1,
+    borderColor: theme.border,
+    backgroundColor: theme.inputBg,
+    borderRadius: 0,
+    padding: 12,
+  },
+  textArea: {
+    color: theme.textPrimary,
+    fontSize: 13,
+    minHeight: 88,
+    lineHeight: 20,
+    paddingTop: 0,
+  },
+  charCountRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+  },
+  charCountHint: {
+    fontSize: 10,
+    color: theme.textMuted,
+  },
+  charCount: {
+    fontSize: 10,
+    color: theme.textMuted,
+    fontWeight: '600',
+  },
+  submitButton: {
+    borderRadius: 0,
+    overflow: 'hidden',
+    marginTop: 8,
+  },
   submitButtonDisabled: {
-    backgroundColor: '#475569',
-    opacity: 0.5,
+    borderWidth: 1,
+    borderColor: theme.border,
+    backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.04)' : '#e2e8f0',
+  },
+  disabledInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 15,
+  },
+  submitGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
   },
   submitButtonText: {
-    color: '#020617',
-    fontSize: 16,
+    color: '#ffffff',
+    fontSize: 14,
     fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: theme.roseTint,
+    borderWidth: 1,
+    borderColor: theme.error,
+    padding: 12,
+    marginBottom: 12,
+    borderRadius: 0,
+  },
+  errorText: {
+    color: theme.error,
+    fontSize: 12,
+    flex: 1,
+    lineHeight: 17,
+    fontWeight: '500',
   },
   successContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
+    padding: 20,
+  },
+  successCard: {
+    width: '100%',
+    maxWidth: 480,
+    backgroundColor: theme.cardBg,
+    borderWidth: 1,
+    borderColor: theme.border,
+    borderRadius: 0,
+    padding: 28,
+    alignItems: 'center',
+    position: 'relative',
+    overflow: 'hidden',
   },
   successIconWrapper: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    width: 64,
+    height: 64,
+    borderRadius: 0,
+    backgroundColor: theme.emeraldTint,
+    borderWidth: 1,
+    borderColor: theme.emerald,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 24,
-    borderWidth: 2,
-    borderColor: theme.success,
+    marginBottom: 18,
+    marginTop: 10,
   },
   successTitle: {
     color: theme.textPrimary,
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '700',
     marginBottom: 8,
+    textAlign: 'center',
   },
   successDesc: {
     color: theme.textSecondary,
-    fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 32,
-    paddingHorizontal: 24,
-  },
-  primaryButton: {
-    backgroundColor: theme.primary,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 0,
-  },
-  primaryButtonText: {
-    color: '#020617',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  errorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-    borderWidth: 1,
-    borderColor: theme.error,
-    padding: 12,
-    marginBottom: 24,
-  },
-  errorText: {
-    color: theme.textPrimary,
     fontSize: 13,
-    flex: 1,
+    lineHeight: 20,
+    textAlign: 'center',
+    marginBottom: 24,
+    paddingHorizontal: 8,
+  },
+  submitButtonSuccess: {
+    width: '100%',
+    borderRadius: 0,
+    overflow: 'hidden',
   },
 });
