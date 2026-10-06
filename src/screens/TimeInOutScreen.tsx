@@ -47,7 +47,14 @@ export default function TimeInOutScreen({ onBack, employeeId, token }: TimeInOut
         const url = Platform.OS === 'web'
           ? `http://${window.location.hostname}/atech_prime/backend/public/api/attendance/my-logs/today${query}`
           : `http://192.168.100.31/atech_prime/backend/public/api/attendance/my-logs/today${query}`;
-        const res = await fetch(url, { cache: 'no-store', headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token}` } });
+        const res = await fetch(url, { 
+          cache: 'no-store', 
+          headers: { 
+            'Accept': 'application/json', 
+            'Authorization': `Bearer ${token}`,
+            'X-Authorization': `Bearer ${token}`
+          } 
+        });
         if (res.ok) {
           const data = await res.json();
           if (data.hasTimedIn) { setHasTimedIn(true); setTimeInLog(data.timeInLog); }
@@ -68,7 +75,12 @@ export default function TimeInOutScreen({ onBack, employeeId, token }: TimeInOut
         : 'http://192.168.100.31/atech_prime/backend/public/api/attendance/tap';
       const res = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 
+          'Content-Type': 'application/json', 
+          'Accept': 'application/json', 
+          'Authorization': `Bearer ${token}`,
+          'X-Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ employee_id: employeeId, action }),
       });
       const data = await res.json();

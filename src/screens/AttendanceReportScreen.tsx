@@ -42,7 +42,14 @@ export default function AttendanceReportScreen({ token, onBack, onNavigateToModi
 
         let url = `http://192.168.100.31/atech_prime/backend/public/api/attendance/my-logs/history${empIdQuery}`;
         if (Platform.OS === 'web') url = `http://${window.location.hostname}/atech_prime/backend/public/api/attendance/my-logs/history${empIdQuery}`;
-        const res = await fetch(url, { cache: 'no-store', headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token}` } });
+        const res = await fetch(url, { 
+          cache: 'no-store', 
+          headers: { 
+            'Accept': 'application/json', 
+            'Authorization': `Bearer ${token}`,
+            'X-Authorization': `Bearer ${token}`
+          } 
+        });
         if (res.ok) { const d = await res.json(); setLogs(Array.isArray(d) ? d : []); }
       } catch (e) { console.error(e); } finally { setLoading(false); }
     };

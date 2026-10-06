@@ -32,8 +32,15 @@ export default function ProfileScreen({ onBack, employeeId, token, userName }: P
       try {
         const url = Platform.OS === 'web'
           ? `http://${window.location.hostname}/atech_prime/backend/public/api/employees/${employeeId}`
-          : 'http://192.168.100.31/atech_prime/backend/public/api/employees/${employeeId}';
-        const res = await fetch(url, { headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token}` } });
+          : `http://192.168.100.31/atech_prime/backend/public/api/employees/${employeeId}`;
+        const res = await fetch(url, { 
+          cache: 'no-store',
+          headers: { 
+            'Accept': 'application/json', 
+            'Authorization': `Bearer ${token}`,
+            'X-Authorization': `Bearer ${token}`
+          } 
+        });
         if (res.ok) setProfileData(await res.json());
       } catch (e) { console.error(e); } finally { setIsLoading(false); }
     };

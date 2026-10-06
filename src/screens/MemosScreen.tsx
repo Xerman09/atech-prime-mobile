@@ -35,7 +35,8 @@ export default function MemosScreen({ token, onBack }: MemosScreenProps) {
           cache: 'no-store',
           headers: {
             'Accept': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            'X-Authorization': `Bearer ${token}`
           }
         });
         

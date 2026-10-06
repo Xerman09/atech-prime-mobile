@@ -64,8 +64,23 @@ export default function App() {
                 : `http://192.168.100.31/atech_prime/backend/public/api/auth/me`;
               const res = await fetch(meUrl, {
                 cache: 'no-store',
-                headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token}` }
+                headers: { 
+                  'Accept': 'application/json', 
+                  'Authorization': `Bearer ${token}`,
+                  'X-Authorization': `Bearer ${token}`
+                }
               });
+              if (res.status === 401) {
+                console.warn('Session expired or unauthorized. Clearing stored session.');
+                await AsyncStorage.removeItem('user_session');
+                await AsyncStorage.removeItem('user_data');
+                setAuthToken(null);
+                setUserName('Workstation User');
+                setEmployeeId(null);
+                setIsLoggedIn(false);
+                setIsAppReady(true);
+                return;
+              }
               if (res.ok) {
                 const meData = await res.json();
                 if (meData.name) name = meData.name;
@@ -81,14 +96,18 @@ export default function App() {
                 }));
               }
             } catch (e) {
-              // Fallback to cached name
+              // Fallback to cached name if offline/network error
             }
           }
 
-          setUserName(name);
-          if (empId) setEmployeeId(empId);
-          await AsyncStorage.setItem('user_session', JSON.stringify({ name, empId, token }));
-          setIsLoggedIn(true);
+          if (token) {
+            setUserName(name);
+            if (empId) setEmployeeId(empId);
+            await AsyncStorage.setItem('user_session', JSON.stringify({ name, empId, token }));
+            setIsLoggedIn(true);
+          } else {
+            setIsLoggedIn(false);
+          }
         }
       } catch (e) {
         console.error('Failed to load session');

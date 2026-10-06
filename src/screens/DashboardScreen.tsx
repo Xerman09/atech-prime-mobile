@@ -112,7 +112,18 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
       try {
         let url = `http://192.168.100.31/atech_prime/backend/public/api/hr/announcements`;
         if (Platform.OS === 'web') url = `http://${window.location.hostname}/atech_prime/backend/public/api/hr/announcements`;
-        const res = await fetch(url, { cache: 'no-store', headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token}` } });
+        const res = await fetch(url, { 
+          cache: 'no-store', 
+          headers: { 
+            'Accept': 'application/json', 
+            'Authorization': `Bearer ${token}`,
+            'X-Authorization': `Bearer ${token}`
+          } 
+        });
+        if (res.status === 401) {
+          onLogout();
+          return;
+        }
         if (res.ok) {
           const data = await res.json();
           setAnnouncements(data.filter((a: any) => a.status === 'published').slice(0, 3));
@@ -124,7 +135,18 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
       try {
         let url = `http://192.168.100.31/atech_prime/backend/public/api/todos`;
         if (Platform.OS === 'web') url = `http://${window.location.hostname}/atech_prime/backend/public/api/todos`;
-        const res = await fetch(url, { headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token}` } });
+        const res = await fetch(url, { 
+          cache: 'no-store',
+          headers: { 
+            'Accept': 'application/json', 
+            'Authorization': `Bearer ${token}`,
+            'X-Authorization': `Bearer ${token}`
+          } 
+        });
+        if (res.status === 401) {
+          onLogout();
+          return;
+        }
         if (res.ok) {
           const data = await res.json();
           const today = new Date();

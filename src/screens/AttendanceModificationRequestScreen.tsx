@@ -29,7 +29,8 @@ export default function AttendanceModificationRequestScreen({ token, onBack, onN
         const response = await fetch(apiUrl, {
           headers: {
             'Accept': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            'X-Authorization': `Bearer ${token}`
           },
           cache: 'no-store'
         });

@@ -25,14 +25,15 @@ export default function BusinessTripRequestScreen({ onBack, onNavigateToForm, to
       if (!token) return;
       try {
         const url = Platform.OS === 'web' 
-          ? 'http://localhost/atech_prime/backend/public/api/business-trip-requests?scope=personal'
+          ? `http://${window.location.hostname}/atech_prime/backend/public/api/business-trip-requests?scope=personal`
           : 'http://192.168.100.31/atech_prime/backend/public/api/business-trip-requests?scope=personal';
           
         const response = await fetch(url, {
           method: 'GET',
           headers: {
             'Accept': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            'X-Authorization': `Bearer ${token}`
           },
           cache: 'no-store'
         });

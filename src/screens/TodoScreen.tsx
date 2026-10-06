@@ -88,7 +88,8 @@ export default function TodoScreen({ onBack, token }: TodoScreenProps) {
       const response = await fetch(getApiUrl('/api/todos'), {
         headers: {
           'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'X-Authorization': `Bearer ${token}`
         }
       });
       if (response.ok) {
@@ -158,7 +159,8 @@ export default function TodoScreen({ onBack, token }: TodoScreenProps) {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(body)
       });
@@ -186,7 +188,8 @@ export default function TodoScreen({ onBack, token }: TodoScreenProps) {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ is_completed: !todo.is_completed })
       });
@@ -204,7 +207,9 @@ export default function TodoScreen({ onBack, token }: TodoScreenProps) {
       const response = await fetch(getApiUrl(`/api/todos/${id}`), {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'X-Authorization': `Bearer ${token}`
         }
       });
       if (response.ok) {

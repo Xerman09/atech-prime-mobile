@@ -38,7 +38,7 @@ export default function CoeRequestFormScreen({ onBack, onSubmitSuccess, token, e
     
     try {
       const url = Platform.OS === 'web' 
-        ? 'http://localhost/atech_prime/backend/public/api/coe-requests'
+        ? `http://${window.location.hostname}/atech_prime/backend/public/api/coe-requests`
         : 'http://192.168.100.31/atech_prime/backend/public/api/coe-requests';
         
       const response = await fetch(url, {
@@ -46,7 +46,8 @@ export default function CoeRequestFormScreen({ onBack, onSubmitSuccess, token, e
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           employee_id: employeeId,

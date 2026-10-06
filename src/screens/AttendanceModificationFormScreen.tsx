@@ -82,7 +82,8 @@ export default function AttendanceModificationFormScreen({ token, initialDate, o
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'X-Authorization': `Bearer ${token}`
         },
         body: formData,
       });
