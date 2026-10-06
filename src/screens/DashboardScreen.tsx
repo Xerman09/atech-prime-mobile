@@ -98,7 +98,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
   useEffect(() => {
     const tick = () => {
       const now = new Date();
-      setCurrentDate(now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }));
+      setCurrentDate(now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }));
       setCurrentTime(now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
     };
     tick();
@@ -318,7 +318,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
             style={styles.heroGradient}
           >
             <View style={styles.heroContent}>
-              {/* Top Row: Shift Status Badge + Date */}
+              {/* Row 1: Shift Status Badge + Date */}
               <View style={styles.heroBadgeRow}>
                 <View style={styles.heroPill}>
                   <View style={styles.heroPillDot} />
@@ -330,9 +330,9 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
                 </View>
               </View>
 
-              {/* Main Row: Live Clock + Punch Attendance Button */}
-              <View style={styles.heroMainRow}>
-                <View style={styles.clockContainer}>
+              {/* Row 2: Live Clock & Shift Details */}
+              <View style={styles.clockSection}>
+                <View style={styles.clockLeft}>
                   <View style={styles.clockHeader}>
                     <View style={styles.liveClockDot} />
                     <Text style={styles.heroClockLabel}>SYSTEM TIME</Text>
@@ -347,38 +347,40 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
                   </View>
                 </View>
 
-                {/* High-Contrast Emerald Punch Button */}
-                <TouchableOpacity
-                  style={styles.punchBtn}
-                  onPress={() => onNavigate('attendance')}
-                  activeOpacity={0.85}
-                >
-                  <LinearGradient
-                    colors={['#10b981', '#059669', '#047857']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.punchBtnGradient}
-                  >
-                    <View style={styles.punchIconCircle}>
-                      <Feather name="clock" size={14} color="#ffffff" />
-                    </View>
-                    <View style={styles.punchTextCol}>
-                      <Text style={styles.punchBtnText}>PUNCH ATTENDANCE</Text>
-                      <Text style={styles.punchBtnSub}>Log Clock In / Out</Text>
-                    </View>
-                    <Feather name="chevron-right" size={14} color="rgba(255,255,255,0.75)" style={{ marginLeft: 6 }} />
-                  </LinearGradient>
-                </TouchableOpacity>
+                <View style={styles.clockRightMeta}>
+                  <View style={styles.shiftMetaTag}>
+                    <Feather name="shield" size={10} color="#38bdf8" style={{ marginRight: 4 }} />
+                    <Text style={styles.shiftMetaTagText}>TIMEKEEPING</Text>
+                  </View>
+                  <Text style={styles.shiftHoursText}>08:00 AM – 05:00 PM</Text>
+                  <Text style={styles.shiftHoursSub}>Standard Day Shift</Text>
+                </View>
               </View>
 
-              {/* Bottom Info Strip */}
-              <View style={styles.heroFooterStrip}>
-                <View style={styles.heroFooterLeft}>
-                  <Feather name="shield" size={11} color="rgba(255,255,255,0.6)" style={{ marginRight: 5 }} />
-                  <Text style={styles.heroFooterText}>Verified Timekeeping Terminal</Text>
-                </View>
-                <Text style={styles.heroFooterRightText}>Shift: 08:00 AM - 05:00 PM</Text>
-              </View>
+              {/* Row 3: Full-Width High-Contrast Emerald Punch Button */}
+              <TouchableOpacity
+                style={styles.punchBtn}
+                onPress={() => onNavigate('attendance')}
+                activeOpacity={0.85}
+              >
+                <LinearGradient
+                  colors={['#10b981', '#059669', '#047857']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.punchBtnGradient}
+                >
+                  <View style={styles.punchIconCircle}>
+                    <Feather name="clock" size={16} color="#ffffff" />
+                  </View>
+                  <View style={styles.punchTextCol}>
+                    <Text style={styles.punchBtnText}>PUNCH ATTENDANCE</Text>
+                    <Text style={styles.punchBtnSub}>Tap to record Time In or Time Out</Text>
+                  </View>
+                  <View style={styles.punchArrowWrap}>
+                    <Feather name="arrow-right" size={16} color="#ffffff" />
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
             </View>
           </LinearGradient>
         </View>
@@ -597,7 +599,14 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
   heroStrip: { position: 'absolute', top: 0, left: 0, right: 0, height: 3, zIndex: 10 },
   heroGradient: { padding: 18 },
   heroContent: { width: '100%' },
-  heroBadgeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  heroBadgeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 16,
+  },
   heroPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -621,24 +630,68 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
     borderRadius: 0,
   },
   heroDate: { color: '#e2e8f0', fontSize: 11, fontWeight: '600' },
-  heroMainRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  clockContainer: { flex: 1, marginRight: 12 },
+  clockSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    marginBottom: 16,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  clockLeft: {
+    flex: 1,
+  },
   clockHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 2 },
-  liveClockDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#38bdf8', marginRight: 5 },
+  liveClockDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#38bdf8', marginRight: 6 },
   heroClockLabel: { color: 'rgba(255,255,255,0.65)', fontSize: 9, fontWeight: '800', letterSpacing: 1.2 },
   timeValueRow: { flexDirection: 'row', alignItems: 'baseline' },
-  heroTimeDigits: { color: '#ffffff', fontSize: 32, fontWeight: '800', letterSpacing: -0.5 },
+  heroTimeDigits: { color: '#ffffff', fontSize: 34, fontWeight: '800', letterSpacing: -0.5 },
   periodBadge: {
     marginLeft: 6,
     backgroundColor: 'rgba(255, 255, 255, 0.12)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.18)',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 0,
   },
   periodBadgeText: { color: '#e2e8f0', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
+  clockRightMeta: {
+    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+  },
+  shiftMetaTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(56, 189, 248, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.3)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 0,
+    marginBottom: 4,
+  },
+  shiftMetaTagText: {
+    color: '#38bdf8',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+  },
+  shiftHoursText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
+  shiftHoursSub: {
+    color: 'rgba(255, 255, 255, 0.55)',
+    fontSize: 9,
+    fontWeight: '500',
+    marginTop: 1,
+  },
   punchBtn: {
+    width: '100%',
     borderRadius: 0,
     overflow: 'hidden',
     borderWidth: 1,
@@ -647,33 +700,41 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
   punchBtnGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 9,
-    paddingHorizontal: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
   },
   punchIconCircle: {
-    width: 28,
-    height: 28,
+    width: 32,
+    height: 32,
     backgroundColor: 'rgba(0, 0, 0, 0.22)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 8,
+    marginRight: 12,
     borderRadius: 0,
   },
-  punchTextCol: { justifyContent: 'center' },
-  punchBtnText: { color: '#ffffff', fontWeight: '800', fontSize: 11, letterSpacing: 0.6 },
-  punchBtnSub: { color: 'rgba(255, 255, 255, 0.82)', fontWeight: '600', fontSize: 9, letterSpacing: 0.2, marginTop: 1 },
-  heroFooterStrip: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 14,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+  punchTextCol: {
+    flex: 1,
+    justifyContent: 'center',
   },
-  heroFooterLeft: { flexDirection: 'row', alignItems: 'center' },
-  heroFooterText: { color: 'rgba(255,255,255,0.65)', fontSize: 10, fontWeight: '600' },
-  heroFooterRightText: { color: 'rgba(255,255,255,0.45)', fontSize: 10, fontWeight: '600' },
+  punchBtnText: {
+    color: '#ffffff',
+    fontWeight: '800',
+    fontSize: 13,
+    letterSpacing: 0.6,
+  },
+  punchBtnSub: {
+    color: 'rgba(255, 255, 255, 0.85)',
+    fontWeight: '500',
+    fontSize: 10,
+    marginTop: 1,
+  },
+  punchArrowWrap: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
   // 3 Metric Tiles
   metricsRow: { flexDirection: 'row', marginHorizontal: -4, marginBottom: 24 },
   metricTile: {
