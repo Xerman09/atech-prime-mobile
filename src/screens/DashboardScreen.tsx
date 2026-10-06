@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Modal, Dimensions
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Modal, Dimensions, Animated
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -16,6 +16,7 @@ interface DashboardScreenProps {
 }
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
+const SIDEBAR_WIDTH = Math.min(SCREEN_WIDTH * 0.85, 340);
 
 export default function DashboardScreen({ userName, token, onLogout, onNavigate }: DashboardScreenProps) {
   const { theme, isDarkMode, toggleTheme } = useTheme();
@@ -24,7 +25,43 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
   const [currentTime, setCurrentTime] = useState('');
   const [companyName, setCompanyName] = useState('ATECH PRIME');
   const [companyPlan, setCompanyPlan] = useState('ENTERPRISE');
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const slideAnim = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
+  const overlayAnim = useRef(new Animated.Value(0)).current;
+
+  const openSidebar = () => {
+    setModalVisible(true);
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 260,
+        useNativeDriver: true,
+      }),
+      Animated.timing(overlayAnim, {
+        toValue: 1,
+        duration: 260,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const closeSidebar = (callback?: () => void) => {
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: -SIDEBAR_WIDTH,
+        duration: 220,
+        useNativeDriver: true,
+      }),
+      Animated.timing(overlayAnim, {
+        toValue: 0,
+        duration: 220,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setModalVisible(false);
+      if (callback) callback();
+    });
+  };
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [todayTasks, setTodayTasks] = useState<any[]>([]);
   const [isLoadingAnnouncements, setIsLoadingAnnouncements] = useState(true);
@@ -141,10 +178,14 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
       <View style={styles.blob1} />
       <View style={styles.blob2} />
 
-      {/* Sidebar Modal */}
-      <Modal visible={isMenuOpen} transparent animationType="slide" onRequestClose={() => setIsMenuOpen(false)}>
-        <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={() => setIsMenuOpen(false)}>
-          <TouchableOpacity activeOpacity={1} style={styles.sidebar}>
+      {/* Sidebar Modal - Smooth Left-to-Right Drawer Animation */}
+      <Modal visible={modalVisible} transparent animationType="none" onRequestClose={() => closeSidebar()}>
+        <View style={StyleSheet.absoluteFillObject}>
+          <Animated.View style={[styles.overlay, { opacity: overlayAnim }]}>
+            <TouchableOpacity style={StyleSheet.absoluteFillObject} activeOpacity={1} onPress={() => closeSidebar()} />
+          </Animated.View>
+
+          <Animated.View style={[styles.sidebar, { transform: [{ translateX: slideAnim }] }]}>
             {/* Signature Top Gradient Strip */}
             <LinearGradient colors={theme.accentGradient as any} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.sidebarStrip} />
 
@@ -162,7 +203,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
                   <Text style={styles.sidebarPlan}>{companyPlan}</Text>
                 </View>
               </View>
-              <TouchableOpacity onPress={() => setIsMenuOpen(false)} style={styles.closeSidebar}>
+              <TouchableOpacity onPress={() => closeSidebar()} style={styles.closeSidebar}>
                 <Feather name="x" size={20} color={theme.textSecondary} />
               </TouchableOpacity>
             </View>
@@ -170,7 +211,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
             <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.sidebarList} showsVerticalScrollIndicator={false}>
               <Text style={styles.sidebarSection}>PORTAL NAVIGATION</Text>
               {sidebarItems.map((item) => (
-                <TouchableOpacity key={item.screen} style={styles.sidebarItem} onPress={() => { setIsMenuOpen(false); onNavigate(item.screen); }}>
+                <TouchableOpacity key={item.screen} style={styles.sidebarItem} onPress={() => closeSidebar(() => onNavigate(item.screen))}>
                   <View style={[styles.sidebarIconBox, { backgroundColor: theme.tealTint, borderColor: theme.border }]}>
                     <Feather name={item.icon as any} size={16} color={item.color} />
                   </View>
@@ -182,7 +223,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
               <View style={styles.sidebarDivider} />
               <Text style={styles.sidebarSection}>PREFERENCES</Text>
 
-              <TouchableOpacity style={styles.sidebarItem} onPress={() => { setIsMenuOpen(false); onNavigate('profile'); }}>
+              <TouchableOpacity style={styles.sidebarItem} onPress={() => closeSidebar(() => onNavigate('profile'))}>
                 <View style={[styles.sidebarIconBox, { backgroundColor: theme.tealTint, borderColor: theme.border }]}>
                   <Feather name="user" size={16} color={theme.primaryLight} />
                 </View>
@@ -199,18 +240,18 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
             </ScrollView>
 
             <View style={styles.sidebarFooter}>
-              <TouchableOpacity style={styles.logoutBtn} onPress={() => { setIsMenuOpen(false); onLogout(); }}>
+              <TouchableOpacity style={styles.logoutBtn} onPress={() => closeSidebar(() => onLogout())}>
                 <Feather name="log-out" size={16} color={theme.rose} />
                 <Text style={styles.logoutText}>Sign Out Workstation</Text>
               </TouchableOpacity>
             </View>
-          </TouchableOpacity>
-        </TouchableOpacity>
+          </Animated.View>
+        </View>
       </Modal>
 
       {/* Top Navbar */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.menuBtn} onPress={() => setIsMenuOpen(true)}>
+        <TouchableOpacity style={styles.menuBtn} onPress={openSidebar}>
           <Feather name="menu" size={20} color={theme.textPrimary} />
         </TouchableOpacity>
         <View style={styles.headerMid}>
@@ -420,9 +461,23 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
     position: 'absolute', bottom: 120, left: -100, width: 280, height: 280,
     backgroundColor: theme.glow2, opacity: 0.1,
   },
-  // Sidebar
-  overlay: { flex: 1, backgroundColor: theme.sidebarOverlay, justifyContent: 'flex-start', alignItems: 'flex-start' },
-  sidebar: { width: Math.min(SCREEN_WIDTH * 0.85, 340), height: '100%', backgroundColor: theme.sidebarBg, borderRightWidth: 1, borderRightColor: theme.border, position: 'relative' },
+  // Sidebar Drawer
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: theme.sidebarOverlay,
+  },
+  sidebar: {
+    width: SIDEBAR_WIDTH,
+    height: '100%',
+    backgroundColor: theme.sidebarBg,
+    borderRightWidth: 1,
+    borderRightColor: theme.border,
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    zIndex: 100,
+  },
   sidebarStrip: { height: 4, position: 'absolute', top: 0, left: 0, right: 0 },
   sidebarTop: { flexDirection: 'row', alignItems: 'center', padding: 20, paddingTop: Platform.OS === 'ios' ? 56 : 36, borderBottomWidth: 1, borderBottomColor: theme.border },
   avatarWrap: { marginRight: 12 },
