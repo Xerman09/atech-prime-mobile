@@ -402,7 +402,7 @@ export default function TodoScreen({ onBack, token }: TodoScreenProps) {
 
       {/* FAB */}
       <TouchableOpacity style={styles.fab} onPress={openAddModal}>
-        <LinearGradient colors={['#2563eb', '#4f46e5']} style={styles.fabGradient}>
+        <LinearGradient colors={['#10b981', '#08697A']} style={styles.fabGradient}>
           <Feather name="plus" size={24} color="#fff" />
         </LinearGradient>
       </TouchableOpacity>

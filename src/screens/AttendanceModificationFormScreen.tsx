@@ -275,7 +275,7 @@ export default function AttendanceModificationFormScreen({ token, initialDate, o
             activeOpacity={0.88}
           >
             <LinearGradient
-              colors={['#2563eb', '#08697A']}
+              colors={['#10b981', '#08697A']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.submitBtnGradient}

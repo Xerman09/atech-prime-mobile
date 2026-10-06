@@ -169,12 +169,12 @@ const getStyles = (theme: any) => StyleSheet.create({
     padding: 40, alignItems: 'center', justifyContent: 'center',
     borderWidth: 1, borderColor: theme.border, backgroundColor: theme.cardBg, marginTop: 20,
   },
-  emptyIcon: { width: 56, height: 56, backgroundColor: theme.roseTint, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  emptyIcon: { width: 56, height: 56, backgroundColor: theme.tealTint, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   emptyTitle: { color: theme.textPrimary, fontSize: 15, fontWeight: '700', marginBottom: 6 },
   emptySubtitle: { color: theme.textMuted, fontSize: 12, textAlign: 'center', lineHeight: 18 },
   memoCard: {
     backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border,
-    borderLeftWidth: 3.5, borderLeftColor: theme.royalBlue,
+    borderLeftWidth: 3.5, borderLeftColor: theme.primaryLight,
     padding: 18, marginBottom: 14,
   },
   memoCardTop: {
@@ -182,7 +182,7 @@ const getStyles = (theme: any) => StyleSheet.create({
     marginBottom: 8, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: theme.border,
   },
   memoTitleRow: { flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 12 },
-  tagDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: theme.royalBlue, marginRight: 8 },
+  tagDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: theme.primaryLight, marginRight: 8 },
   memoTitle: { fontSize: 15, fontWeight: '700', color: theme.textPrimary, flex: 1 },
   dateBadge: {
     backgroundColor: theme.tealTint, borderWidth: 1, borderColor: theme.border,
@@ -193,9 +193,9 @@ const getStyles = (theme: any) => StyleSheet.create({
   memoAuthor: { fontSize: 12, color: theme.textSecondary, fontWeight: '500' },
   memoContent: { fontSize: 13, color: theme.textSecondary, lineHeight: 20, marginBottom: 14 },
   attachmentBtn: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: theme.blueTint,
-    paddingVertical: 8, paddingHorizontal: 12, borderWidth: 1, borderColor: 'rgba(37, 99, 235, 0.3)',
+    flexDirection: 'row', alignItems: 'center', backgroundColor: theme.tealTint,
+    paddingVertical: 8, paddingHorizontal: 12, borderWidth: 1, borderColor: theme.border,
     alignSelf: 'flex-start',
   },
-  attachmentText: { color: theme.royalBlue, fontWeight: '700', fontSize: 12, marginLeft: 6 },
+  attachmentText: { color: theme.primaryLight, fontWeight: '700', fontSize: 12, marginLeft: 6 },
 });

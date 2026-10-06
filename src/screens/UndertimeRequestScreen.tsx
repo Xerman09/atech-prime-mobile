@@ -121,7 +121,7 @@ export default function UndertimeRequestScreen({ onBack, onNavigateToForm, token
         </View>
         
         <TouchableOpacity style={styles.addButton} onPress={onNavigateToForm} activeOpacity={0.85}>
-          <LinearGradient colors={['#2563eb', '#4f46e5']} style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 7 }}>
+          <LinearGradient colors={['#10b981', '#08697A']} style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 7 }}>
             <Feather name="plus" size={16} color="#ffffff" style={{ marginRight: 4 }} />
             <Text style={{ color: '#ffffff', fontSize: 12, fontWeight: '800' }}>Apply</Text>
           </LinearGradient>

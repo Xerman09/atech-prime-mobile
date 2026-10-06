@@ -84,12 +84,18 @@ export default function ProfileScreen({ onBack, employeeId, token, userName }: P
         {/* Profile hero card */}
         <View style={styles.heroCardWrapper}>
           <LinearGradient
-            colors={isDarkMode ? ['#05252b', '#03171a'] : ['#08697A', '#053e48']}
+            colors={theme.accentGradient as any}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{ height: 3, width: '100%' }}
+          />
+          <LinearGradient
+            colors={isDarkMode ? ['#0c1929', '#08121f'] : ['#08697A', '#053e48']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.profileHero}
           >
-            <LinearGradient colors={['#2563eb', '#139D9E']} style={styles.avatarRing}>
+            <LinearGradient colors={['#10b981', '#08697A']} style={styles.avatarRing}>
               <Text style={styles.avatarText}>{initials}</Text>
             </LinearGradient>
             <Text style={styles.profileName}>{userName}</Text>
@@ -104,7 +110,7 @@ export default function ProfileScreen({ onBack, employeeId, token, userName }: P
         {/* 3 Metric Stats row */}
         <View style={styles.statsRow}>
           <View style={styles.statBox}>
-            <Text style={[styles.statValue, { color: theme.royalBlue }]}>{employeeId ? `#${employeeId}` : '-'}</Text>
+            <Text style={[styles.statValue, { color: theme.primaryLight }]}>{employeeId ? `#${employeeId}` : '-'}</Text>
             <Text style={styles.statLabel}>Employee ID</Text>
           </View>
           <View style={[styles.statBox, { borderLeftWidth: 1, borderRightWidth: 1, borderColor: theme.border }]}>
@@ -112,7 +118,7 @@ export default function ProfileScreen({ onBack, employeeId, token, userName }: P
             <Text style={styles.statLabel}>Department</Text>
           </View>
           <View style={styles.statBox}>
-            <Text style={[styles.statValue, { color: theme.amber }]}>{formatDate(profileData?.hire_date).split(' ')[2] || '2026'}</Text>
+            <Text style={[styles.statValue, { color: theme.primary }]}>{formatDate(profileData?.hire_date).split(' ')[2] || '2026'}</Text>
             <Text style={styles.statLabel}>Year Onboarded</Text>
           </View>
         </View>
@@ -120,18 +126,18 @@ export default function ProfileScreen({ onBack, employeeId, token, userName }: P
         {/* General Details */}
         <Text style={styles.sectionLabel}>ORGANIZATIONAL DETAILS</Text>
         <View style={styles.detailsCard}>
-          <DetailRow icon="briefcase" label="DESIGNATION / ROLE" value={profileData?.position_name || 'Employee'} iconColor={theme.royalBlue} iconBg={theme.blueTint} />
-          <DetailRow icon="layers" label="DEPARTMENT / DIVISION" value={profileData?.department_name || 'General Operations'} iconColor={theme.indigo} iconBg={theme.indigoTint} />
-          <DetailRow icon="calendar" label="HIRE DATE" value={formatDate(profileData?.hire_date)} iconColor={theme.emerald} iconBg={theme.emeraldTint} />
-          <DetailRow icon="clock" label="EMPLOYMENT CLASSIFICATION" value={profileData?.employment_type || 'Regular / Full-Time'} iconColor={theme.primary} iconBg={theme.tealTint} last />
+          <DetailRow icon="briefcase" label="DESIGNATION / ROLE" value={profileData?.position_name || 'Employee'} iconColor={theme.primaryLight} iconBg={theme.tealTint} />
+          <DetailRow icon="layers" label="DEPARTMENT / DIVISION" value={profileData?.department_name || 'General Operations'} iconColor={theme.primary} iconBg={theme.tealTint} />
+          <DetailRow icon="calendar" label="HIRE DATE" value={formatDate(profileData?.hire_date)} iconColor={theme.emerald} iconBg={theme.tealTint} />
+          <DetailRow icon="clock" label="EMPLOYMENT CLASSIFICATION" value={profileData?.employment_type || 'Regular / Full-Time'} iconColor={theme.primaryLight} iconBg={theme.tealTint} last />
         </View>
 
         {/* Contact Details */}
         <Text style={styles.sectionLabel}>CONTACT & CONNECTIVITY</Text>
         <View style={styles.detailsCard}>
-          <DetailRow icon="mail" label="OFFICIAL EMAIL" value={profileData?.email || '-'} iconColor={theme.royalBlue} iconBg={theme.blueTint} />
-          <DetailRow icon="phone" label="MOBILE CONTACT" value={profileData?.contact_number || '-'} iconColor={theme.emerald} iconBg={theme.emeraldTint} />
-          <DetailRow icon="map-pin" label="REGISTERED ADDRESS" value={profileData?.address || '-'} iconColor={theme.rose} iconBg={theme.roseTint} last />
+          <DetailRow icon="mail" label="OFFICIAL EMAIL" value={profileData?.email || '-'} iconColor={theme.primaryLight} iconBg={theme.tealTint} />
+          <DetailRow icon="phone" label="MOBILE CONTACT" value={profileData?.contact_number || '-'} iconColor={theme.emerald} iconBg={theme.tealTint} />
+          <DetailRow icon="map-pin" label="REGISTERED ADDRESS" value={profileData?.address || '-'} iconColor={theme.primary} iconBg={theme.tealTint} last />
         </View>
 
         <View style={{ height: 32 }} />

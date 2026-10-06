@@ -89,26 +89,26 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
     fetchTasks();
   }, [token]);
 
-  // Colorful Quick Actions matching Frontend Palette
+  // Clean, Unified Quick Actions in Green-to-Blue Theme
   const quickActions = [
-    { icon: 'clock', label: "Time In/Out", sub: "Record punch", screen: 'attendance', tint: theme.emeraldTint, color: theme.emerald, border: theme.emerald },
-    { icon: 'file-text', label: "Leave Request", sub: "Apply time off", screen: 'leave_request', tint: theme.blueTint, color: theme.royalBlue, border: theme.royalBlue },
-    { icon: 'map', label: "Business Trip", sub: "Travel permit", screen: 'business_trip_request', tint: theme.indigoTint, color: theme.indigo, border: theme.indigo },
-    { icon: 'corner-down-left', label: "Undertime", sub: "Early leave", screen: 'undertime_request', tint: theme.amberTint, color: theme.amber, border: theme.amber },
-    { icon: 'award', label: "COE Request", sub: "Certificate", screen: 'coe_request', tint: theme.tealTint, color: theme.primary, border: theme.primary },
-    { icon: 'calendar', label: "Attendance", sub: "Audit logs", screen: 'attendance_report', tint: theme.cyanTint, color: theme.cyan, border: theme.cyan },
+    { icon: 'clock', label: "Time In/Out", sub: "Record punch", screen: 'attendance', color: theme.emerald },
+    { icon: 'file-text', label: "Leave Request", sub: "Apply time off", screen: 'leave_request', color: theme.primaryLight },
+    { icon: 'map', label: "Business Trip", sub: "Travel permit", screen: 'business_trip_request', color: theme.primaryLight },
+    { icon: 'corner-down-left', label: "Undertime", sub: "Early leave", screen: 'undertime_request', color: theme.primaryLight },
+    { icon: 'award', label: "COE Request", sub: "Certificate", screen: 'coe_request', color: theme.primary },
+    { icon: 'calendar', label: "Attendance", sub: "Audit logs", screen: 'attendance_report', color: theme.primary },
   ];
 
   const sidebarItems = [
-    { icon: 'home', label: 'Dashboard', screen: 'dashboard', color: theme.royalBlue, tint: theme.blueTint },
-    { icon: 'clock', label: 'Time In/Out', screen: 'attendance', color: theme.emerald, tint: theme.emeraldTint },
-    { icon: 'calendar', label: 'Attendance Report', screen: 'attendance_report', color: theme.cyan, tint: theme.cyanTint },
-    { icon: 'file-text', label: 'Leave Requests', screen: 'leave_request', color: theme.royalBlue, tint: theme.blueTint },
-    { icon: 'corner-down-left', label: 'Undertime Requests', screen: 'undertime_request', color: theme.amber, tint: theme.amberTint },
-    { icon: 'award', label: 'COE Requests', screen: 'coe_request', color: theme.primary, tint: theme.tealTint },
-    { icon: 'book', label: 'Company Policies', screen: 'policies', color: theme.indigo, tint: theme.indigoTint },
-    { icon: 'inbox', label: 'Memorandums', screen: 'memos', color: theme.rose, tint: theme.roseTint },
-    { icon: 'check-square', label: 'To-Do List', screen: 'todo', color: theme.secondary, tint: theme.greenTint },
+    { icon: 'home', label: 'Dashboard', screen: 'dashboard', color: theme.primaryLight },
+    { icon: 'clock', label: 'Time In/Out', screen: 'attendance', color: theme.emerald },
+    { icon: 'calendar', label: 'Attendance Report', screen: 'attendance_report', color: theme.primaryLight },
+    { icon: 'file-text', label: 'Leave Requests', screen: 'leave_request', color: theme.primaryLight },
+    { icon: 'corner-down-left', label: 'Undertime Requests', screen: 'undertime_request', color: theme.primaryLight },
+    { icon: 'award', label: 'COE Requests', screen: 'coe_request', color: theme.primaryLight },
+    { icon: 'book', label: 'Company Policies', screen: 'policies', color: theme.primary },
+    { icon: 'inbox', label: 'Memorandums', screen: 'memos', color: theme.primary },
+    { icon: 'check-square', label: 'To-Do List', screen: 'todo', color: theme.emerald },
   ];
 
   const getPriorityBadge = (p: string) => {
@@ -116,10 +116,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
     if (lower === 'high' || lower === 'urgent') {
       return { text: p.toUpperCase(), color: theme.rose, bg: theme.roseTint, border: theme.rose };
     }
-    if (lower === 'medium') {
-      return { text: p.toUpperCase(), color: theme.amber, bg: theme.amberTint, border: theme.amber };
-    }
-    return { text: (p || 'NORMAL').toUpperCase(), color: theme.cyan, bg: theme.cyanTint, border: theme.cyan };
+    return { text: (p || 'NORMAL').toUpperCase(), color: theme.primaryLight, bg: theme.tealTint, border: theme.primaryLight };
   };
 
   return (
@@ -127,7 +124,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
       <StatusBar style={isDarkMode ? 'light' : 'dark'} />
       <LinearGradient colors={theme.backgroundGradient as any} style={StyleSheet.absoluteFillObject} />
 
-      {/* Subtle colorful ambient blobs matching frontend */}
+      {/* Subtle ambient lighting */}
       <View style={styles.blob1} />
       <View style={styles.blob2} />
 
@@ -140,7 +137,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
 
             <View style={styles.sidebarTop}>
               <View style={styles.avatarWrap}>
-                <LinearGradient colors={['#2563eb', '#139D9E']} style={styles.avatar}>
+                <LinearGradient colors={['#10b981', '#08697A']} style={styles.avatar}>
                   <Text style={styles.avatarText}>{initials}</Text>
                 </LinearGradient>
               </View>
@@ -161,7 +158,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
               <Text style={styles.sidebarSection}>PORTAL NAVIGATION</Text>
               {sidebarItems.map((item) => (
                 <TouchableOpacity key={item.screen} style={styles.sidebarItem} onPress={() => { setIsMenuOpen(false); onNavigate(item.screen); }}>
-                  <View style={[styles.sidebarIconBox, { backgroundColor: item.tint, borderColor: item.color + '30' }]}>
+                  <View style={[styles.sidebarIconBox, { backgroundColor: theme.tealTint, borderColor: theme.border }]}>
                     <Feather name={item.icon as any} size={16} color={item.color} />
                   </View>
                   <Text style={styles.sidebarItemLabel}>{item.label}</Text>
@@ -173,16 +170,16 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
               <Text style={styles.sidebarSection}>PREFERENCES</Text>
 
               <TouchableOpacity style={styles.sidebarItem} onPress={() => { setIsMenuOpen(false); onNavigate('profile'); }}>
-                <View style={[styles.sidebarIconBox, { backgroundColor: theme.tealTint, borderColor: theme.primary + '30' }]}>
-                  <Feather name="user" size={16} color={theme.primary} />
+                <View style={[styles.sidebarIconBox, { backgroundColor: theme.tealTint, borderColor: theme.border }]}>
+                  <Feather name="user" size={16} color={theme.primaryLight} />
                 </View>
                 <Text style={styles.sidebarItemLabel}>My Profile & Security</Text>
                 <Feather name="chevron-right" size={14} color={theme.textMuted} />
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.sidebarItem} onPress={toggleTheme}>
-                <View style={[styles.sidebarIconBox, { backgroundColor: theme.amberTint, borderColor: theme.amber + '30' }]}>
-                  <Feather name={isDarkMode ? 'sun' : 'moon'} size={16} color={theme.amber} />
+                <View style={[styles.sidebarIconBox, { backgroundColor: theme.tealTint, borderColor: theme.border }]}>
+                  <Feather name={isDarkMode ? 'sun' : 'moon'} size={16} color={theme.primaryLight} />
                 </View>
                 <Text style={styles.sidebarItemLabel}>{isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}</Text>
               </TouchableOpacity>
@@ -208,7 +205,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
           <Text style={styles.headerName} numberOfLines={1}>{userName}</Text>
         </View>
         <TouchableOpacity style={styles.avatarSmall} onPress={() => onNavigate('profile')}>
-          <LinearGradient colors={['#2563eb', '#139D9E']} style={styles.avatarSmallGrad}>
+          <LinearGradient colors={['#10b981', '#08697A']} style={styles.avatarSmallGrad}>
             <Text style={styles.avatarSmallText}>{initials}</Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -216,7 +213,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
 
       <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent} showsVerticalScrollIndicator={false}>
 
-        {/* Tenant Status Alert matching Frontend Dashboard */}
+        {/* Tenant Status Alert */}
         <View style={styles.tenantBanner}>
           <View style={styles.tenantLeft}>
             <View style={styles.liveDot} />
@@ -239,7 +236,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
             style={styles.heroStrip}
           />
           <LinearGradient
-            colors={isDarkMode ? ['#05252b', '#03191d'] : ['#08697A', '#064b57']}
+            colors={isDarkMode ? ['#0c1929', '#08121f'] : ['#08697A', '#064b57']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.heroGradient}
@@ -247,7 +244,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
             <View style={styles.heroContent}>
               <View style={styles.heroBadgeRow}>
                 <View style={styles.heroPill}>
-                  <View style={[styles.heroPillDot, { backgroundColor: theme.secondary }]} />
+                  <View style={[styles.heroPillDot, { backgroundColor: theme.emerald }]} />
                   <Text style={styles.heroPillText}>SHIFT IN PROGRESS</Text>
                 </View>
                 <Text style={styles.heroDate}>{currentDate}</Text>
@@ -259,19 +256,19 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
                   <Text style={styles.heroTime}>{currentTime}</Text>
                 </View>
 
-                {/* Vibrant Emerald/Lime Punch Button */}
+                {/* Clean Green-to-Blue Punch Button */}
                 <TouchableOpacity
                   style={styles.punchBtn}
                   onPress={() => onNavigate('attendance')}
                   activeOpacity={0.88}
                 >
                   <LinearGradient
-                    colors={['#10b981', '#A6CE38']}
+                    colors={['#10b981', '#08697A']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={styles.punchBtnGradient}
                   >
-                    <Feather name="clock" size={16} color="#042a30" />
+                    <Feather name="clock" size={16} color="#ffffff" />
                     <Text style={styles.punchBtnText}>PUNCH ATTENDANCE</Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -280,40 +277,40 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
           </LinearGradient>
         </View>
 
-        {/* 3 Metric Summary Tiles matching Frontend Balance Cards */}
+        {/* 3 Unified Metric Summary Tiles */}
         <View style={styles.metricsRow}>
-          {/* Tile 1: Royal Blue Inflow/Attendance */}
-          <View style={[styles.metricTile, { backgroundColor: theme.royalBlue }]}>
+          {/* Tile 1: Attendance */}
+          <View style={styles.metricTile}>
             <View style={styles.metricTileTop}>
               <Text style={styles.metricTileLabel}>ATTENDANCE</Text>
-              <Feather name="trending-up" size={14} color="rgba(255,255,255,0.9)" />
+              <Feather name="trending-up" size={14} color={theme.emerald} />
             </View>
-            <Text style={styles.metricTileValue}>100%</Text>
+            <Text style={[styles.metricTileValue, { color: theme.emerald }]}>100%</Text>
             <Text style={styles.metricTileSub}>On-time Record</Text>
           </View>
 
-          {/* Tile 2: Crisp Dark/White with Outflow/Leave info */}
-          <View style={[styles.metricTile, { backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border }]}>
+          {/* Tile 2: Leave Credits */}
+          <View style={styles.metricTile}>
             <View style={styles.metricTileTop}>
-              <Text style={[styles.metricTileLabel, { color: theme.textMuted }]}>LEAVE CREDITS</Text>
-              <Feather name="file-text" size={14} color={theme.royalBlue} />
+              <Text style={styles.metricTileLabel}>LEAVE CREDITS</Text>
+              <Feather name="file-text" size={14} color={theme.primaryLight} />
             </View>
             <Text style={[styles.metricTileValue, { color: theme.textPrimary }]}>15.0</Text>
-            <Text style={[styles.metricTileSub, { color: theme.textSecondary }]}>Days Available</Text>
+            <Text style={styles.metricTileSub}>Days Available</Text>
           </View>
 
-          {/* Tile 3: Emerald/Lime Liquid Reserves / Pending Status */}
-          <View style={[styles.metricTile, { backgroundColor: theme.emerald }]}>
+          {/* Tile 3: Tasks Due */}
+          <View style={styles.metricTile}>
             <View style={styles.metricTileTop}>
-              <Text style={[styles.metricTileLabel, { color: '#042a30' }]}>TASKS DUE</Text>
-              <Feather name="check-circle" size={14} color="#042a30" />
+              <Text style={styles.metricTileLabel}>TASKS DUE</Text>
+              <Feather name="check-circle" size={14} color={theme.primaryLight} />
             </View>
-            <Text style={[styles.metricTileValue, { color: '#042a30' }]}>{todayTasks.length}</Text>
-            <Text style={[styles.metricTileSub, { color: '#06424d' }]}>Actions Today</Text>
+            <Text style={[styles.metricTileValue, { color: theme.textPrimary }]}>{todayTasks.length}</Text>
+            <Text style={styles.metricTileSub}>Actions Today</Text>
           </View>
         </View>
 
-        {/* Quick Actions Grid with Colorful Tiles */}
+        {/* Quick Actions Grid - Clean, Simple Cards */}
         <View style={styles.sectionHeaderRow}>
           <Text style={styles.sectionLabel}>SERVICES & REQUESTS</Text>
           <Text style={styles.sectionBadge}>6 MODULES</Text>
@@ -321,8 +318,8 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
         <View style={styles.grid}>
           {quickActions.map((a, i) => (
             <TouchableOpacity key={i} style={styles.gridItem} onPress={() => onNavigate(a.screen)} activeOpacity={0.82}>
-              <View style={[styles.gridCard, { borderTopColor: a.border }]}>
-                <View style={[styles.gridIcon, { backgroundColor: a.tint, borderColor: a.border + '35' }]}>
+              <View style={styles.gridCard}>
+                <View style={[styles.gridIcon, { backgroundColor: theme.tealTint }]}>
                   <Feather name={a.icon as any} size={20} color={a.color} />
                 </View>
                 <Text style={styles.gridLabel}>{a.label}</Text>
@@ -487,29 +484,30 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
   punchBtnGradient: {
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10,
   },
-  punchBtnText: { color: '#042a30', fontWeight: '900', fontSize: 11, letterSpacing: 0.5, marginLeft: 6 },
+  punchBtnText: { color: '#ffffff', fontWeight: '900', fontSize: 11, letterSpacing: 0.5, marginLeft: 6 },
   // 3 Metric Tiles
   metricsRow: { flexDirection: 'row', marginHorizontal: -4, marginBottom: 24 },
   metricTile: {
     flex: 1, marginHorizontal: 4, padding: 12, minHeight: 84, justifyContent: 'space-between',
+    backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border,
   },
   metricTileTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  metricTileLabel: { fontSize: 9, fontWeight: '800', letterSpacing: 0.8, color: 'rgba(255,255,255,0.85)' },
-  metricTileValue: { fontSize: 20, fontWeight: '900', color: '#ffffff', marginVertical: 2 },
-  metricTileSub: { fontSize: 9, fontWeight: '500', color: 'rgba(255,255,255,0.75)' },
+  metricTileLabel: { fontSize: 9, fontWeight: '800', letterSpacing: 0.8, color: theme.textMuted },
+  metricTileValue: { fontSize: 20, fontWeight: '900', marginVertical: 2 },
+  metricTileSub: { fontSize: 9, fontWeight: '500', color: theme.textSecondary },
   // Sections
   sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   sectionLabel: { fontSize: 11, fontWeight: '800', letterSpacing: 1.2, color: theme.textMuted },
-  sectionBadge: { fontSize: 10, fontWeight: '700', color: theme.royalBlue },
-  seeAllText: { fontSize: 11, fontWeight: '700', color: theme.royalBlue },
+  sectionBadge: { fontSize: 10, fontWeight: '700', color: theme.primaryLight },
+  seeAllText: { fontSize: 11, fontWeight: '700', color: theme.primaryLight },
   // Grid
   grid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -5, marginBottom: 24 },
   gridItem: { width: '33.33%', padding: 5 },
   gridCard: {
-    backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border, borderTopWidth: 3,
+    backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border,
     padding: 12, alignItems: 'center',
   },
-  gridIcon: { width: 38, height: 38, borderWidth: 1, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  gridIcon: { width: 38, height: 38, borderWidth: 1, borderColor: theme.border, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
   gridLabel: { color: theme.textPrimary, fontSize: 11, fontWeight: '700', textAlign: 'center', marginBottom: 2 },
   gridSub: { color: theme.textMuted, fontSize: 9, textAlign: 'center' },
   // Cards

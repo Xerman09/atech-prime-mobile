@@ -89,12 +89,12 @@ export default function TimeInOutScreen({ onBack, employeeId, token }: TimeInOut
 
   const getStatusTheme = () => {
     if (hasTimedIn && hasTimedOut) {
-      return { dot: theme.emerald, text: 'SHIFT COMPLETED', bg: theme.emeraldTint, border: theme.emerald };
+      return { dot: theme.emerald, text: 'SHIFT COMPLETED', bg: theme.tealTint, border: theme.emerald };
     }
     if (hasTimedIn) {
-      return { dot: theme.secondary, text: 'CLOCKED IN • ACTIVE', bg: theme.greenTint, border: theme.secondary };
+      return { dot: theme.primaryLight, text: 'CLOCKED IN • ACTIVE', bg: theme.tealTint, border: theme.primaryLight };
     }
-    return { dot: theme.amber, text: 'PENDING CLOCK IN', bg: theme.amberTint, border: theme.amber };
+    return { dot: theme.textMuted, text: 'NOT CLOCKED IN', bg: theme.tealTint, border: theme.border };
   };
 
   const statusTheme = getStatusTheme();
@@ -130,12 +130,12 @@ export default function TimeInOutScreen({ onBack, employeeId, token }: TimeInOut
             style={styles.signatureStrip}
           />
           <LinearGradient
-            colors={isDarkMode ? ['#05252b', '#03171a'] : ['#08697A', '#053e48']}
+            colors={isDarkMode ? ['#0c1929', '#08121f'] : ['#08697A', '#053e48']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.clockGradient}
           >
-            <View style={[styles.statusPill, { backgroundColor: statusTheme.bg, borderColor: statusTheme.border + '50' }]}>
+            <View style={[styles.statusPill, { backgroundColor: statusTheme.bg, borderColor: statusTheme.border }]}>
               <View style={[styles.statusDot, { backgroundColor: statusTheme.dot }]} />
               <Text style={[styles.statusText, { color: statusTheme.dot }]}>{statusTheme.text}</Text>
             </View>
@@ -145,7 +145,7 @@ export default function TimeInOutScreen({ onBack, employeeId, token }: TimeInOut
 
             <View style={styles.systemPillsRow}>
               <View style={styles.systemPill}>
-                <Feather name="map-pin" size={11} color={theme.cyan} style={{ marginRight: 4 }} />
+                <Feather name="map-pin" size={11} color={theme.primaryLight} style={{ marginRight: 4 }} />
                 <Text style={styles.systemPillText}>HQ Office Geofence</Text>
               </View>
               <View style={styles.systemPill}>
@@ -161,7 +161,7 @@ export default function TimeInOutScreen({ onBack, employeeId, token }: TimeInOut
           <View style={[
             styles.msgBanner,
             {
-              backgroundColor: message.type === 'success' ? theme.emeraldTint : theme.roseTint,
+              backgroundColor: message.type === 'success' ? theme.tealTint : theme.roseTint,
               borderColor: message.type === 'success' ? theme.emerald : theme.rose,
               borderLeftColor: message.type === 'success' ? theme.emerald : theme.rose,
             }
@@ -181,66 +181,66 @@ export default function TimeInOutScreen({ onBack, employeeId, token }: TimeInOut
           </View>
         )}
 
-        {/* Two-Column Log Cards with Distinct Colors */}
+        {/* Two-Column Log Cards */}
         <View style={styles.logRow}>
-          {/* TIME IN CARD (Emerald & Lime accent) */}
+          {/* TIME IN CARD */}
           <View style={[
             styles.logCard,
             { borderTopColor: theme.emerald, borderColor: hasTimedIn ? theme.emerald + '60' : theme.border }
           ]}>
-            <View style={[styles.logIconBox, { backgroundColor: theme.emeraldTint, borderColor: theme.emerald + '40' }]}>
+            <View style={[styles.logIconBox, { backgroundColor: theme.tealTint, borderColor: theme.border }]}>
               <Feather name="log-in" size={18} color={theme.emerald} />
             </View>
             <Text style={styles.logLabel}>FIRST TIME IN</Text>
             <Text style={[styles.logValue, { color: hasTimedIn ? theme.emerald : theme.textMuted }]}>
               {isLoadingLogs ? '--:--' : formatLog(timeInLog)}
             </Text>
-            <View style={[styles.logBadge, { backgroundColor: hasTimedIn ? theme.emeraldTint : theme.tealTint }]}>
+            <View style={[styles.logBadge, { backgroundColor: hasTimedIn ? theme.tealTint : theme.cardBg }]}>
               <Text style={[styles.logBadgeText, { color: hasTimedIn ? theme.emerald : theme.textMuted }]}>
                 {hasTimedIn ? 'VERIFIED' : 'PENDING'}
               </Text>
             </View>
           </View>
 
-          {/* TIME OUT CARD (Rose & Orange accent) */}
+          {/* TIME OUT CARD */}
           <View style={[
             styles.logCard,
-            { borderTopColor: theme.rose, borderColor: hasTimedOut ? theme.rose + '60' : theme.border }
+            { borderTopColor: theme.primaryLight, borderColor: hasTimedOut ? theme.primaryLight + '60' : theme.border }
           ]}>
-            <View style={[styles.logIconBox, { backgroundColor: theme.roseTint, borderColor: theme.rose + '40' }]}>
-              <Feather name="log-out" size={18} color={theme.rose} />
+            <View style={[styles.logIconBox, { backgroundColor: theme.tealTint, borderColor: theme.border }]}>
+              <Feather name="log-out" size={18} color={theme.primaryLight} />
             </View>
             <Text style={styles.logLabel}>FINAL TIME OUT</Text>
-            <Text style={[styles.logValue, { color: hasTimedOut ? theme.rose : theme.textMuted }]}>
+            <Text style={[styles.logValue, { color: hasTimedOut ? theme.primaryLight : theme.textMuted }]}>
               {isLoadingLogs ? '--:--' : formatLog(timeOutLog)}
             </Text>
-            <View style={[styles.logBadge, { backgroundColor: hasTimedOut ? theme.roseTint : theme.tealTint }]}>
-              <Text style={[styles.logBadgeText, { color: hasTimedOut ? theme.rose : theme.textMuted }]}>
+            <View style={[styles.logBadge, { backgroundColor: hasTimedOut ? theme.tealTint : theme.cardBg }]}>
+              <Text style={[styles.logBadgeText, { color: hasTimedOut ? theme.primaryLight : theme.textMuted }]}>
                 {hasTimedOut ? 'VERIFIED' : 'PENDING'}
               </Text>
             </View>
           </View>
         </View>
 
-        {/* High-Energy Action Buttons */}
+        {/* Action Buttons */}
         {isLoadingLogs ? (
-          <ActivityIndicator color={theme.primary} style={{ marginTop: 24 }} />
+          <ActivityIndicator color={theme.primaryLight} style={{ marginTop: 24 }} />
         ) : (
           <View style={styles.actionArea}>
             {!hasTimedIn && (
               <TouchableOpacity style={styles.punchActionBtn} onPress={() => handleTimeAction('In')} disabled={isActing} activeOpacity={0.88}>
                 <LinearGradient
-                  colors={['#10b981', '#A6CE38']}
+                  colors={['#10b981', '#08697A']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.actionBtnGradient}
                 >
                   {isActing ? (
-                    <ActivityIndicator color="#042a30" />
+                    <ActivityIndicator color="#ffffff" />
                   ) : (
                     <View style={styles.actionBtnRow}>
-                      <Feather name="log-in" size={20} color="#042a30" style={{ marginRight: 10 }} />
-                      <Text style={[styles.actionBtnText, { color: '#042a30' }]}>SUBMIT TIME IN PUNCH</Text>
+                      <Feather name="log-in" size={20} color="#ffffff" style={{ marginRight: 10 }} />
+                      <Text style={[styles.actionBtnText, { color: '#ffffff' }]}>SUBMIT TIME IN PUNCH</Text>
                     </View>
                   )}
                 </LinearGradient>
@@ -250,7 +250,7 @@ export default function TimeInOutScreen({ onBack, employeeId, token }: TimeInOut
             {hasTimedIn && !hasTimedOut && (
               <TouchableOpacity style={styles.punchActionBtn} onPress={() => handleTimeAction('Out')} disabled={isActing} activeOpacity={0.88}>
                 <LinearGradient
-                  colors={['#f43f5e', '#e11d48']}
+                  colors={['#139D9E', '#08697A']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.actionBtnGradient}

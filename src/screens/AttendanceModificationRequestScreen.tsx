@@ -93,7 +93,7 @@ export default function AttendanceModificationRequestScreen({ token, onBack, onN
           <Text style={styles.headerSubtitle}>Attendance Adjustment Portal</Text>
         </View>
         <TouchableOpacity style={styles.addBtn} onPress={onNavigateToForm}>
-          <LinearGradient colors={['#2563eb', '#4f46e5']} style={styles.addBtnGradient}>
+          <LinearGradient colors={['#10b981', '#08697A']} style={styles.addBtnGradient}>
             <Feather name="plus" size={16} color="#fff" style={{ marginRight: 4 }} />
             <Text style={styles.addBtnText}>New</Text>
           </LinearGradient>

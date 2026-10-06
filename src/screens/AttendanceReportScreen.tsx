@@ -73,14 +73,14 @@ export default function AttendanceReportScreen({ token, onBack, onNavigateToModi
           <Text style={styles.headerSubtitle}>Official Workstation Ledger</Text>
         </View>
         <TouchableOpacity style={styles.filterBtn} onPress={onNavigateToModificationRequests}>
-          <Feather name="git-pull-request" size={16} color={theme.royalBlue} style={{ marginRight: 6 }} />
+          <Feather name="git-pull-request" size={16} color={theme.primaryLight} style={{ marginRight: 6 }} />
           <Text style={styles.filterBtnText}>Requests</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.subheader}>
         <View style={styles.subheaderBadge}>
-          <Feather name="calendar" size={12} color={theme.royalBlue} style={{ marginRight: 5 }} />
+          <Feather name="calendar" size={12} color={theme.primaryLight} style={{ marginRight: 5 }} />
           <Text style={styles.subheaderText}>Showing Past 30 Days Audit Records</Text>
         </View>
         <Text style={styles.recordCountText}>{logs.length} RECORDS</Text>
@@ -88,7 +88,7 @@ export default function AttendanceReportScreen({ token, onBack, onNavigateToModi
 
       {loading ? (
         <View style={styles.centerBox}>
-          <ActivityIndicator size="large" color={theme.primary} />
+          <ActivityIndicator size="large" color={theme.primaryLight} />
           <Text style={styles.loadingText}>Fetching attendance ledger...</Text>
         </View>
       ) : logs.length === 0 ? (
@@ -113,7 +113,7 @@ export default function AttendanceReportScreen({ token, onBack, onNavigateToModi
                       <Text style={[styles.statusText, { color: status.color }]}>{status.text}</Text>
                     </View>
                     <TouchableOpacity style={styles.editBtn} onPress={() => onNavigateToForm(record.date)}>
-                      <Feather name="edit-3" size={14} color={theme.royalBlue} />
+                      <Feather name="edit-3" size={14} color={theme.primaryLight} />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -127,7 +127,7 @@ export default function AttendanceReportScreen({ token, onBack, onNavigateToModi
                   <View style={styles.timeSep} />
                   <View style={styles.timeBlock}>
                     <Text style={styles.timeBlockLabel}>TIME OUT</Text>
-                    <Text style={[styles.timeBlockValue, !record.timeOut ? { color: theme.textMuted } : { color: theme.rose }]}>
+                    <Text style={[styles.timeBlockValue, !record.timeOut ? { color: theme.textMuted } : { color: theme.primaryLight }]}>
                       {record.timeOut || '--:--'}
                     </Text>
                   </View>
@@ -156,9 +156,9 @@ const getStyles = (theme: any, isDarkMode: boolean) => StyleSheet.create({
   headerSubtitle: { color: theme.textMuted, fontSize: 11 },
   filterBtn: {
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6,
-    backgroundColor: theme.blueTint, borderWidth: 1, borderColor: 'rgba(37, 99, 235, 0.25)',
+    backgroundColor: theme.tealTint, borderWidth: 1, borderColor: theme.border,
   },
-  filterBtnText: { color: theme.royalBlue, fontSize: 11, fontWeight: '700' },
+  filterBtnText: { color: theme.primaryLight, fontSize: 11, fontWeight: '700' },
   subheader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: theme.border,
@@ -166,7 +166,7 @@ const getStyles = (theme: any, isDarkMode: boolean) => StyleSheet.create({
   },
   subheaderBadge: { flexDirection: 'row', alignItems: 'center' },
   subheaderText: { color: theme.textSecondary, fontSize: 11, fontWeight: '600' },
-  recordCountText: { fontSize: 10, fontWeight: '800', letterSpacing: 0.8, color: theme.royalBlue },
+  recordCountText: { fontSize: 10, fontWeight: '800', letterSpacing: 0.8, color: theme.primaryLight },
   centerBox: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
   loadingText: { color: theme.textMuted, fontSize: 13, marginTop: 12 },
   emptyIcon: { width: 56, height: 56, backgroundColor: theme.tealTint, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },

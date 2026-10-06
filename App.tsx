@@ -49,17 +49,30 @@ export default function App() {
     checkLoginStatus();
   }, []);
 
-  const handleLoginSuccess = async (name: string, empId?: number, token?: string, rememberMe?: boolean) => {
+  const handleLoginSuccess = async (param1: any, param2?: any, param3?: any) => {
+    let name = 'Workstation User';
+    let empId: number | null = null;
+    let token = '';
+
+    if (typeof param1 === 'string' && typeof param2 === 'object' && param2 !== null) {
+      // Called as onLoginSuccess(token, user)
+      token = param1;
+      name = param2.name || param2.email || 'Workstation User';
+      empId = param2.employee_id || param2.id || null;
+    } else {
+      name = param1 || 'Workstation User';
+      empId = param2 || null;
+      token = param3 || '';
+    }
+
     setUserName(name);
-    if (empId) setEmployeeId(empId);
-    if (token) setAuthToken(token);
+    setEmployeeId(empId);
+    setAuthToken(token);
     
-    if (rememberMe) {
-      try {
-        await AsyncStorage.setItem('user_session', JSON.stringify({ name, empId, token }));
-      } catch (e) {
-        console.error('Failed to save session');
-      }
+    try {
+      await AsyncStorage.setItem('user_session', JSON.stringify({ name, empId, token }));
+    } catch (e) {
+      console.error('Failed to save session');
     }
     
     setIsLoggedIn(true);
