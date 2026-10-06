@@ -46,7 +46,7 @@ export default function TimeInOutScreen({ onBack, employeeId, token }: TimeInOut
         const query = employeeId ? `?employee_id=${employeeId}` : '';
         const url = Platform.OS === 'web'
           ? `http://${window.location.hostname}/atech_prime/backend/public/api/attendance/my-logs/today${query}`
-          : `http://192.168.100.31/atech_prime/backend/public/api/attendance/my-logs/today${query}`;
+          : `http://192.168.100.11/atech_prime/backend/public/api/attendance/my-logs/today${query}`;
         const res = await fetch(url, { 
           cache: 'no-store', 
           headers: { 
@@ -72,7 +72,7 @@ export default function TimeInOutScreen({ onBack, employeeId, token }: TimeInOut
     try {
       const url = Platform.OS === 'web'
         ? `http://${window.location.hostname}/atech_prime/backend/public/api/attendance/tap`
-        : 'http://192.168.100.31/atech_prime/backend/public/api/attendance/tap';
+        : 'http://192.168.100.11/atech_prime/backend/public/api/attendance/tap';
       const res = await fetch(url, {
         method: 'POST',
         headers: { 

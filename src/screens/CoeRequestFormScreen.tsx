@@ -59,7 +59,7 @@ export default function CoeRequestFormScreen({ onBack, onSubmitSuccess, token, e
     try {
       const url = Platform.OS === 'web' 
         ? `http://${window.location.hostname}/atech_prime/backend/public/api/coe-requests`
-        : 'http://192.168.100.31/atech_prime/backend/public/api/coe-requests';
+        : 'http://192.168.100.11/atech_prime/backend/public/api/coe-requests';
         
       const response = await fetch(url, {
         method: 'POST',

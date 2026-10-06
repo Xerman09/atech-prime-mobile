@@ -46,7 +46,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
     setIsLoading(true);
 
     try {
-      let apiUrl = `http://192.168.100.31/atech_prime/backend/public/api/login`;
+      let apiUrl = `http://192.168.100.11/atech_prime/backend/public/api/login`;
       if (Platform.OS === 'web') {
         apiUrl = `http://${window.location.hostname}/atech_prime/backend/public/api/login`;
       }
@@ -95,7 +95,7 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
     setIsLoading(true);
 
     try {
-      let apiUrl = `http://192.168.100.31/atech_prime/backend/public/api/login/verify-otp`;
+      let apiUrl = `http://192.168.100.11/atech_prime/backend/public/api/login/verify-otp`;
       if (Platform.OS === 'web') {
         apiUrl = `http://${window.location.hostname}/atech_prime/backend/public/api/login/verify-otp`;
       }

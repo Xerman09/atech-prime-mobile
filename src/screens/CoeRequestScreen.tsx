@@ -26,7 +26,7 @@ export default function CoeRequestScreen({ onBack, onNavigateToForm, token }: Co
       try {
         const url = Platform.OS === 'web' 
           ? `http://${window.location.hostname}/atech_prime/backend/public/api/coe-requests?scope=personal`
-          : 'http://192.168.100.31/atech_prime/backend/public/api/coe-requests?scope=personal';
+          : 'http://192.168.100.11/atech_prime/backend/public/api/coe-requests?scope=personal';
           
         const response = await fetch(url, {
           method: 'GET',
@@ -144,22 +144,20 @@ export default function CoeRequestScreen({ onBack, onNavigateToForm, token }: Co
                 </View>
               </View>
 
-              <View style={styles.dateContainer}>
-                <View style={styles.dateBlock}>
-                  <Text style={styles.dateLabel}>Start Date</Text>
-                  <Text style={styles.dateValue}>{formatDate(item.start_date || item.startDate)}</Text>
-                </View>
-                <View style={styles.arrowWrapper}>
-                  <Feather name="arrow-right" size={16} color={theme.textMuted} />
-                </View>
-                <View style={styles.dateBlock}>
-                  <Text style={styles.dateLabel}>End Date</Text>
-                  <Text style={styles.dateValue}>{formatDate(item.end_date || item.endDate)}</Text>
-                </View>
+              <View style={styles.purposeBox}>
+                <Text style={styles.purposeLabel}>INTENDED PURPOSE & DETAILS</Text>
+                <Text style={styles.purposeText} numberOfLines={2}>
+                  {item.purpose || 'Certificate of Employment'}
+                </Text>
               </View>
 
               <View style={styles.cardFooter}>
-                <Text style={styles.submittedText}>Submitted: {item.created_at ? formatDate(item.created_at.split('T')[0] || item.created_at.split(' ')[0]) : formatDate(item.submittedAt)}</Text>
+                <View style={styles.filingDateWrap}>
+                  <Feather name="calendar" size={12} color={theme.textMuted} style={{ marginRight: 5 }} />
+                  <Text style={styles.submittedText}>
+                    Filed: {formatDate(item.created_at ? (item.created_at.split('T')[0] || item.created_at.split(' ')[0]) : item.submittedAt)}
+                  </Text>
+                </View>
                 <TouchableOpacity 
                   style={styles.viewButton}
                   onPress={() => setSelectedRequest(item)}
@@ -201,8 +199,8 @@ export default function CoeRequestScreen({ onBack, onNavigateToForm, token }: Co
               {selectedRequest && (
                 <>
                   <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>PURPOSE</Text>
-                    <Text style={styles.detailValue}>{selectedRequest.purpose || selectedRequest.type}</Text>
+                    <Text style={styles.detailLabel}>DOCUMENT TYPE</Text>
+                    <Text style={styles.detailValue}>Certificate of Employment (COE)</Text>
                   </View>
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>STATUS</Text>
@@ -211,17 +209,21 @@ export default function CoeRequestScreen({ onBack, onNavigateToForm, token }: Co
                     </View>
                   </View>
                   <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>START DATE</Text>
-                    <Text style={styles.detailValue}>{formatDate(selectedRequest.start_date || selectedRequest.startDate)}</Text>
+                    <Text style={styles.detailLabel}>DATE FILED</Text>
+                    <Text style={styles.detailValue}>
+                      {formatDate(selectedRequest.created_at ? (selectedRequest.created_at.split('T')[0] || selectedRequest.created_at.split(' ')[0]) : selectedRequest.submittedAt)}
+                    </Text>
                   </View>
                   <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>END DATE</Text>
-                    <Text style={styles.detailValue}>{formatDate(selectedRequest.end_date || selectedRequest.endDate)}</Text>
-                  </View>
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>REASON</Text>
+                    <Text style={styles.detailLabel}>PURPOSE & REMARKS</Text>
                     <Text style={[styles.detailValue, { lineHeight: 22 }]}>
-                      { 'No reason provided.'}
+                      {selectedRequest.purpose || 'Official employment record certification'}
+                    </Text>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>ESTIMATED TURNAROUND</Text>
+                    <Text style={[styles.detailValue, { color: theme.primary, fontWeight: '600' }]}>
+                      1–2 Working Days (Subject to HR Endorsement)
                     </Text>
                   </View>
                 </>
@@ -366,36 +368,30 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
     fontWeight: '700',
     textTransform: 'uppercase',
   },
-  dateContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
+  purposeBox: {
+    backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.02)' : '#f8fafc',
     borderWidth: 1,
     borderColor: theme.border,
     padding: 12,
     borderRadius: 0,
-    marginBottom: 16,
+    marginBottom: 14,
   },
-  dateBlock: {
-    flex: 1,
-  },
-  arrowWrapper: {
-    paddingHorizontal: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  dateLabel: {
+  purposeLabel: {
     color: theme.textMuted,
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 1,
     marginBottom: 4,
-    textTransform: 'uppercase',
   },
-  dateValue: {
+  purposeText: {
     color: theme.textPrimary,
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: '600',
+    lineHeight: 18,
+  },
+  filingDateWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   submittedText: {
     color: theme.textMuted,

@@ -40,7 +40,7 @@ export default function AttendanceReportScreen({ token, onBack, onNavigateToModi
           }
         } catch {}
 
-        let url = `http://192.168.100.31/atech_prime/backend/public/api/attendance/my-logs/history${empIdQuery}`;
+        let url = `http://192.168.100.11/atech_prime/backend/public/api/attendance/my-logs/history${empIdQuery}`;
         if (Platform.OS === 'web') url = `http://${window.location.hostname}/atech_prime/backend/public/api/attendance/my-logs/history${empIdQuery}`;
         const res = await fetch(url, { 
           cache: 'no-store', 

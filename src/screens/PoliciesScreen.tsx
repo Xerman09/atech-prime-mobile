@@ -37,7 +37,7 @@ export default function PoliciesScreen({ onBack, token }: PoliciesScreenProps) {
       try {
         const apiUrl = Platform.OS === 'web' 
           ? `http://${window.location.hostname}/atech_prime/backend/public/api/policies`
-          : `http://192.168.100.31/atech_prime/backend/public/api/policies`;
+          : `http://192.168.100.11/atech_prime/backend/public/api/policies`;
           
         const response = await fetch(apiUrl, {
           cache: 'no-store',

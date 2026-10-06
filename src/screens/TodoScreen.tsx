@@ -56,7 +56,7 @@ export default function TodoScreen({ onBack, token }: TodoScreenProps) {
   const getApiUrl = (endpoint: string) => {
     return Platform.OS === 'web' 
       ? `http://${window.location.hostname}/atech_prime/backend/public${endpoint}`
-      : `http://192.168.100.31/atech_prime/backend/public${endpoint}`;
+      : `http://192.168.100.11/atech_prime/backend/public${endpoint}`;
   };
 
   const toDateString = (d: Date) => {

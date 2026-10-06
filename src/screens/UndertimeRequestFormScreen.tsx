@@ -142,7 +142,7 @@ export default function UndertimeRequestFormScreen({ onBack, onSubmitSuccess, to
     try {
       const url = Platform.OS === 'web' 
         ? `http://${window.location.hostname}/atech_prime/backend/public/api/undertime-requests`
-        : 'http://192.168.100.31/atech_prime/backend/public/api/undertime-requests';
+        : 'http://192.168.100.11/atech_prime/backend/public/api/undertime-requests';
         
       const response = await fetch(url, {
         method: 'POST',

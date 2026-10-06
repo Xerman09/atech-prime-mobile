@@ -26,7 +26,7 @@ export default function LeaveRequestScreen({ onBack, onNavigateToForm, token }: 
       try {
         const url = Platform.OS === 'web' 
           ? `http://${window.location.hostname}/atech_prime/backend/public/api/leave-requests?scope=personal`
-          : 'http://192.168.100.31/atech_prime/backend/public/api/leave-requests?scope=personal';
+          : 'http://192.168.100.11/atech_prime/backend/public/api/leave-requests?scope=personal';
           
         const response = await fetch(url, {
           method: 'GET',

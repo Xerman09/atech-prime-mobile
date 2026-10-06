@@ -128,7 +128,7 @@ export default function LeaveRequestFormScreen({ onBack, onSubmitSuccess, token,
     try {
       const url = Platform.OS === 'web' 
         ? `http://${window.location.hostname}/atech_prime/backend/public/api/leave-requests`
-        : 'http://192.168.100.31/atech_prime/backend/public/api/leave-requests';
+        : 'http://192.168.100.11/atech_prime/backend/public/api/leave-requests';
         
       const response = await fetch(url, {
         method: 'POST',

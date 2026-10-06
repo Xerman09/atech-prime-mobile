@@ -65,6 +65,12 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [todayTasks, setTodayTasks] = useState<any[]>([]);
   const [isLoadingAnnouncements, setIsLoadingAnnouncements] = useState(true);
+  const [metrics, setMetrics] = useState({
+    attendanceRate: 100,
+    leaveCredits: 0.0,
+    tasksDue: 0,
+    isLoading: true,
+  });
 
   const isTokenString = (str: string) => !str || str.startsWith('MS4') || (str.length > 30 && str.includes('.'));
   const [localName, setLocalName] = useState(userName);
@@ -110,7 +116,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
     const fetchAnnouncements = async () => {
       if (!token) { setIsLoadingAnnouncements(false); return; }
       try {
-        let url = `http://192.168.100.31/atech_prime/backend/public/api/hr/announcements`;
+        let url = `http://192.168.100.11/atech_prime/backend/public/api/hr/announcements`;
         if (Platform.OS === 'web') url = `http://${window.location.hostname}/atech_prime/backend/public/api/hr/announcements`;
         const res = await fetch(url, { 
           cache: 'no-store', 
@@ -133,7 +139,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
     const fetchTasks = async () => {
       if (!token) return;
       try {
-        let url = `http://192.168.100.31/atech_prime/backend/public/api/todos`;
+        let url = `http://192.168.100.11/atech_prime/backend/public/api/todos`;
         if (Platform.OS === 'web') url = `http://${window.location.hostname}/atech_prime/backend/public/api/todos`;
         const res = await fetch(url, { 
           cache: 'no-store',
@@ -154,11 +160,51 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
           const todayStr = `${y}-${m}-${d}`;
           const filtered = data.filter((t: any) => !t.is_completed && (t.due_date === todayStr || t.start_date === todayStr || (t.start_date && t.due_date && t.start_date <= todayStr && t.due_date >= todayStr)));
           setTodayTasks(filtered.slice(0, 3));
+          setMetrics(prev => ({ ...prev, tasksDue: filtered.length }));
         }
       } catch (e) { console.error(e); }
     };
+    const fetchMetrics = async () => {
+      if (!token) return;
+      try {
+        let empIdQuery = '';
+        try {
+          const uData = await AsyncStorage.getItem('user_data');
+          if (uData) {
+            const parsed = JSON.parse(uData);
+            if (parsed.employee_id) empIdQuery = `?employee_id=${parsed.employee_id}`;
+          }
+        } catch {}
+
+        let url = `http://192.168.100.11/atech_prime/backend/public/api/attendance/my-summary${empIdQuery}`;
+        if (Platform.OS === 'web') url = `http://${window.location.hostname}/atech_prime/backend/public/api/attendance/my-summary${empIdQuery}`;
+        const res = await fetch(url, { 
+          cache: 'no-store', 
+          headers: { 
+            'Accept': 'application/json', 
+            'Authorization': `Bearer ${token}`,
+            'X-Authorization': `Bearer ${token}`
+          } 
+        });
+        if (res.status === 401) {
+          onLogout();
+          return;
+        }
+        if (res.ok) {
+          const data = await res.json();
+          setMetrics(prev => ({
+            ...prev,
+            attendanceRate: typeof data.attendance_rate === 'number' ? data.attendance_rate : 100,
+            leaveCredits: typeof data.leave_credits === 'number' ? data.leave_credits : 0.0,
+            tasksDue: typeof data.tasks_due === 'number' ? data.tasks_due : prev.tasksDue,
+            isLoading: false,
+          }));
+        }
+      } catch (e) { console.error('Failed to fetch dashboard metrics:', e); }
+    };
     fetchAnnouncements();
     fetchTasks();
+    fetchMetrics();
   }, [token]);
 
   // Clean, Unified Quick Actions in Green-to-Blue Theme
@@ -386,7 +432,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
               <Text style={styles.metricTileLabel}>ATTENDANCE</Text>
               <Feather name="trending-up" size={14} color={theme.emerald} />
             </View>
-            <Text style={[styles.metricTileValue, { color: theme.emerald }]}>100%</Text>
+            <Text style={[styles.metricTileValue, { color: theme.emerald }]}>{metrics.attendanceRate}%</Text>
             <Text style={styles.metricTileSub}>On-time Record</Text>
           </View>
 
@@ -396,7 +442,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
               <Text style={styles.metricTileLabel}>LEAVE CREDITS</Text>
               <Feather name="file-text" size={14} color={theme.primaryLight} />
             </View>
-            <Text style={[styles.metricTileValue, { color: theme.textPrimary }]}>15.0</Text>
+            <Text style={[styles.metricTileValue, { color: theme.textPrimary }]}>{metrics.leaveCredits.toFixed(1)}</Text>
             <Text style={styles.metricTileSub}>Days Available</Text>
           </View>
 
@@ -406,7 +452,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
               <Text style={styles.metricTileLabel}>TASKS DUE</Text>
               <Feather name="check-circle" size={14} color={theme.primaryLight} />
             </View>
-            <Text style={[styles.metricTileValue, { color: theme.textPrimary }]}>{todayTasks.length}</Text>
+            <Text style={[styles.metricTileValue, { color: theme.textPrimary }]}>{metrics.tasksDue}</Text>
             <Text style={styles.metricTileSub}>Actions Today</Text>
           </View>
         </View>

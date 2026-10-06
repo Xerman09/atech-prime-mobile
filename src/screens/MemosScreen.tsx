@@ -25,7 +25,7 @@ export default function MemosScreen({ token, onBack }: MemosScreenProps) {
         return;
       }
       try {
-        let apiUrl = `http://192.168.100.31/atech_prime/backend/public/api/memos`;
+        let apiUrl = `http://192.168.100.11/atech_prime/backend/public/api/memos`;
         if (Platform.OS === 'web') {
           apiUrl = `http://${window.location.hostname}/atech_prime/backend/public/api/memos`;
         }
@@ -68,7 +68,7 @@ export default function MemosScreen({ token, onBack }: MemosScreenProps) {
   };
 
   const handleOpenAttachment = (filePath: string) => {
-    let baseUrl = `http://192.168.100.31/atech_prime/backend/public/`;
+    let baseUrl = `http://192.168.100.11/atech_prime/backend/public/`;
     if (Platform.OS === 'web') {
       baseUrl = `http://${window.location.hostname}/atech_prime/backend/public/`;
     }

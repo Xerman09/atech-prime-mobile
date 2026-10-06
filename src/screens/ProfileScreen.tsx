@@ -32,7 +32,7 @@ export default function ProfileScreen({ onBack, employeeId, token, userName }: P
       try {
         const url = Platform.OS === 'web'
           ? `http://${window.location.hostname}/atech_prime/backend/public/api/employees/${employeeId}`
-          : `http://192.168.100.31/atech_prime/backend/public/api/employees/${employeeId}`;
+          : `http://192.168.100.11/atech_prime/backend/public/api/employees/${employeeId}`;
         const res = await fetch(url, { 
           cache: 'no-store',
           headers: { 
