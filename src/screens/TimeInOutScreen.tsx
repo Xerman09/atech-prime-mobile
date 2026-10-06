@@ -43,10 +43,11 @@ export default function TimeInOutScreen({ onBack, employeeId, token }: TimeInOut
     const fetchTodayLogs = async () => {
       if (!token) { setIsLoadingLogs(false); return; }
       try {
+        const query = employeeId ? `?employee_id=${employeeId}` : '';
         const url = Platform.OS === 'web'
-          ? `http://${window.location.hostname}/atech_prime/backend/public/api/attendance/my-logs/today`
-          : 'http://192.168.100.31/atech_prime/backend/public/api/attendance/my-logs/today';
-        const res = await fetch(url, { headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token}` } });
+          ? `http://${window.location.hostname}/atech_prime/backend/public/api/attendance/my-logs/today${query}`
+          : `http://192.168.100.31/atech_prime/backend/public/api/attendance/my-logs/today${query}`;
+        const res = await fetch(url, { cache: 'no-store', headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token}` } });
         if (res.ok) {
           const data = await res.json();
           if (data.hasTimedIn) { setHasTimedIn(true); setTimeInLog(data.timeInLog); }
@@ -55,7 +56,7 @@ export default function TimeInOutScreen({ onBack, employeeId, token }: TimeInOut
       } catch (e) { console.error(e); } finally { setIsLoadingLogs(false); }
     };
     fetchTodayLogs();
-  }, [token]);
+  }, [token, employeeId]);
 
   const handleTimeAction = async (action: 'In' | 'Out') => {
     if (!employeeId) { setMessage({ type: 'error', text: 'No active employee profile linked to account.' }); return; }

@@ -5,6 +5,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { Feather } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../theme/ThemeContext';
 
 interface AttendanceReportScreenProps {
@@ -30,8 +31,17 @@ export default function AttendanceReportScreen({ token, onBack, onNavigateToModi
     const fetchLogs = async () => {
       if (!token) { setLoading(false); return; }
       try {
-        let url = `http://192.168.100.31/atech_prime/backend/public/api/attendance/my-logs/history`;
-        if (Platform.OS === 'web') url = `http://${window.location.hostname}/atech_prime/backend/public/api/attendance/my-logs/history`;
+        let empIdQuery = '';
+        try {
+          const uData = await AsyncStorage.getItem('user_data');
+          if (uData) {
+            const parsed = JSON.parse(uData);
+            if (parsed.employee_id) empIdQuery = `?employee_id=${parsed.employee_id}`;
+          }
+        } catch {}
+
+        let url = `http://192.168.100.31/atech_prime/backend/public/api/attendance/my-logs/history${empIdQuery}`;
+        if (Platform.OS === 'web') url = `http://${window.location.hostname}/atech_prime/backend/public/api/attendance/my-logs/history${empIdQuery}`;
         const res = await fetch(url, { cache: 'no-store', headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token}` } });
         if (res.ok) { const d = await res.json(); setLogs(Array.isArray(d) ? d : []); }
       } catch (e) { console.error(e); } finally { setLoading(false); }
