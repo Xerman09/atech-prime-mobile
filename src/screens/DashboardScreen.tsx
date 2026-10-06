@@ -102,7 +102,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
       setCurrentTime(now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
     };
     tick();
-    const t = setInterval(tick, 10000);
+    const t = setInterval(tick, 1000);
     return () => clearInterval(t);
   }, []);
 
@@ -302,7 +302,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
           </View>
         </View>
 
-        {/* Hero Clock & Punch Card with Signature Frontend Strip */}
+        {/* Hero Clock & Punch Card with Signature Top Strip */}
         <View style={styles.heroCard}>
           {/* Top Gradient Strip */}
           <LinearGradient
@@ -312,42 +312,72 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
             style={styles.heroStrip}
           />
           <LinearGradient
-            colors={isDarkMode ? ['#0c1929', '#08121f'] : ['#08697A', '#064b57']}
+            colors={isDarkMode ? ['#0a192f', '#071324'] : ['#062338', '#031624']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.heroGradient}
           >
             <View style={styles.heroContent}>
+              {/* Top Row: Shift Status Badge + Date */}
               <View style={styles.heroBadgeRow}>
                 <View style={styles.heroPill}>
-                  <View style={[styles.heroPillDot, { backgroundColor: theme.emerald }]} />
+                  <View style={styles.heroPillDot} />
                   <Text style={styles.heroPillText}>SHIFT IN PROGRESS</Text>
                 </View>
-                <Text style={styles.heroDate}>{currentDate}</Text>
+                <View style={styles.heroDatePill}>
+                  <Feather name="calendar" size={11} color="rgba(255,255,255,0.7)" style={{ marginRight: 5 }} />
+                  <Text style={styles.heroDate}>{currentDate}</Text>
+                </View>
               </View>
 
+              {/* Main Row: Live Clock + Punch Attendance Button */}
               <View style={styles.heroMainRow}>
-                <View>
-                  <Text style={styles.heroClockLabel}>SYSTEM TIME</Text>
-                  <Text style={styles.heroTime}>{currentTime}</Text>
+                <View style={styles.clockContainer}>
+                  <View style={styles.clockHeader}>
+                    <View style={styles.liveClockDot} />
+                    <Text style={styles.heroClockLabel}>SYSTEM TIME</Text>
+                  </View>
+                  <View style={styles.timeValueRow}>
+                    <Text style={styles.heroTimeDigits}>{currentTime.split(' ')[0] || currentTime}</Text>
+                    {currentTime.split(' ')[1] ? (
+                      <View style={styles.periodBadge}>
+                        <Text style={styles.periodBadgeText}>{currentTime.split(' ')[1]}</Text>
+                      </View>
+                    ) : null}
+                  </View>
                 </View>
 
-                {/* Clean Green-to-Blue Punch Button */}
+                {/* High-Contrast Emerald Punch Button */}
                 <TouchableOpacity
                   style={styles.punchBtn}
                   onPress={() => onNavigate('attendance')}
-                  activeOpacity={0.88}
+                  activeOpacity={0.85}
                 >
                   <LinearGradient
-                    colors={['#10b981', '#08697A']}
+                    colors={['#10b981', '#059669', '#047857']}
                     start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
+                    end={{ x: 1, y: 1 }}
                     style={styles.punchBtnGradient}
                   >
-                    <Feather name="clock" size={16} color="#ffffff" />
-                    <Text style={styles.punchBtnText}>PUNCH ATTENDANCE</Text>
+                    <View style={styles.punchIconCircle}>
+                      <Feather name="clock" size={14} color="#ffffff" />
+                    </View>
+                    <View style={styles.punchTextCol}>
+                      <Text style={styles.punchBtnText}>PUNCH ATTENDANCE</Text>
+                      <Text style={styles.punchBtnSub}>Log Clock In / Out</Text>
+                    </View>
+                    <Feather name="chevron-right" size={14} color="rgba(255,255,255,0.75)" style={{ marginLeft: 6 }} />
                   </LinearGradient>
                 </TouchableOpacity>
+              </View>
+
+              {/* Bottom Info Strip */}
+              <View style={styles.heroFooterStrip}>
+                <View style={styles.heroFooterLeft}>
+                  <Feather name="shield" size={11} color="rgba(255,255,255,0.6)" style={{ marginRight: 5 }} />
+                  <Text style={styles.heroFooterText}>Verified Timekeeping Terminal</Text>
+                </View>
+                <Text style={styles.heroFooterRightText}>Shift: 08:00 AM - 05:00 PM</Text>
               </View>
             </View>
           </LinearGradient>
@@ -556,25 +586,94 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
   liveBadgeText: { fontSize: 9, fontWeight: '800', color: theme.emerald, letterSpacing: 0.5 },
   // Hero Card
   heroCard: {
-    marginBottom: 20, backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border,
-    position: 'relative', overflow: 'hidden',
+    marginBottom: 20,
+    backgroundColor: isDarkMode ? '#0a192f' : '#062338',
+    borderWidth: 1,
+    borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.12)',
+    borderRadius: 0,
+    position: 'relative',
+    overflow: 'hidden',
   },
   heroStrip: { position: 'absolute', top: 0, left: 0, right: 0, height: 3, zIndex: 10 },
   heroGradient: { padding: 18 },
   heroContent: { width: '100%' },
-  heroBadgeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  heroPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 8, paddingVertical: 3 },
-  heroPillDot: { width: 5, height: 5, borderRadius: 2.5, marginRight: 6 },
-  heroPillText: { color: '#fff', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
-  heroDate: { color: 'rgba(255,255,255,0.75)', fontSize: 11, fontWeight: '500' },
-  heroMainRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
-  heroClockLabel: { color: 'rgba(255,255,255,0.6)', fontSize: 9, fontWeight: '800', letterSpacing: 1, marginBottom: 2 },
-  heroTime: { color: '#ffffff', fontSize: 28, fontWeight: '300', letterSpacing: 1 },
-  punchBtn: { overflow: 'hidden' },
-  punchBtnGradient: {
-    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10,
+  heroBadgeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  heroPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.35)',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 0,
   },
-  punchBtnText: { color: '#ffffff', fontWeight: '900', fontSize: 11, letterSpacing: 0.5, marginLeft: 6 },
+  heroPillDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#10b981', marginRight: 6 },
+  heroPillText: { color: '#34d399', fontSize: 10, fontWeight: '800', letterSpacing: 0.8 },
+  heroDatePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.07)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 0,
+  },
+  heroDate: { color: '#e2e8f0', fontSize: 11, fontWeight: '600' },
+  heroMainRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  clockContainer: { flex: 1, marginRight: 12 },
+  clockHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 2 },
+  liveClockDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#38bdf8', marginRight: 5 },
+  heroClockLabel: { color: 'rgba(255,255,255,0.65)', fontSize: 9, fontWeight: '800', letterSpacing: 1.2 },
+  timeValueRow: { flexDirection: 'row', alignItems: 'baseline' },
+  heroTimeDigits: { color: '#ffffff', fontSize: 32, fontWeight: '800', letterSpacing: -0.5 },
+  periodBadge: {
+    marginLeft: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 0,
+  },
+  periodBadgeText: { color: '#e2e8f0', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
+  punchBtn: {
+    borderRadius: 0,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+  },
+  punchBtnGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 9,
+    paddingHorizontal: 12,
+  },
+  punchIconCircle: {
+    width: 28,
+    height: 28,
+    backgroundColor: 'rgba(0, 0, 0, 0.22)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+    borderRadius: 0,
+  },
+  punchTextCol: { justifyContent: 'center' },
+  punchBtnText: { color: '#ffffff', fontWeight: '800', fontSize: 11, letterSpacing: 0.6 },
+  punchBtnSub: { color: 'rgba(255, 255, 255, 0.82)', fontWeight: '600', fontSize: 9, letterSpacing: 0.2, marginTop: 1 },
+  heroFooterStrip: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 14,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  heroFooterLeft: { flexDirection: 'row', alignItems: 'center' },
+  heroFooterText: { color: 'rgba(255,255,255,0.65)', fontSize: 10, fontWeight: '600' },
+  heroFooterRightText: { color: 'rgba(255,255,255,0.45)', fontSize: 10, fontWeight: '600' },
   // 3 Metric Tiles
   metricsRow: { flexDirection: 'row', marginHorizontal: -4, marginBottom: 24 },
   metricTile: {
