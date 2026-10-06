@@ -79,11 +79,22 @@ export default function MemosScreen({ token, onBack }: MemosScreenProps) {
       <StatusBar style={isDarkMode ? 'light' : 'dark'} />
       <LinearGradient colors={theme.backgroundGradient as any} style={StyleSheet.absoluteFillObject} />
 
+      {/* Signature Top Gradient Strip */}
+      <LinearGradient
+        colors={theme.accentGradient as any}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.signatureStrip}
+      />
+
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={onBack}>
           <Feather name="arrow-left" size={20} color={theme.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Memorandums & Notices</Text>
+        <View style={styles.headerTitleWrap}>
+          <Text style={styles.headerTitle}>Memorandums & Notices</Text>
+          <Text style={styles.headerSubtitle}>Official Company Directives</Text>
+        </View>
         <View style={{ width: 36 }} />
       </View>
 
@@ -96,10 +107,10 @@ export default function MemosScreen({ token, onBack }: MemosScreenProps) {
         ) : memos.length === 0 ? (
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIcon}>
-              <Feather name="file-text" size={28} color={theme.textMuted} />
+              <Feather name="file-text" size={28} color={theme.rose} />
             </View>
             <Text style={styles.emptyTitle}>No memorandums published</Text>
-            <Text style={styles.emptySubtitle}>Official company memos and directives will appear here.</Text>
+            <Text style={styles.emptySubtitle}>Official executive circulars and policy notices will appear here.</Text>
           </View>
         ) : (
           memos.map(memo => (
@@ -109,19 +120,25 @@ export default function MemosScreen({ token, onBack }: MemosScreenProps) {
                   <View style={styles.tagDot} />
                   <Text style={styles.memoTitle}>{memo.title}</Text>
                 </View>
-                <Text style={styles.memoDate}>{formatDate(memo.created_at)}</Text>
+                <View style={styles.dateBadge}>
+                  <Text style={styles.memoDate}>{formatDate(memo.created_at)}</Text>
+                </View>
               </View>
               
-              <Text style={styles.memoAuthor}>Issued by: {memo.name || 'Management'}</Text>
+              <View style={styles.authorRow}>
+                <Feather name="user-check" size={12} color={theme.royalBlue} style={{ marginRight: 5 }} />
+                <Text style={styles.memoAuthor}>Issued by: {memo.name || 'Executive Management'}</Text>
+              </View>
               <Text style={styles.memoContent}>{memo.content}</Text>
               
               {memo.file_path ? (
                 <TouchableOpacity 
                   style={styles.attachmentBtn}
                   onPress={() => handleOpenAttachment(memo.file_path as string)}
+                  activeOpacity={0.8}
                 >
-                  <Feather name="paperclip" size={14} color={theme.primary} />
-                  <Text style={styles.attachmentText}>View Official Attachment</Text>
+                  <Feather name="paperclip" size={14} color={theme.royalBlue} />
+                  <Text style={styles.attachmentText}>View Official Document PDF</Text>
                 </TouchableOpacity>
               ) : null}
             </View>
@@ -135,43 +152,50 @@ export default function MemosScreen({ token, onBack }: MemosScreenProps) {
 
 const getStyles = (theme: any) => StyleSheet.create({
   container: { flex: 1 },
+  signatureStrip: { height: 3, width: '100%' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingTop: Platform.OS === 'ios' ? 56 : 36, paddingHorizontal: 20, paddingBottom: 16,
+    paddingTop: Platform.OS === 'ios' ? 50 : 30, paddingHorizontal: 20, paddingBottom: 14,
     borderBottomWidth: 1, borderBottomColor: theme.border,
   },
-  backBtn: {
-    padding: 8, backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border, borderRadius: 0
-  },
-  headerTitle: { color: theme.textPrimary, fontSize: 17, fontWeight: '700' },
+  backBtn: { padding: 8, backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border },
+  headerTitleWrap: { flex: 1, marginHorizontal: 12 },
+  headerTitle: { color: theme.textPrimary, fontSize: 16, fontWeight: '700' },
+  headerSubtitle: { color: theme.textMuted, fontSize: 11 },
   scrollContent: { padding: 20 },
   centerBox: { padding: 40, alignItems: 'center', justifyContent: 'center' },
   centerText: { marginTop: 12, color: theme.textMuted, fontSize: 13 },
   emptyContainer: {
     padding: 40, alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: theme.border, backgroundColor: theme.cardBg, borderRadius: 0, marginTop: 20
+    borderWidth: 1, borderColor: theme.border, backgroundColor: theme.cardBg, marginTop: 20,
   },
-  emptyIcon: { width: 56, height: 56, backgroundColor: theme.tealTint, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  emptyTitle: { color: theme.textPrimary, fontSize: 15, fontWeight: '600', marginBottom: 6 },
-  emptySubtitle: { color: theme.textMuted, fontSize: 13, textAlign: 'center', lineHeight: 18 },
+  emptyIcon: { width: 56, height: 56, backgroundColor: theme.roseTint, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  emptyTitle: { color: theme.textPrimary, fontSize: 15, fontWeight: '700', marginBottom: 6 },
+  emptySubtitle: { color: theme.textMuted, fontSize: 12, textAlign: 'center', lineHeight: 18 },
   memoCard: {
     backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border,
-    padding: 18, marginBottom: 14, borderRadius: 0
+    borderLeftWidth: 3.5, borderLeftColor: theme.royalBlue,
+    padding: 18, marginBottom: 14,
   },
   memoCardTop: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start',
-    marginBottom: 8, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: theme.border
+    marginBottom: 8, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: theme.border,
   },
   memoTitleRow: { flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 12 },
-  tagDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: theme.primary, marginRight: 8 },
+  tagDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: theme.royalBlue, marginRight: 8 },
   memoTitle: { fontSize: 15, fontWeight: '700', color: theme.textPrimary, flex: 1 },
-  memoDate: { fontSize: 12, color: theme.textMuted, fontWeight: '500' },
-  memoAuthor: { fontSize: 12, color: theme.textSecondary, marginBottom: 10, fontStyle: 'italic' },
-  memoContent: { fontSize: 13, color: theme.textSecondary, lineHeight: 20, marginBottom: 12 },
-  attachmentBtn: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: theme.tealTint,
-    paddingVertical: 8, paddingHorizontal: 12, borderWidth: 1, borderColor: theme.border,
-    alignSelf: 'flex-start', borderRadius: 0
+  dateBadge: {
+    backgroundColor: theme.tealTint, borderWidth: 1, borderColor: theme.border,
+    paddingHorizontal: 6, paddingVertical: 2,
   },
-  attachmentText: { color: theme.primary, fontWeight: '600', fontSize: 12, marginLeft: 6 }
+  memoDate: { fontSize: 11, color: theme.textPrimary, fontWeight: '600' },
+  authorRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  memoAuthor: { fontSize: 12, color: theme.textSecondary, fontWeight: '500' },
+  memoContent: { fontSize: 13, color: theme.textSecondary, lineHeight: 20, marginBottom: 14 },
+  attachmentBtn: {
+    flexDirection: 'row', alignItems: 'center', backgroundColor: theme.blueTint,
+    paddingVertical: 8, paddingHorizontal: 12, borderWidth: 1, borderColor: 'rgba(37, 99, 235, 0.3)',
+    alignSelf: 'flex-start',
+  },
+  attachmentText: { color: theme.royalBlue, fontWeight: '700', fontSize: 12, marginLeft: 6 },
 });

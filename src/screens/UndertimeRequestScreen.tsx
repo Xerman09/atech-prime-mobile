@@ -57,19 +57,19 @@ export default function UndertimeRequestScreen({ onBack, onNavigateToForm, token
 
   const getStatusColor = (status: string) => {
     switch(status) {
-      case 'Approved': return '#22c55e';
-      case 'Pending': return '#f59e0b';
-      case 'Rejected': return '#ef4444';
-      default: return '#94a3b8';
+      case 'Approved': return theme.emerald;
+      case 'Pending': return theme.amber;
+      case 'Rejected': return theme.rose;
+      default: return theme.textMuted;
     }
   };
 
   const getStatusBg = (status: string) => {
     switch(status) {
-      case 'Approved': return 'rgba(34, 197, 94, 0.1)';
-      case 'Pending': return 'rgba(245, 158, 11, 0.1)';
-      case 'Rejected': return 'rgba(239, 68, 68, 0.1)';
-      default: return 'rgba(148, 163, 184, 0.1)';
+      case 'Approved': return theme.emeraldTint;
+      case 'Pending': return theme.amberTint;
+      case 'Rejected': return theme.roseTint;
+      default: return theme.tealTint;
     }
   };
 
@@ -78,7 +78,7 @@ export default function UndertimeRequestScreen({ onBack, onNavigateToForm, token
     try {
       const d = new Date(dateStr);
       if (isNaN(d.getTime())) return dateStr;
-      return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     } catch {
       return dateStr;
     }
@@ -101,21 +101,30 @@ export default function UndertimeRequestScreen({ onBack, onNavigateToForm, token
     <LinearGradient colors={theme.backgroundGradient} style={styles.container}>
       <StatusBar style={isDarkMode ? "light" : "dark"} />
       
-      {/* Decorative Background Elements */}
-      <View style={styles.glow1} />
-      <View style={styles.glow2} />
+      {/* Signature Top Gradient Strip */}
+      <LinearGradient
+        colors={theme.accentGradient as any}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={{ height: 3, width: '100%' }}
+      />
 
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <TouchableOpacity style={styles.backButton} onPress={onBack}>
-            <Feather name="arrow-left" size={24} color={theme.textPrimary} />
+            <Feather name="arrow-left" size={20} color={theme.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Undertime History</Text>
+          <View style={{ marginLeft: 8 }}>
+            <Text style={styles.headerTitle}>Undertime Requests</Text>
+            <Text style={{ fontSize: 11, color: theme.textMuted }}>Early Departure Authorizations</Text>
+          </View>
         </View>
         
-        <TouchableOpacity style={styles.addButton} onPress={onNavigateToForm}>
-          <Feather name="plus" size={20} color={theme.textPrimary} />
-          <Text style={styles.addButtonText}>Apply</Text>
+        <TouchableOpacity style={styles.addButton} onPress={onNavigateToForm} activeOpacity={0.85}>
+          <LinearGradient colors={['#2563eb', '#4f46e5']} style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 7 }}>
+            <Feather name="plus" size={16} color="#ffffff" style={{ marginRight: 4 }} />
+            <Text style={{ color: '#ffffff', fontSize: 12, fontWeight: '800' }}>Apply</Text>
+          </LinearGradient>
         </TouchableOpacity>
       </View>
 

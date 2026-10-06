@@ -237,13 +237,21 @@ export default function TodoScreen({ onBack, token }: TodoScreenProps) {
     <View style={styles.container}>
       <StatusBar style="light" />
       
+      {/* Signature Top Gradient Strip */}
+      <LinearGradient
+        colors={theme.accentGradient as any}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={{ height: 3, width: '100%' }}
+      />
+      
       {/* Header */}
-      <LinearGradient colors={theme.primaryGradient as any} style={styles.header}>
+      <View style={[styles.header, { backgroundColor: theme.cardBg, borderBottomWidth: 1, borderBottomColor: theme.border }]}>
         <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Feather name="arrow-left" size={24} color="#fff" />
+          <Feather name="arrow-left" size={20} color={theme.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>To Do List</Text>
-      </LinearGradient>
+        <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>Workstation Tasks</Text>
+      </View>
 
       {/* Filter Tabs */}
       <View style={styles.filterContainer}>
@@ -394,7 +402,7 @@ export default function TodoScreen({ onBack, token }: TodoScreenProps) {
 
       {/* FAB */}
       <TouchableOpacity style={styles.fab} onPress={openAddModal}>
-        <LinearGradient colors={theme.primaryGradient as any} style={styles.fabGradient}>
+        <LinearGradient colors={['#2563eb', '#4f46e5']} style={styles.fabGradient}>
           <Feather name="plus" size={24} color="#fff" />
         </LinearGradient>
       </TouchableOpacity>
@@ -403,8 +411,8 @@ export default function TodoScreen({ onBack, token }: TodoScreenProps) {
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
-            {/* Top Gradient Strip requirement */}
-            <LinearGradient colors={theme.primaryGradient as any} style={styles.modalGradientStrip} start={{x: 0, y: 0}} end={{x: 1, y: 0}} />
+            {/* Signature Top Gradient Strip requirement */}
+            <LinearGradient colors={theme.accentGradient as any} style={styles.modalGradientStrip} start={{x: 0, y: 0}} end={{x: 1, y: 0}} />
             
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{editTarget ? 'Edit Task' : 'New Task'}</Text>
