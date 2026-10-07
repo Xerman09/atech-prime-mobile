@@ -427,34 +427,46 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
         {/* 3 Unified Metric Summary Tiles */}
         <View style={styles.metricsRow}>
           {/* Tile 1: Attendance */}
-          <View style={styles.metricTile}>
+          <TouchableOpacity 
+            style={styles.metricTile} 
+            onPress={() => onNavigate('attendance_report')} 
+            activeOpacity={0.75}
+          >
             <View style={styles.metricTileTop}>
               <Text style={styles.metricTileLabel}>ATTENDANCE</Text>
               <Feather name="trending-up" size={14} color={theme.emerald} />
             </View>
             <Text style={[styles.metricTileValue, { color: theme.emerald }]}>{metrics.attendanceRate}%</Text>
             <Text style={styles.metricTileSub}>On-time Record</Text>
-          </View>
+          </TouchableOpacity>
 
           {/* Tile 2: Leave Credits */}
-          <View style={styles.metricTile}>
+          <TouchableOpacity 
+            style={styles.metricTile} 
+            onPress={() => onNavigate('leave_request')} 
+            activeOpacity={0.75}
+          >
             <View style={styles.metricTileTop}>
               <Text style={styles.metricTileLabel}>LEAVE CREDITS</Text>
               <Feather name="file-text" size={14} color={theme.primaryLight} />
             </View>
             <Text style={[styles.metricTileValue, { color: theme.textPrimary }]}>{metrics.leaveCredits.toFixed(1)}</Text>
             <Text style={styles.metricTileSub}>Days Available</Text>
-          </View>
+          </TouchableOpacity>
 
           {/* Tile 3: Tasks Due */}
-          <View style={styles.metricTile}>
+          <TouchableOpacity 
+            style={styles.metricTile} 
+            onPress={() => onNavigate('todo')} 
+            activeOpacity={0.75}
+          >
             <View style={styles.metricTileTop}>
               <Text style={styles.metricTileLabel}>TASKS DUE</Text>
               <Feather name="check-circle" size={14} color={theme.primaryLight} />
             </View>
             <Text style={[styles.metricTileValue, { color: theme.textPrimary }]}>{metrics.tasksDue}</Text>
             <Text style={styles.metricTileSub}>Actions Today</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Quick Actions Grid - Clean, Simple Cards */}
