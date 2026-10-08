@@ -62,6 +62,23 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
       if (callback) callback();
     });
   };
+
+  // Lock background window/body scrolling on web when sidebar drawer is open
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      if (modalVisible) {
+        const prevBodyOverflow = document.body.style.overflow;
+        const prevHtmlOverflow = document.documentElement.style.overflow;
+        document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
+        return () => {
+          document.body.style.overflow = prevBodyOverflow;
+          document.documentElement.style.overflow = prevHtmlOverflow;
+        };
+      }
+    }
+  }, [modalVisible]);
+
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [todayTasks, setTodayTasks] = useState<any[]>([]);
   const [isLoadingAnnouncements, setIsLoadingAnnouncements] = useState(true);
@@ -211,6 +228,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
   const quickActions = [
     { icon: 'clock', label: "Time In/Out", sub: "Record punch", screen: 'attendance', color: theme.emerald },
     { icon: 'file-text', label: "Leave Request", sub: "Apply time off", screen: 'leave_request', color: theme.primaryLight },
+    { icon: 'box', label: "Assigned Assets", sub: "Tools in custody", screen: 'assets', color: theme.emerald },
     { icon: 'map', label: "Business Trip", sub: "Travel permit", screen: 'business_trip_request', color: theme.primaryLight },
     { icon: 'corner-down-left', label: "Undertime", sub: "Early leave", screen: 'undertime_request', color: theme.primaryLight },
     { icon: 'award', label: "COE Request", sub: "Certificate", screen: 'coe_request', color: theme.primary },
@@ -220,6 +238,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
   const sidebarItems = [
     { icon: 'home', label: 'Dashboard', screen: 'dashboard', color: theme.primaryLight },
     { icon: 'clock', label: 'Time In/Out', screen: 'attendance', color: theme.emerald },
+    { icon: 'box', label: 'Assigned Assets', screen: 'assets', color: theme.emerald },
     { icon: 'calendar', label: 'Attendance Report', screen: 'attendance_report', color: theme.primaryLight },
     { icon: 'file-text', label: 'Leave Requests', screen: 'leave_request', color: theme.primaryLight },
     { icon: 'corner-down-left', label: 'Undertime Requests', screen: 'undertime_request', color: theme.primaryLight },
@@ -248,12 +267,15 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
 
       {/* Sidebar Modal - Smooth Left-to-Right Drawer Animation */}
       <Modal visible={modalVisible} transparent animationType="none" onRequestClose={() => closeSidebar()}>
-        <View style={StyleSheet.absoluteFillObject}>
+        <View style={[StyleSheet.absoluteFillObject, Platform.OS === 'web' ? ({ position: 'fixed', zIndex: 9999 } as any) : {}]}>
           <Animated.View style={[styles.overlay, { opacity: overlayAnim }]}>
             <TouchableOpacity style={StyleSheet.absoluteFillObject} activeOpacity={1} onPress={() => closeSidebar()} />
           </Animated.View>
 
-          <Animated.View style={[styles.sidebar, { transform: [{ translateX: slideAnim }] }]}>
+          <Animated.View 
+            style={[styles.sidebar, { transform: [{ translateX: slideAnim }] }]}
+            {...(Platform.OS === 'web' ? { onWheel: (e: any) => e.stopPropagation() } : {})}
+          >
             {/* Signature Top Gradient Strip */}
             <LinearGradient colors={theme.accentGradient as any} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.sidebarStrip} />
 
@@ -276,7 +298,14 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.sidebarList} showsVerticalScrollIndicator={false}>
+            <ScrollView 
+              style={styles.sidebarScrollView} 
+              contentContainerStyle={styles.sidebarList} 
+              showsVerticalScrollIndicator={false}
+              bounces={false}
+              nestedScrollEnabled={true}
+              overScrollMode="never"
+            >
               <Text style={styles.sidebarSection}>PORTAL NAVIGATION</Text>
               {sidebarItems.map((item) => (
                 <TouchableOpacity key={item.screen} style={styles.sidebarItem} onPress={() => closeSidebar(() => onNavigate(item.screen))}>
@@ -333,7 +362,12 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.body} 
+        contentContainerStyle={styles.bodyContent} 
+        showsVerticalScrollIndicator={false}
+        scrollEnabled={!modalVisible}
+      >
 
         {/* Tenant Status Alert */}
         <View style={styles.tenantBanner}>
@@ -570,10 +604,14 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: theme.sidebarOverlay,
+    ...(Platform.OS === 'web' ? ({
+      position: 'fixed',
+    } as any) : {}),
   },
   sidebar: {
     width: SIDEBAR_WIDTH,
     height: '100%',
+    maxHeight: '100%',
     backgroundColor: theme.sidebarBg,
     borderRightWidth: 1,
     borderRightColor: theme.border,
@@ -582,9 +620,32 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
     bottom: 0,
     left: 0,
     zIndex: 100,
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+    ...(Platform.OS === 'web' ? ({
+      position: 'fixed',
+      overscrollBehavior: 'contain',
+    } as any) : {}),
   },
-  sidebarStrip: { height: 4, position: 'absolute', top: 0, left: 0, right: 0 },
-  sidebarTop: { flexDirection: 'row', alignItems: 'center', padding: 20, paddingTop: Platform.OS === 'ios' ? 56 : 36, borderBottomWidth: 1, borderBottomColor: theme.border },
+  sidebarScrollView: {
+    flex: 1,
+    height: '100%',
+    ...(Platform.OS === 'web' ? ({
+      overscrollBehavior: 'contain',
+      WebkitOverflowScrolling: 'touch',
+    } as any) : {}),
+  },
+  sidebarStrip: { height: 4, position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 },
+  sidebarTop: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    padding: 20, 
+    paddingTop: Platform.OS === 'ios' ? 56 : 36, 
+    borderBottomWidth: 1, 
+    borderBottomColor: theme.border,
+    flexShrink: 0,
+  },
   avatarWrap: { marginRight: 12 },
   avatar: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   avatarText: { color: '#fff', fontSize: 16, fontWeight: '900' },
@@ -600,7 +661,12 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
   sidebarIconBox: { width: 32, height: 32, borderWidth: 1, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   sidebarItemLabel: { flex: 1, color: theme.textPrimary, fontSize: 13, fontWeight: '600' },
   sidebarDivider: { height: 1, backgroundColor: theme.border, marginVertical: 14 },
-  sidebarFooter: { padding: 20, borderTopWidth: 1, borderTopColor: theme.border },
+  sidebarFooter: { 
+    padding: 20, 
+    borderTopWidth: 1, 
+    borderTopColor: theme.border,
+    flexShrink: 0,
+  },
   logoutBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     paddingVertical: 12, borderWidth: 1, borderColor: theme.rose + '40',

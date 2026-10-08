@@ -19,6 +19,7 @@ import ProfileScreen from './src/screens/ProfileScreen';
 import PoliciesScreen from './src/screens/PoliciesScreen';
 import MemosScreen from './src/screens/MemosScreen';
 import TodoScreen from './src/screens/TodoScreen';
+import AssignedAssetsScreen from './src/screens/AssignedAssetsScreen';
 import { ThemeProvider } from './src/theme/ThemeContext';
 
 export default function App() {
@@ -341,6 +342,19 @@ export default function App() {
           token={authToken}
           employeeId={employeeId}
           userName={userName}
+          onBack={() => handleNavigate('dashboard')} 
+          onNavigateToAssets={() => handleNavigate('assets')}
+        />
+      </ThemeProvider>
+    );
+  }
+
+  if (currentScreen === 'assets') {
+    return (
+      <ThemeProvider>
+        <AssignedAssetsScreen 
+          token={authToken}
+          employeeId={employeeId}
           onBack={() => handleNavigate('dashboard')} 
         />
       </ThemeProvider>

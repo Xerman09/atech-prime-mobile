@@ -13,9 +13,10 @@ interface ProfileScreenProps {
   employeeId: number | null;
   token: string | null;
   userName: string;
+  onNavigateToAssets?: () => void;
 }
 
-export default function ProfileScreen({ onBack, employeeId, token, userName }: ProfileScreenProps) {
+export default function ProfileScreen({ onBack, employeeId, token, userName, onNavigateToAssets }: ProfileScreenProps) {
   const { theme, isDarkMode } = useTheme();
   const styles = getStyles(theme, isDarkMode);
   const [profileData, setProfileData] = useState<any>(null);
@@ -206,7 +207,7 @@ export default function ProfileScreen({ onBack, employeeId, token, userName }: P
             </LinearGradient>
           </View>
 
-          {/* 3 Metric Stats row */}
+          {/* 4 Metric Stats row */}
           <View style={styles.statsRow}>
             <View style={styles.statBox}>
               <Text style={[styles.statValue, { color: theme.primaryLight }]}>
@@ -220,12 +221,28 @@ export default function ProfileScreen({ onBack, employeeId, token, userName }: P
               </Text>
               <Text style={styles.statLabel}>Department</Text>
             </View>
-            <View style={styles.statBox}>
+            <View style={[styles.statBox, { borderRightWidth: 1, borderColor: theme.border }]}>
               <Text style={[styles.statValue, { color: theme.primary }]}>
                 {getYear(profileData?.hire_date)}
               </Text>
-              <Text style={styles.statLabel}>Year Onboarded</Text>
+              <Text style={styles.statLabel}>Onboarded</Text>
             </View>
+            <TouchableOpacity
+              style={styles.statBox}
+              onPress={onNavigateToAssets}
+              activeOpacity={onNavigateToAssets ? 0.7 : 1}
+              disabled={!onNavigateToAssets}
+            >
+              <Text style={[styles.statValue, { color: theme.emerald }]}>
+                {profileData?.allocated_assets ? profileData.allocated_assets.length : 0}
+              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={styles.statLabel}>Assets</Text>
+                {onNavigateToAssets ? (
+                  <Feather name="arrow-up-right" size={9} color={theme.emerald} style={{ marginLeft: 3 }} />
+                ) : null}
+              </View>
+            </TouchableOpacity>
           </View>
 
           {/* General Details */}
@@ -255,6 +272,101 @@ export default function ProfileScreen({ onBack, employeeId, token, userName }: P
               </View>
             </>
           ) : null}
+
+          {/* Assigned Assets & Equipment Section */}
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionLabel}>ASSIGNED ASSETS & EQUIPMENT</Text>
+            {onNavigateToAssets ? (
+              <TouchableOpacity
+                style={styles.viewInventoryBtn}
+                onPress={onNavigateToAssets}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.viewInventoryBtnText}>View Full List</Text>
+                <Feather name="chevron-right" size={12} color={theme.primaryLight} style={{ marginLeft: 2 }} />
+              </TouchableOpacity>
+            ) : profileData?.allocated_assets && profileData.allocated_assets.length > 0 ? (
+              <View style={styles.assetCountBadge}>
+                <Text style={styles.assetCountText}>
+                  {profileData.allocated_assets.length} {profileData.allocated_assets.length === 1 ? 'ITEM' : 'ITEMS'}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+
+          {profileData?.allocated_assets && profileData.allocated_assets.length > 0 ? (
+            <View style={{ marginBottom: 20 }}>
+              {profileData.allocated_assets.map((asset: any, idx: number) => (
+                <View key={asset.allocation_id || asset.asset_id || idx} style={styles.assetCard}>
+                  {/* Top Header of Card */}
+                  <View style={styles.assetCardHeader}>
+                    <View style={styles.assetTagBadge}>
+                      <Feather name="box" size={12} color={theme.primaryLight} style={{ marginRight: 5 }} />
+                      <Text style={styles.assetTagText}>{asset.asset_tag || 'ASSET'}</Text>
+                    </View>
+                    <View style={styles.assetCategoryBadge}>
+                      <Text style={styles.assetCategoryText}>{asset.category || 'Equipment'}</Text>
+                    </View>
+                  </View>
+
+                  {/* Asset Title */}
+                  <Text style={styles.assetName}>{asset.asset_name}</Text>
+
+                  {/* Details Grid */}
+                  <View style={styles.assetDetailsGrid}>
+                    {(asset.model_number || asset.serial_number) ? (
+                      <View style={styles.assetDetailItem}>
+                        <Text style={styles.assetDetailLabel}>MODEL / SERIAL</Text>
+                        <Text style={styles.assetDetailVal} numberOfLines={1}>
+                          {[asset.model_number, asset.serial_number].filter(Boolean).join(' · ') || '-'}
+                        </Text>
+                      </View>
+                    ) : null}
+
+                    <View style={styles.assetDetailItem}>
+                      <Text style={styles.assetDetailLabel}>ASSIGNED ON</Text>
+                      <Text style={styles.assetDetailVal}>{formatDate(asset.allocation_date)}</Text>
+                    </View>
+
+                    {asset.condition ? (
+                      <View style={styles.assetDetailItem}>
+                        <Text style={styles.assetDetailLabel}>CONDITION</Text>
+                        <View style={styles.assetConditionRow}>
+                          <View style={[styles.conditionDot, { backgroundColor: asset.condition === 'Brand New' || asset.condition === 'Good' ? theme.emerald : '#f59e0b' }]} />
+                          <Text style={[styles.assetDetailVal, { color: theme.textPrimary }]}>{asset.condition}</Text>
+                        </View>
+                      </View>
+                    ) : null}
+
+                    {asset.expected_return_date ? (
+                      <View style={styles.assetDetailItem}>
+                        <Text style={styles.assetDetailLabel}>RETURN DATE</Text>
+                        <Text style={[styles.assetDetailVal, { color: '#f59e0b' }]}>{formatDate(asset.expected_return_date)}</Text>
+                      </View>
+                    ) : null}
+                  </View>
+
+                  {/* Allocation Notes if present */}
+                  {asset.notes ? (
+                    <View style={styles.assetNotesBox}>
+                      <Feather name="info" size={11} color={theme.textMuted} style={{ marginRight: 6 }} />
+                      <Text style={styles.assetNotesText} numberOfLines={2}>{asset.notes}</Text>
+                    </View>
+                  ) : null}
+                </View>
+              ))}
+            </View>
+          ) : (
+            <View style={styles.noAssetsCard}>
+              <View style={styles.noAssetsIconWrap}>
+                <Feather name="package" size={22} color={theme.textMuted} />
+              </View>
+              <Text style={styles.noAssetsTitle}>No Company Assets Assigned</Text>
+              <Text style={styles.noAssetsSub}>
+                You currently do not have any company equipment, devices, or tools in your custody.
+              </Text>
+            </View>
+          )}
 
           <View style={{ height: 32 }} />
         </ScrollView>
@@ -343,4 +455,86 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
   detailIconBox: { width: 34, height: 34, borderWidth: 1, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   detailLabel: { fontSize: 9, fontWeight: '800', letterSpacing: 1, color: theme.textMuted, marginBottom: 2 },
   detailValue: { fontSize: 13, color: theme.textPrimary, fontWeight: '600' },
+  sectionHeaderRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10,
+  },
+  viewInventoryBtn: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 8, paddingVertical: 4,
+    backgroundColor: theme.tealTint, borderWidth: 1, borderColor: theme.border,
+  },
+  viewInventoryBtnText: {
+    fontSize: 9, fontWeight: '800', color: theme.primaryLight, letterSpacing: 0.5,
+  },
+  assetCountBadge: {
+    paddingHorizontal: 8, paddingVertical: 2, backgroundColor: theme.tealTint,
+    borderWidth: 1, borderColor: theme.border,
+  },
+  assetCountText: {
+    fontSize: 9, fontWeight: '800', color: theme.primaryLight, letterSpacing: 0.5,
+  },
+  assetCard: {
+    backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border,
+    padding: 16, marginBottom: 12,
+  },
+  assetCardHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10,
+  },
+  assetTagBadge: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: theme.tealTint, paddingHorizontal: 8, paddingVertical: 3,
+    borderWidth: 1, borderColor: theme.border,
+  },
+  assetTagText: {
+    fontSize: 11, fontWeight: '800', color: theme.primaryLight, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  assetCategoryBadge: {
+    paddingHorizontal: 8, paddingVertical: 3, backgroundColor: isDarkMode ? '#1e293b' : '#f1f5f9',
+    borderWidth: 1, borderColor: theme.border,
+  },
+  assetCategoryText: {
+    fontSize: 10, fontWeight: '700', color: theme.textMuted,
+  },
+  assetName: {
+    fontSize: 15, fontWeight: '800', color: theme.textPrimary, marginBottom: 12,
+  },
+  assetDetailsGrid: {
+    flexDirection: 'row', flexWrap: 'wrap', gap: 12,
+  },
+  assetDetailItem: {
+    minWidth: '45%', flex: 1, marginBottom: 6,
+  },
+  assetDetailLabel: {
+    fontSize: 9, fontWeight: '800', color: theme.textMuted, letterSpacing: 0.8, marginBottom: 2,
+  },
+  assetDetailVal: {
+    fontSize: 12, fontWeight: '600', color: theme.textPrimary,
+  },
+  assetConditionRow: {
+    flexDirection: 'row', alignItems: 'center',
+  },
+  conditionDot: {
+    width: 6, height: 6, marginRight: 6,
+  },
+  assetNotesBox: {
+    flexDirection: 'row', alignItems: 'center', backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+    padding: 8, marginTop: 10, borderWidth: 1, borderColor: theme.border,
+  },
+  assetNotesText: {
+    fontSize: 11, color: theme.textMuted, flex: 1, fontStyle: 'italic',
+  },
+  noAssetsCard: {
+    backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border,
+    padding: 24, alignItems: 'center', justifyContent: 'center', marginBottom: 20,
+  },
+  noAssetsIconWrap: {
+    width: 44, height: 44, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: theme.tealTint, borderWidth: 1, borderColor: theme.border, marginBottom: 10,
+  },
+  noAssetsTitle: {
+    fontSize: 13, fontWeight: '800', color: theme.textPrimary, marginBottom: 4,
+  },
+  noAssetsSub: {
+    fontSize: 11, color: theme.textMuted, textAlign: 'center', lineHeight: 16,
+  },
 });
