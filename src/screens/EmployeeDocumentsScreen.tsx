@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform,
-  ActivityIndicator, TextInput, Modal, Linking
+  ActivityIndicator, TextInput, Modal, Linking, Image
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -82,8 +82,9 @@ export default function EmployeeDocumentsScreen({ onBack, token, employeeId }: E
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
 
-  // Inspection Modal State
+  // Inspection & Viewer Modal States
   const [selectedDocument, setSelectedDocument] = useState<EmployeeDocument | null>(null);
+  const [previewDocModal, setPreviewDocModal] = useState<EmployeeDocument | null>(null);
 
   // Upload Modal State
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -189,6 +190,31 @@ export default function EmployeeDocumentsScreen({ onBack, token, employeeId }: E
     } else {
       Linking.openURL(fullUrl).catch(err => {
         console.error("Couldn't open document", err);
+      });
+    }
+  };
+
+  const handleDownloadDocument = (doc: EmployeeDocument) => {
+    if (!doc?.file_url) return;
+    const baseUrl = getApiBaseUrl();
+    const cleanUrl = doc.file_url.startsWith('/') ? doc.file_url : `/${doc.file_url}`;
+    const fullUrl = `${baseUrl}${cleanUrl}`;
+
+    if (Platform.OS === 'web') {
+      try {
+        const link = document.createElement('a');
+        link.href = fullUrl;
+        link.download = doc.file_name || doc.document_name || 'document';
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (err) {
+        window.open(fullUrl, '_blank');
+      }
+    } else {
+      Linking.openURL(fullUrl).catch(err => {
+        console.error("Couldn't open/download document", err);
       });
     }
   };
@@ -658,15 +684,24 @@ export default function EmployeeDocumentsScreen({ onBack, token, employeeId }: E
                         ) : null}
 
                         {item.document ? (
-                          <TouchableOpacity
-                            style={styles.openFileBtn}
-                            onPress={() => handleOpenDocument(item.document?.file_url)}
-                            activeOpacity={0.8}
-                          >
-                            <Feather name="file-text" size={12} color="#ffffff" style={{ marginRight: 5 }} />
-                            <Text style={styles.openFileBtnText}>View File</Text>
-                            <Feather name="external-link" size={11} color="#ffffff" style={{ marginLeft: 4 }} />
-                          </TouchableOpacity>
+                          <>
+                            <TouchableOpacity
+                              style={styles.openFileBtn}
+                              onPress={() => setPreviewDocModal(item.document || null)}
+                              activeOpacity={0.8}
+                            >
+                              <Feather name="eye" size={12} color="#ffffff" style={{ marginRight: 5 }} />
+                              <Text style={styles.openFileBtnText}>View File</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                              style={styles.downloadIconBtn}
+                              onPress={() => item.document && handleDownloadDocument(item.document)}
+                              activeOpacity={0.8}
+                            >
+                              <Feather name="download" size={12} color={theme.textPrimary} />
+                            </TouchableOpacity>
+                          </>
                         ) : null}
 
                         {item.document ? (
@@ -777,12 +812,19 @@ export default function EmployeeDocumentsScreen({ onBack, token, employeeId }: E
                       <View style={styles.cardActionsRow}>
                         <TouchableOpacity
                           style={styles.openFileBtn}
-                          onPress={() => handleOpenDocument(doc.file_url)}
+                          onPress={() => setPreviewDocModal(doc)}
                           activeOpacity={0.8}
                         >
-                          <Feather name={isPdf ? 'file-text' : 'image'} size={12} color="#ffffff" style={{ marginRight: 5 }} />
+                          <Feather name="eye" size={12} color="#ffffff" style={{ marginRight: 5 }} />
                           <Text style={styles.openFileBtnText}>View File</Text>
-                          <Feather name="external-link" size={11} color="#ffffff" style={{ marginLeft: 4 }} />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={styles.downloadIconBtn}
+                          onPress={() => handleDownloadDocument(doc)}
+                          activeOpacity={0.8}
+                        >
+                          <Feather name="download" size={12} color={theme.textPrimary} />
                         </TouchableOpacity>
 
                         <TouchableOpacity
@@ -1127,16 +1169,154 @@ export default function EmployeeDocumentsScreen({ onBack, token, employeeId }: E
               <View style={styles.modalFooter}>
                 <TouchableOpacity
                   style={styles.modalDownloadBtn}
-                  onPress={() => handleOpenDocument(selectedDocument.file_url)}
+                  onPress={() => {
+                    const doc = selectedDocument;
+                    setSelectedDocument(null);
+                    setPreviewDocModal(doc);
+                  }}
                   activeOpacity={0.85}
                 >
-                  <Feather name="external-link" size={14} color="#ffffff" style={{ marginRight: 8 }} />
-                  <Text style={styles.modalDownloadText}>Open Document</Text>
+                  <Feather name="eye" size={14} color="#ffffff" style={{ marginRight: 6 }} />
+                  <Text style={styles.modalDownloadText}>View File</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.modalDismissBtn}
+                  onPress={() => handleDownloadDocument(selectedDocument)}
+                  activeOpacity={0.85}
+                >
+                  <Feather name="download" size={13} color={theme.textPrimary} style={{ marginRight: 5 }} />
+                  <Text style={styles.modalDismissText}>Download</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={styles.modalDismissBtn}
                   onPress={() => setSelectedDocument(null)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.modalDismissText}>Close</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════
+          MODAL 3: IN-APP DOCUMENT PREVIEW & DOWNLOADER MODAL
+          ══════════════════════════════════════════════════════════ */}
+      {previewDocModal && (
+        <Modal
+          visible={!!previewDocModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setPreviewDocModal(null)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalCard, styles.viewerModalCard]}>
+              <LinearGradient
+                colors={theme.accentGradient as any}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.modalGradientStrip}
+              />
+
+              <View style={styles.modalHeader}>
+                <View style={{ flex: 1, paddingRight: 8 }}>
+                  <Text style={styles.modalCategory}>{previewDocModal.category || 'OFFICIAL 201 RECORD'}</Text>
+                  <Text style={styles.modalTitle} numberOfLines={1}>{previewDocModal.document_name}</Text>
+                  <Text style={{ fontSize: 10, color: theme.textMuted, marginTop: 2 }}>
+                    {previewDocModal.file_name} • {formatFileSize(previewDocModal.file_size)}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.modalCloseBtn}
+                  onPress={() => setPreviewDocModal(null)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Feather name="x" size={18} color={theme.textMuted} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Viewer Body */}
+              <View style={styles.viewerBody}>
+                {(() => {
+                  const baseUrl = getApiBaseUrl();
+                  const cleanUrl = previewDocModal.file_url.startsWith('/') ? previewDocModal.file_url : `/${previewDocModal.file_url}`;
+                  const fullUrl = `${baseUrl}${cleanUrl}`;
+                  const isImage = (previewDocModal.mime_type && previewDocModal.mime_type.includes('image')) ||
+                    /\.(png|jpe?g|webp|gif)$/i.test(previewDocModal.file_name || '');
+                  const isPdf = (previewDocModal.mime_type && previewDocModal.mime_type.includes('pdf')) ||
+                    /\.pdf$/i.test(previewDocModal.file_name || '');
+
+                  if (isImage) {
+                    return (
+                      <View style={styles.imageViewerWrap}>
+                        <Image
+                          source={{ uri: fullUrl }}
+                          style={styles.previewImage}
+                          resizeMode="contain"
+                        />
+                      </View>
+                    );
+                  }
+
+                  if (isPdf && Platform.OS === 'web') {
+                    return (
+                      <iframe
+                        src={fullUrl}
+                        style={{ width: '100%', height: '100%', border: 'none', backgroundColor: '#ffffff' }}
+                        title={previewDocModal.document_name}
+                      />
+                    );
+                  }
+
+                  return (
+                    <View style={styles.fileFallbackBox}>
+                      <View style={styles.fileFallbackIconWrap}>
+                        <Feather name="file-text" size={36} color={theme.primaryLight} />
+                      </View>
+                      <Text style={styles.fileFallbackTitle}>{previewDocModal.document_name}</Text>
+                      <Text style={styles.fileFallbackSub}>{previewDocModal.file_name}</Text>
+                      <Text style={styles.fileFallbackDesc}>
+                        Format: {previewDocModal.mime_type || (isPdf ? 'PDF Document' : 'Official Document')} • {formatFileSize(previewDocModal.file_size)}
+                      </Text>
+                      <TouchableOpacity
+                        style={styles.fallbackDownloadBtn}
+                        onPress={() => handleDownloadDocument(previewDocModal)}
+                        activeOpacity={0.85}
+                      >
+                        <Feather name="download" size={14} color="#ffffff" style={{ marginRight: 6 }} />
+                        <Text style={styles.fallbackDownloadText}>Download File</Text>
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })()}
+              </View>
+
+              {/* Viewer Footer */}
+              <View style={styles.modalFooter}>
+                <TouchableOpacity
+                  style={styles.modalDownloadBtn}
+                  onPress={() => handleDownloadDocument(previewDocModal)}
+                  activeOpacity={0.85}
+                >
+                  <Feather name="download" size={14} color="#ffffff" style={{ marginRight: 6 }} />
+                  <Text style={styles.modalDownloadText}>Download Document</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.modalDismissBtn}
+                  onPress={() => handleOpenDocument(previewDocModal.file_url)}
+                  activeOpacity={0.8}
+                >
+                  <Feather name="external-link" size={13} color={theme.textPrimary} style={{ marginRight: 5 }} />
+                  <Text style={styles.modalDismissText}>Open Tab</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.modalDismissBtn}
+                  onPress={() => setPreviewDocModal(null)}
                   activeOpacity={0.8}
                 >
                   <Text style={styles.modalDismissText}>Close</Text>
@@ -1476,4 +1656,49 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
     paddingVertical: 10, paddingHorizontal: 14,
   },
   modalDismissText: { color: theme.textPrimary, fontSize: 11, fontWeight: '700' },
+
+  downloadIconBtn: {
+    padding: 7, borderWidth: 1, borderColor: theme.border,
+    backgroundColor: isDarkMode ? '#1e293b' : '#f8fafc',
+    alignItems: 'center', justifyContent: 'center',
+  },
+
+  viewerModalCard: {
+    maxWidth: 620, height: '88%', maxHeight: 680,
+  },
+  viewerBody: {
+    flex: 1, backgroundColor: isDarkMode ? '#020617' : '#f8fafc',
+    alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+  },
+  imageViewerWrap: {
+    width: '100%', height: '100%',
+    alignItems: 'center', justifyContent: 'center', padding: 8,
+  },
+  previewImage: {
+    width: '100%', height: '100%',
+  },
+  fileFallbackBox: {
+    alignItems: 'center', justifyContent: 'center', padding: 24, textAlign: 'center',
+  },
+  fileFallbackIconWrap: {
+    width: 64, height: 64, backgroundColor: theme.tealTint,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 12,
+    borderWidth: 1, borderColor: theme.border,
+  },
+  fileFallbackTitle: {
+    fontSize: 14, fontWeight: '800', color: theme.textPrimary, textAlign: 'center', marginBottom: 4,
+  },
+  fileFallbackSub: {
+    fontSize: 11, color: theme.textMuted, textAlign: 'center', marginBottom: 6,
+  },
+  fileFallbackDesc: {
+    fontSize: 10, color: theme.textSecondary, textAlign: 'center', marginBottom: 16,
+  },
+  fallbackDownloadBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: theme.primary, paddingHorizontal: 16, paddingVertical: 10,
+  },
+  fallbackDownloadText: {
+    color: '#ffffff', fontSize: 11, fontWeight: '800',
+  },
 });
