@@ -43,7 +43,18 @@ export default function AssignedAssetsScreen({ onBack, token, employeeId }: Assi
   const [selectedAsset, setSelectedAsset] = useState<AllocatedAsset | null>(null);
 
   const fetchAssets = async () => {
-    if (!token) {
+    let resolvedToken = token;
+    if (!resolvedToken) {
+      try {
+        const uSession = await AsyncStorage.getItem('user_session');
+        if (uSession) {
+          const parsed = JSON.parse(uSession);
+          if (parsed.token) resolvedToken = parsed.token;
+        }
+      } catch {}
+    }
+
+    if (!resolvedToken) {
       setIsLoading(false);
       return;
     }
@@ -53,14 +64,14 @@ export default function AssignedAssetsScreen({ onBack, token, employeeId }: Assi
       const endpoint = `api/employees/me`;
       const url = Platform.OS === 'web'
         ? `http://${window.location.hostname}/atech_prime/backend/public/${endpoint}`
-        : `http://192.168.100.11/atech_prime/backend/public/${endpoint}`;
+        : `http://192.168.100.31/atech_prime/backend/public/${endpoint}`;
 
       const res = await fetch(url, {
         cache: 'no-store',
         headers: {
           'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          'X-Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${resolvedToken}`,
+          'X-Authorization': `Bearer ${resolvedToken}`
         }
       });
 

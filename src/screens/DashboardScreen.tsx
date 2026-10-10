@@ -229,6 +229,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
     { icon: 'clock', label: "Time In/Out", sub: "Record punch", screen: 'attendance', color: theme.emerald },
     { icon: 'file-text', label: "Leave Request", sub: "Apply time off", screen: 'leave_request', color: theme.primaryLight },
     { icon: 'box', label: "Assigned Assets", sub: "Tools in custody", screen: 'assets', color: theme.emerald },
+    { icon: 'folder', label: "My Documents", sub: "201 file archive", screen: 'documents', color: theme.primaryLight },
     { icon: 'map', label: "Business Trip", sub: "Travel permit", screen: 'business_trip_request', color: theme.primaryLight },
     { icon: 'corner-down-left', label: "Undertime", sub: "Early leave", screen: 'undertime_request', color: theme.primaryLight },
     { icon: 'award', label: "COE Request", sub: "Certificate", screen: 'coe_request', color: theme.primary },
@@ -239,6 +240,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
     { icon: 'home', label: 'Dashboard', screen: 'dashboard', color: theme.primaryLight },
     { icon: 'clock', label: 'Time In/Out', screen: 'attendance', color: theme.emerald },
     { icon: 'box', label: 'Assigned Assets', screen: 'assets', color: theme.emerald },
+    { icon: 'folder', label: 'Uploaded Documents', screen: 'documents', color: theme.primaryLight },
     { icon: 'calendar', label: 'Attendance Report', screen: 'attendance_report', color: theme.primaryLight },
     { icon: 'file-text', label: 'Leave Requests', screen: 'leave_request', color: theme.primaryLight },
     { icon: 'corner-down-left', label: 'Undertime Requests', screen: 'undertime_request', color: theme.primaryLight },
@@ -506,7 +508,7 @@ export default function DashboardScreen({ userName, token, onLogout, onNavigate 
         {/* Quick Actions Grid - Clean, Simple Cards */}
         <View style={styles.sectionHeaderRow}>
           <Text style={styles.sectionLabel}>SERVICES & REQUESTS</Text>
-          <Text style={styles.sectionBadge}>6 MODULES</Text>
+          <Text style={styles.sectionBadge}>{quickActions.length} MODULES</Text>
         </View>
         <View style={styles.grid}>
           {quickActions.map((a, i) => (

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, ActivityIndicator
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, ActivityIndicator, Linking
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -14,9 +14,10 @@ interface ProfileScreenProps {
   token: string | null;
   userName: string;
   onNavigateToAssets?: () => void;
+  onNavigateToDocuments?: () => void;
 }
 
-export default function ProfileScreen({ onBack, employeeId, token, userName, onNavigateToAssets }: ProfileScreenProps) {
+export default function ProfileScreen({ onBack, employeeId, token, userName, onNavigateToAssets, onNavigateToDocuments }: ProfileScreenProps) {
   const { theme, isDarkMode } = useTheme();
   const styles = getStyles(theme, isDarkMode);
   const [profileData, setProfileData] = useState<any>(null);
@@ -24,7 +25,18 @@ export default function ProfileScreen({ onBack, employeeId, token, userName, onN
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const fetchProfile = async () => {
-    if (!token) {
+    let resolvedToken = token;
+    if (!resolvedToken) {
+      try {
+        const uSession = await AsyncStorage.getItem('user_session');
+        if (uSession) {
+          const parsed = JSON.parse(uSession);
+          if (parsed.token) resolvedToken = parsed.token;
+        }
+      } catch {}
+    }
+
+    if (!resolvedToken) {
       setIsLoading(false);
       return;
     }
@@ -45,14 +57,14 @@ export default function ProfileScreen({ onBack, employeeId, token, userName, onN
       const endpoint = `api/employees/me`;
       const url = Platform.OS === 'web'
         ? `http://${window.location.hostname}/atech_prime/backend/public/${endpoint}`
-        : `http://192.168.100.11/atech_prime/backend/public/${endpoint}`;
+        : `http://192.168.100.31/atech_prime/backend/public/${endpoint}`;
 
       const res = await fetch(url, { 
         cache: 'no-store',
         headers: { 
           'Accept': 'application/json', 
-          'Authorization': `Bearer ${token}`,
-          'X-Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${resolvedToken}`,
+          'X-Authorization': `Bearer ${resolvedToken}`
         } 
       });
 
@@ -97,6 +109,44 @@ export default function ProfileScreen({ onBack, employeeId, token, userName, onN
     const d = new Date(ds);
     if (isNaN(d.getTime())) return '-';
     return d.getFullYear().toString();
+  };
+
+  const formatFileSize = (bytes?: number | null) => {
+    if (!bytes || bytes <= 0) return '-';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  };
+
+  const handleOpenDocument = (fileUrl?: string) => {
+    if (!fileUrl) return;
+    let baseUrl = `http://192.168.100.31/atech_prime/backend/public`;
+    if (Platform.OS === 'web') {
+      baseUrl = `http://${window.location.hostname}/atech_prime/backend/public`;
+    }
+    const cleanUrl = fileUrl.startsWith('/') ? fileUrl : `/${fileUrl}`;
+    const fullUrl = `${baseUrl}${cleanUrl}`;
+
+    if (Platform.OS === 'web') {
+      window.open(fullUrl, '_blank');
+    } else {
+      Linking.openURL(fullUrl).catch(err => {
+        console.error("Couldn't open document", err);
+      });
+    }
+  };
+
+  const getDocStatusStyle = (status?: string) => {
+    switch (status) {
+      case 'Verified':
+        return { text: theme.emerald, bg: theme.tealTint, border: theme.emerald + '40', icon: 'check-circle' };
+      case 'Pending Review':
+        return { text: '#d97706', bg: isDarkMode ? 'rgba(217, 119, 6, 0.15)' : '#fef3c7', border: '#d9770640', icon: 'clock' };
+      case 'Rejected':
+        return { text: theme.rose, bg: theme.roseTint, border: theme.rose + '40', icon: 'x-circle' };
+      default:
+        return { text: theme.textMuted, bg: isDarkMode ? '#1e293b' : '#f1f5f9', border: theme.border, icon: 'file' };
+    }
   };
 
   const isTokenString = (str?: string) => !str || str.startsWith('MS4') || (str.length > 30 && str.includes('.'));
@@ -221,25 +271,35 @@ export default function ProfileScreen({ onBack, employeeId, token, userName, onN
               </Text>
               <Text style={styles.statLabel}>Department</Text>
             </View>
-            <View style={[styles.statBox, { borderRightWidth: 1, borderColor: theme.border }]}>
-              <Text style={[styles.statValue, { color: theme.primary }]}>
-                {getYear(profileData?.hire_date)}
-              </Text>
-              <Text style={styles.statLabel}>Onboarded</Text>
-            </View>
             <TouchableOpacity
-              style={styles.statBox}
+              style={[styles.statBox, { borderRightWidth: 1, borderColor: theme.border }]}
               onPress={onNavigateToAssets}
               activeOpacity={onNavigateToAssets ? 0.7 : 1}
               disabled={!onNavigateToAssets}
             >
-              <Text style={[styles.statValue, { color: theme.emerald }]}>
+              <Text style={[styles.statValue, { color: theme.primary }]}>
                 {profileData?.allocated_assets ? profileData.allocated_assets.length : 0}
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Text style={styles.statLabel}>Assets</Text>
                 {onNavigateToAssets ? (
-                  <Feather name="arrow-up-right" size={9} color={theme.emerald} style={{ marginLeft: 3 }} />
+                  <Feather name="arrow-up-right" size={9} color={theme.primary} style={{ marginLeft: 2 }} />
+                ) : null}
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.statBox}
+              onPress={onNavigateToDocuments}
+              activeOpacity={onNavigateToDocuments ? 0.7 : 1}
+              disabled={!onNavigateToDocuments}
+            >
+              <Text style={[styles.statValue, { color: theme.emerald }]}>
+                {profileData?.uploaded_documents ? profileData.uploaded_documents.length : 0}
+              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={styles.statLabel}>Documents</Text>
+                {onNavigateToDocuments ? (
+                  <Feather name="arrow-up-right" size={9} color={theme.emerald} style={{ marginLeft: 2 }} />
                 ) : null}
               </View>
             </TouchableOpacity>
@@ -364,6 +424,126 @@ export default function ProfileScreen({ onBack, employeeId, token, userName, onN
               <Text style={styles.noAssetsTitle}>No Company Assets Assigned</Text>
               <Text style={styles.noAssetsSub}>
                 You currently do not have any company equipment, devices, or tools in your custody.
+              </Text>
+            </View>
+          )}
+
+          {/* Uploaded Documents & 201 Files Section */}
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionLabel}>UPLOADED DOCUMENTS (201 FILES)</Text>
+            {onNavigateToDocuments ? (
+              <TouchableOpacity
+                style={styles.viewInventoryBtn}
+                onPress={onNavigateToDocuments}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.viewInventoryBtnText}>View Full List</Text>
+                <Feather name="chevron-right" size={12} color={theme.primaryLight} style={{ marginLeft: 2 }} />
+              </TouchableOpacity>
+            ) : profileData?.uploaded_documents && profileData.uploaded_documents.length > 0 ? (
+              <View style={styles.assetCountBadge}>
+                <Text style={styles.assetCountText}>
+                  {profileData.uploaded_documents.length} {profileData.uploaded_documents.length === 1 ? 'FILE' : 'FILES'}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+
+          {profileData?.uploaded_documents && profileData.uploaded_documents.length > 0 ? (
+            <View style={{ marginBottom: 20 }}>
+              {profileData.uploaded_documents.map((doc: any, idx: number) => {
+                const statusCfg = getDocStatusStyle(doc.status);
+                const isPdf = (doc.mime_type && doc.mime_type.includes('pdf')) || (doc.file_name && doc.file_name.toLowerCase().endsWith('.pdf'));
+
+                return (
+                  <View key={doc.id || idx} style={styles.docCard}>
+                    {/* Top Header of Card */}
+                    <View style={styles.docCardHeader}>
+                      <View style={styles.docCategoryBadge}>
+                        <Feather name="folder" size={11} color={theme.primaryLight} style={{ marginRight: 5 }} />
+                        <Text style={styles.docCategoryText}>{doc.category || 'General'}</Text>
+                      </View>
+                      <View style={[styles.docStatusBadge, { backgroundColor: statusCfg.bg, borderColor: statusCfg.border }]}>
+                        <Feather name={statusCfg.icon as any} size={10} color={statusCfg.text} style={{ marginRight: 4 }} />
+                        <Text style={[styles.docStatusText, { color: statusCfg.text }]}>{doc.status || 'Pending'}</Text>
+                      </View>
+                    </View>
+
+                    {/* Document Title */}
+                    <Text style={styles.docTitle}>{doc.document_name}</Text>
+                    {doc.document_number ? (
+                      <View style={styles.docRefRow}>
+                        <Text style={styles.docRefLabel}>REF / DOC NO:</Text>
+                        <Text style={styles.docRefVal}>{doc.document_number}</Text>
+                      </View>
+                    ) : null}
+
+                    {/* Details Grid */}
+                    <View style={styles.docDetailsGrid}>
+                      <View style={styles.docDetailItem}>
+                        <Text style={styles.docDetailLabel}>ISSUE DATE</Text>
+                        <Text style={styles.docDetailVal}>{formatDate(doc.issue_date)}</Text>
+                      </View>
+
+                      <View style={styles.docDetailItem}>
+                        <Text style={styles.docDetailLabel}>EXPIRY DATE</Text>
+                        <Text style={styles.docDetailVal}>{formatDate(doc.expiry_date)}</Text>
+                      </View>
+
+                      <View style={styles.docDetailItem}>
+                        <Text style={styles.docDetailLabel}>FILE NAME</Text>
+                        <Text style={styles.docDetailVal} numberOfLines={1}>{doc.file_name || '-'}</Text>
+                      </View>
+
+                      <View style={styles.docDetailItem}>
+                        <Text style={styles.docDetailLabel}>FILE SIZE</Text>
+                        <Text style={styles.docDetailVal}>{formatFileSize(doc.file_size)}</Text>
+                      </View>
+                    </View>
+
+                    {/* Review Notes if present */}
+                    {doc.review_notes ? (
+                      <View style={styles.docNotesBox}>
+                        <Feather name="message-square" size={11} color={theme.textMuted} style={{ marginRight: 6 }} />
+                        <Text style={styles.docNotesText} numberOfLines={2}>{doc.review_notes}</Text>
+                      </View>
+                    ) : null}
+
+                    {/* Footer Actions */}
+                    <View style={styles.docFooterRow}>
+                      <TouchableOpacity
+                        style={styles.openFileBtn}
+                        onPress={() => handleOpenDocument(doc.file_url)}
+                        activeOpacity={0.8}
+                      >
+                        <Feather name={isPdf ? 'file-text' : 'image'} size={12} color="#ffffff" style={{ marginRight: 6 }} />
+                        <Text style={styles.openFileBtnText}>View Document</Text>
+                        <Feather name="external-link" size={11} color="#ffffff" style={{ marginLeft: 4 }} />
+                      </TouchableOpacity>
+
+                      {onNavigateToDocuments ? (
+                        <TouchableOpacity
+                          style={styles.inspectBtn}
+                          onPress={onNavigateToDocuments}
+                          activeOpacity={0.8}
+                        >
+                          <Text style={styles.inspectBtnText}>All Records</Text>
+                          <Feather name="chevron-right" size={12} color={theme.primaryLight} style={{ marginLeft: 2 }} />
+                        </TouchableOpacity>
+                      ) : null}
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          ) : (
+            <View style={styles.noAssetsCard}>
+              <View style={styles.noAssetsIconWrap}>
+                <Feather name="file-text" size={22} color={theme.textMuted} />
+              </View>
+              <Text style={styles.noAssetsTitle}>No Uploaded Documents</Text>
+              <Text style={styles.noAssetsSub}>
+                You currently do not have any official 201 file documents or credentials uploaded in the system.
               </Text>
             </View>
           )}
@@ -537,4 +717,57 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
   noAssetsSub: {
     fontSize: 11, color: theme.textMuted, textAlign: 'center', lineHeight: 16,
   },
+
+  // Document Cards in Profile
+  docCard: {
+    backgroundColor: theme.cardBg, borderWidth: 1, borderColor: theme.border,
+    padding: 16, marginBottom: 12,
+  },
+  docCardHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8,
+  },
+  docCategoryBadge: {
+    flexDirection: 'row', alignItems: 'center', backgroundColor: theme.tealTint,
+    paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1, borderColor: theme.border,
+  },
+  docCategoryText: {
+    fontSize: 10, fontWeight: '800', color: theme.primaryLight, letterSpacing: 0.5,
+  },
+  docStatusBadge: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1,
+  },
+  docStatusText: { fontSize: 10, fontWeight: '800', letterSpacing: 0.4 },
+  docTitle: { fontSize: 15, fontWeight: '800', color: theme.textPrimary, marginBottom: 4 },
+  docRefRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  docRefLabel: { fontSize: 9, fontWeight: '800', color: theme.textMuted, letterSpacing: 0.8, marginRight: 6 },
+  docRefVal: {
+    fontSize: 11, fontWeight: '800', color: theme.primaryLight,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  docDetailsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 4 },
+  docDetailItem: { minWidth: '45%', flex: 1, marginBottom: 6 },
+  docDetailLabel: { fontSize: 9, fontWeight: '800', color: theme.textMuted, letterSpacing: 0.8, marginBottom: 2 },
+  docDetailVal: { fontSize: 12, fontWeight: '600', color: theme.textPrimary },
+  docNotesBox: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+    padding: 8, marginTop: 10, borderWidth: 1, borderColor: theme.border,
+  },
+  docNotesText: { fontSize: 11, color: theme.textMuted, flex: 1, fontStyle: 'italic' },
+  docFooterRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: theme.border,
+  },
+  openFileBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: theme.primary, paddingVertical: 9, paddingHorizontal: 12,
+  },
+  openFileBtnText: { color: '#ffffff', fontSize: 11, fontWeight: '800' },
+  inspectBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: theme.border, backgroundColor: theme.cardBg,
+    paddingVertical: 9, paddingHorizontal: 12,
+  },
+  inspectBtnText: { color: theme.primaryLight, fontSize: 11, fontWeight: '800' },
 });
