@@ -449,6 +449,28 @@ export default function ProfileScreen({ onBack, employeeId, token, userName, onN
             ) : null}
           </View>
 
+          {/* Missing Requirements Alert Banner */}
+          {profileData?.compliance?.missing_count > 0 && onNavigateToDocuments ? (
+            <TouchableOpacity
+              style={styles.missingReqAlertCard}
+              onPress={onNavigateToDocuments}
+              activeOpacity={0.85}
+            >
+              <View style={styles.missingReqIconWrap}>
+                <Feather name="alert-circle" size={15} color="#ef4444" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.missingReqAlertTitle}>
+                  {profileData.compliance.missing_count} Required {profileData.compliance.missing_count === 1 ? 'Document' : 'Documents'} Still Needed
+                </Text>
+                <Text style={styles.missingReqAlertSub}>
+                  Institutional compliance requires uploading your missing 201 credentials. Tap to upload.
+                </Text>
+              </View>
+              <Feather name="chevron-right" size={15} color="#ef4444" style={{ marginLeft: 6 }} />
+            </TouchableOpacity>
+          ) : null}
+
           {profileData?.uploaded_documents && profileData.uploaded_documents.length > 0 ? (
             <View style={{ marginBottom: 20 }}>
               {profileData.uploaded_documents.map((doc: any, idx: number) => {
@@ -770,4 +792,15 @@ const getStyles = (theme: ThemeColors, isDarkMode: boolean) => StyleSheet.create
     paddingVertical: 9, paddingHorizontal: 12,
   },
   inspectBtnText: { color: theme.primaryLight, fontSize: 11, fontWeight: '800' },
+
+  missingReqAlertCard: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: isDarkMode ? 'rgba(239, 68, 68, 0.12)' : '#fef2f2',
+    borderWidth: 1, borderColor: '#ef444440',
+    borderLeftWidth: 3, borderLeftColor: '#ef4444',
+    padding: 12, marginBottom: 14,
+  },
+  missingReqIconWrap: { marginRight: 10 },
+  missingReqAlertTitle: { fontSize: 12, fontWeight: '800', color: '#ef4444', marginBottom: 2 },
+  missingReqAlertSub: { fontSize: 10, color: theme.textMuted, lineHeight: 14 },
 });
